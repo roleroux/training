@@ -48,25 +48,25 @@ button{user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .box:active,.pill:active,.tool:active{transform:scale(.93)}
 
 header{padding:26px 0 22px;border-bottom:1px solid var(--edge)}
-.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.hdr-top{display:block}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
 .eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:5px}
 h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;margin:0;letter-spacing:-.01em}
 h1 em{font-style:italic;font-weight:400;color:var(--depth)}
-.readout{display:flex;gap:24px;margin-top:18px;flex-wrap:wrap}
+.readout{display:flex;gap:30px;margin-top:16px;flex-wrap:wrap;justify-content:center;text-align:center}
 .ro-val{font-family:var(--mono);font-size:25px;font-weight:500;line-height:1}
 .ro-sub{color:var(--fog);font-size:14px}
 .ro-lab{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--fog);margin-top:6px}
 
-.prog{display:flex;gap:14px;margin-left:auto;padding-top:3px}
+.prog{display:flex;gap:24px;justify-content:center;margin-top:20px}
 .gauge{display:flex;align-items:center;gap:8px}
 .ring{width:38px;height:38px;flex:0 0 38px;transform:rotate(-90deg)}
 .g-val{font-family:var(--mono);font-size:16px;font-weight:500;line-height:1;white-space:nowrap}
 .g-sub{color:var(--fog);font-size:11px}
 .g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
-@media (max-width:430px){.prog{gap:12px}.ring{width:32px;height:32px;flex:0 0 32px}.g-val{font-size:14px}}
+@media (max-width:430px){.prog{gap:18px}.readout{gap:22px}}
 
 .phase{display:flex;align-items:baseline;gap:12px;margin:32px 0 12px}
 .phase-name{font-family:var(--serif);font-style:italic;font-size:19px}
@@ -238,7 +238,7 @@ const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-06.4", RKEY="jdb-reload";
+const VERSION="2026-08-06.5", RKEY="jdb-reload";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -352,7 +352,7 @@ function render(){
 
   document.getElementById("readout").innerHTML=
     '<div><div class="ro-val">'+st.left+'</div><div class="ro-lab">jours avant le retour</div></div>'+
-    '<div><div class="ro-val">'+(st.vo2.length?st.vo2[st.vo2.length-1].v.toFixed(0):VO2_START)+'<span class="ro-sub"> vo2</span></div><div class="ro-lab">dernier relevé</div></div>';
+    '<div><div class="ro-val">'+(st.vo2.length?st.vo2[st.vo2.length-1].v.toFixed(0):VO2_START)+'<span class="ro-sub"> VO2max</span></div><div class="ro-lab">dernier relevé</div></div>';
 
   const idx=PLAN.findIndex(d=>d.d===TODAY);
   document.getElementById("track").style.height=(idx<0?0:((idx+.5)/PLAN.length)*100)+"%";
