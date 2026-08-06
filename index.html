@@ -31,6 +31,7 @@ body{
 .bg{position:fixed;inset:0;pointer-events:none;opacity:.9;z-index:0}
 
 header{padding:26px 0 22px;border-bottom:1px solid var(--edge)}
+.hdr-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
@@ -41,6 +42,14 @@ h1 em{font-style:italic;font-weight:400;color:var(--depth)}
 .ro-val{font-family:var(--mono);font-size:25px;font-weight:500;line-height:1}
 .ro-sub{color:var(--fog);font-size:14px}
 .ro-lab{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--fog);margin-top:6px}
+
+.prog{display:flex;gap:14px;margin-left:auto;padding-top:3px}
+.gauge{display:flex;align-items:center;gap:8px}
+.ring{width:38px;height:38px;flex:0 0 38px;transform:rotate(-90deg)}
+.g-val{font-family:var(--mono);font-size:16px;font-weight:500;line-height:1;white-space:nowrap}
+.g-sub{color:var(--fog);font-size:11px}
+.g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
+@media (max-width:430px){.prog{gap:12px}.ring{width:32px;height:32px;flex:0 0 32px}.g-val{font-size:14px}}
 
 .phase{display:flex;align-items:baseline;gap:12px;margin:32px 0 12px}
 .phase-name{font-family:var(--serif);font-style:italic;font-size:19px}
@@ -123,7 +132,7 @@ input[type=number]:focus{outline:none;border-bottom-color:var(--brass)}
 <body>
 <svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
 <div class="wrap">
-  <header><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><circle cx="100" cy="100" r="81.5" fill="none" stroke="#1E3E54" stroke-width="1.1"/><g stroke="#244A62" stroke-width="0.9" fill="none"><path d="M22 78 A 150 60 0 0 0 178 78"/><path d="M22 100 A 150 60 0 0 0 178 100"/><path d="M22 122 A 150 60 0 0 0 178 122"/></g><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9.5"><path d="M22 148 Q 42 140 54 132 T 82 116 L 92 110" stroke="#FFFFFF"/><path d="M92 110 Q 108 112 112 100 T 100 88 Q 92 88 88 92" stroke="#2EA896"/><path d="M88 92 Q 104 84 112 70 T 132 44" stroke="#FFFFFF"/></g><circle cx="22" cy="148" r="6.5" fill="#FFFFFF"/><circle cx="136" cy="40" r="14" fill="#0A2233" stroke="#E06A42" stroke-width="4.5"/><circle cx="136" cy="40" r="6" fill="#E06A42"/></svg><div class="brand-txt"><h1>East Coast <em>Training</em></h1><div class="eyebrow">Shelter Island → Acadia → New York</div></div></div><div class="readout" id="readout"></div></header>
+  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><circle cx="100" cy="100" r="81.5" fill="none" stroke="#1E3E54" stroke-width="1.1"/><g stroke="#244A62" stroke-width="0.9" fill="none"><path d="M22 78 A 150 60 0 0 0 178 78"/><path d="M22 100 A 150 60 0 0 0 178 100"/><path d="M22 122 A 150 60 0 0 0 178 122"/></g><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9.5"><path d="M22 148 Q 42 140 54 132 T 82 116 L 92 110" stroke="#FFFFFF"/><path d="M92 110 Q 108 112 112 100 T 100 88 Q 92 88 88 92" stroke="#2EA896"/><path d="M88 92 Q 104 84 112 70 T 132 44" stroke="#FFFFFF"/></g><circle cx="22" cy="148" r="6.5" fill="#FFFFFF"/><circle cx="136" cy="40" r="14" fill="#0A2233" stroke="#E06A42" stroke-width="4.5"/><circle cx="136" cy="40" r="6" fill="#E06A42"/></svg><div class="brand-txt"><h1>East Coast <em>Training</em></h1><div class="eyebrow">Shelter Island → Acadia → New York</div></div></div><div class="prog" id="prog"></div></div><div class="readout" id="readout"></div></header>
   <div class="route" id="route"><div class="line"></div><div class="track" id="track"></div></div>
   <section class="panel" id="panel"></section>
 </div>
@@ -241,11 +250,13 @@ function bg(){
 }
 
 function stats(){
-  let done=0,planned=0,strength=0,km=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
+  let done=0,planned=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
   PLAN.forEach(day=>{
     const e=log[day.d],u=units(day);
+    total+=u.length;
     if(day.d<=TODAY)planned+=u.length;
     if(e)u.forEach(k=>{if(e.done[k])done++;});
+    if(day.d===TODAY){dayTotal=u.length;if(e)u.forEach(k=>{if(e.done[k])dayDone++;});}
     if(e)day.ss.forEach((s,i)=>{
       if(s.circuit){if(s.circuit!=="P"&&CIRCUITS[s.circuit].moves.every((_,j)=>e.done["s"+i+"e"+j]))strength++;}
       else if(e.done["s"+i]&&s.km)km+=s.km;});
@@ -256,7 +267,7 @@ function stats(){
       if(e.vo2)vo2.push({k:day.d,v:parseFloat(e.vo2)});}
   });
   const left=Math.max(0,Math.round((parse("2026-08-26")-parse(TODAY))/86400000));
-  return{done:done,planned:planned,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
+  return{done:done,planned:planned,total:total,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
 }
 
 function vo2svg(v){
@@ -276,11 +287,26 @@ function vo2svg(v){
   return s;
 }
 
+function gauge(d,t,lab,col){
+  const C=2*Math.PI*19, on=t?(C*d/t):0;
+  return '<div class="gauge" title="'+d+' exercice'+(d>1?"s":"")+' tenu'+(d>1?"s":"")+' sur '+t+' — '+lab+'">'+
+    '<svg class="ring" viewBox="0 0 44 44" aria-hidden="true">'+
+      '<circle cx="22" cy="22" r="19" fill="none" stroke="var(--edge)" stroke-width="4"/>'+
+      (on>0?'<circle cx="22" cy="22" r="19" fill="none" stroke="'+col+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+on.toFixed(2)+' '+(C-on).toFixed(2)+'"/>':'')+
+    '</svg>'+
+    '<div><div class="g-val">'+(t?d+'<span class="g-sub">/'+t+'</span>':'<span class="g-sub">—</span>')+'</div>'+
+    '<div class="g-lab">'+lab+'</div></div></div>';
+}
+
 function render(){
   const st=stats();
+  document.getElementById("prog").innerHTML=
+    gauge(st.dayDone,st.dayTotal,"du jour","var(--buoy)")+
+    gauge(st.done,st.total,"tout le plan","var(--depth)");
+
   document.getElementById("readout").innerHTML=
     '<div><div class="ro-val">'+st.left+'</div><div class="ro-lab">jours avant le retour</div></div>'+
-    '<div><div class="ro-val">'+st.done+'<span class="ro-sub">/'+st.planned+'</span></div><div class="ro-lab">exercices tenus</div></div>'+
+    '<div><div class="ro-val">'+st.done+'<span class="ro-sub">/'+st.planned+'</span></div><div class="ro-lab">exercices tenus à ce jour</div></div>'+
     '<div><div class="ro-val">'+(st.vo2.length?st.vo2[st.vo2.length-1].v.toFixed(0):VO2_START)+'<span class="ro-sub"> vo2</span></div><div class="ro-lab">dernier relevé</div></div>';
 
   const idx=PLAN.findIndex(d=>d.d===TODAY);
