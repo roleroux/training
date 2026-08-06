@@ -219,7 +219,7 @@ const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-06.2", RKEY="jdb-reload";
+const VERSION="2026-08-06.3", RKEY="jdb-reload";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -278,11 +278,10 @@ function bg(){
 }
 
 function stats(){
-  let done=0,planned=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
+  let done=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
   PLAN.forEach(day=>{
     const e=log[day.d],u=units(day);
     total+=u.length;
-    if(day.d<=TODAY)planned+=u.length;
     if(e)u.forEach(k=>{if(e.done[k])done++;});
     if(day.d===TODAY){dayTotal=u.length;if(e)u.forEach(k=>{if(e.done[k])dayDone++;});}
     if(e)day.ss.forEach((s,i)=>{
@@ -295,7 +294,7 @@ function stats(){
       if(e.vo2)vo2.push({k:day.d,v:parseFloat(e.vo2)});}
   });
   const left=Math.max(0,Math.round((parse("2026-08-26")-parse(TODAY))/86400000));
-  return{done:done,planned:planned,total:total,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
+  return{done:done,total:total,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
 }
 
 function vo2svg(v){
@@ -334,7 +333,6 @@ function render(){
 
   document.getElementById("readout").innerHTML=
     '<div><div class="ro-val">'+st.left+'</div><div class="ro-lab">jours avant le retour</div></div>'+
-    '<div><div class="ro-val">'+st.done+'<span class="ro-sub">/'+st.planned+'</span></div><div class="ro-lab">exercices tenus à ce jour</div></div>'+
     '<div><div class="ro-val">'+(st.vo2.length?st.vo2[st.vo2.length-1].v.toFixed(0):VO2_START)+'<span class="ro-sub"> vo2</span></div><div class="ro-lab">dernier relevé</div></div>';
 
   const idx=PLAN.findIndex(d=>d.d===TODAY);
