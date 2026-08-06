@@ -238,7 +238,7 @@ const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-06.5", RKEY="jdb-reload";
+const VERSION="2026-08-06.6", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -257,10 +257,17 @@ function setSave(t){const el=document.getElementById("save"); if(el)el.textConte
    Le raccourci iOS sert la page depuis son cache et GitHub Pages ne permet
    pas de fixer d'en-tête Cache-Control. On interroge donc version.txt hors
    cache : si le déploiement est plus récent que la page qui tourne, on
-   recharge avec un paramètre que le cache ne connaît pas. */
-let stale="";
-function ses(op,v){try{return op==="get"?sessionStorage.getItem(RKEY):op==="set"?sessionStorage.setItem(RKEY,v):sessionStorage.removeItem(RKEY);}catch(e){return null;}}
+   recharge avec un paramètre que le cache ne connaît pas.
+
+   En mode standalone, iOS reprend l'app depuis la mémoire au lieu de la
+   recharger : le script ne rejoue pas, donc vérifier au seul chargement ne
+   suffit pas. On revérifie à chaque retour au premier plan. */
+let stale="", lastCheck=0;
+function ses(op,v,k){const key=k||RKEY;try{return op==="get"?sessionStorage.getItem(key):op==="set"?sessionStorage.setItem(key,v):sessionStorage.removeItem(key);}catch(e){return null;}}
 function checkVersion(){
+  const now=Date.now();
+  if(now-lastCheck<60000)return;   /* pas plus d'une requête par minute */
+  lastCheck=now;
   const tried=ses("get");
   fetch("version.txt",{cache:"no-store"})
     .then(r=>r.ok?r.text():null)
@@ -271,10 +278,13 @@ function checkVersion(){
          On s'arrête là plutôt que de boucler, et on le signale. */
       if(tried===v){stale="Nouvelle version disponible — ferme puis rouvre le raccourci";setSave(stale);return;}
       ses("set",v);
+      ses("set",open||"",OKEY);   /* rouvrir le même jour après le rechargement */
       location.replace(location.pathname+"?v="+encodeURIComponent(v));
     })
     .catch(()=>{});
 }
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkVersion();});
+window.addEventListener("pageshow",e=>{if(e.persisted)checkVersion();});
 
 /* ---------------- Utilitaires ---------------- */
 const pad=n=>String(n).padStart(2,"0");
@@ -288,6 +298,8 @@ function units(day){const u=[];day.ss.forEach((s,i)=>{if(s.kind==="rest")return;
 
 const TODAY=todayKey();
 let open=PLAN.some(d=>d.d===TODAY)?TODAY:PLAN[0].d;
+/* Jour déplié avant un rechargement pour mise à jour : on le rouvre. */
+{const o=ses("get",null,OKEY); if(o!==null){open=o||null; ses("del",null,OKEY);}}
 
 /* ---------------- Rendu ---------------- */
 function bg(){
