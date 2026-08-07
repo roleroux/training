@@ -55,18 +55,16 @@ header{padding:26px 0 22px;border-bottom:1px solid var(--edge)}
 .eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:5px}
 h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;margin:0;letter-spacing:-.01em}
 h1 em{font-style:italic;font-weight:400;color:var(--depth)}
-.readout{display:flex;gap:30px;margin-top:16px;flex-wrap:wrap;justify-content:center;text-align:center}
-.ro-val{font-family:var(--mono);font-size:25px;font-weight:500;line-height:1}
 .ro-sub{color:var(--fog);font-size:14px}
-.ro-lab{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--fog);margin-top:6px}
 
-.prog{display:flex;gap:24px;justify-content:center;margin-top:20px}
+.prog{display:grid;grid-template-columns:repeat(2,auto);gap:16px 26px;justify-content:center;margin-top:20px}
+@media (min-width:600px){.prog{grid-template-columns:repeat(4,auto);gap:24px}}
 .gauge{display:flex;align-items:center;gap:8px}
 .ring{width:38px;height:38px;flex:0 0 38px;transform:rotate(-90deg)}
 .g-val{font-family:var(--mono);font-size:16px;font-weight:500;line-height:1;white-space:nowrap}
 .g-sub{color:var(--fog);font-size:11px}
 .g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
-@media (max-width:430px){.prog{gap:18px}.readout{gap:22px}}
+@media (max-width:430px){.prog{gap:14px 20px}}
 
 .phase{display:flex;align-items:baseline;gap:12px;margin:32px 0 12px}
 .phase-name{font-family:var(--serif);font-style:italic;font-size:19px}
@@ -151,7 +149,7 @@ input[type=number]:focus{outline:none;border-bottom-color:var(--brass)}
 <body>
 <svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
 <div class="wrap">
-  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><circle cx="100" cy="100" r="81.5" fill="none" stroke="#1E3E54" stroke-width="1.1"/><g stroke="#244A62" stroke-width="0.9" fill="none"><path d="M22 78 A 150 60 0 0 0 178 78"/><path d="M22 100 A 150 60 0 0 0 178 100"/><path d="M22 122 A 150 60 0 0 0 178 122"/></g><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9.5"><path d="M22 148 Q 42 140 54 132 T 82 116 L 92 110" stroke="#FFFFFF"/><path d="M92 110 Q 108 112 112 100 T 100 88 Q 92 88 88 92" stroke="#2EA896"/><path d="M88 92 Q 104 84 112 70 T 132 44" stroke="#FFFFFF"/></g><circle cx="22" cy="148" r="6.5" fill="#FFFFFF"/><circle cx="136" cy="40" r="14" fill="#0A2233" stroke="#E06A42" stroke-width="4.5"/><circle cx="136" cy="40" r="6" fill="#E06A42"/></svg><div class="brand-txt"><h1>East Coast <em>Training</em></h1><div class="eyebrow">Shelter Island → Acadia → New York</div></div></div><div class="prog" id="prog"></div></div><div class="readout" id="readout"></div></header>
+  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><circle cx="100" cy="100" r="81.5" fill="none" stroke="#1E3E54" stroke-width="1.1"/><g stroke="#244A62" stroke-width="0.9" fill="none"><path d="M22 78 A 150 60 0 0 0 178 78"/><path d="M22 100 A 150 60 0 0 0 178 100"/><path d="M22 122 A 150 60 0 0 0 178 122"/></g><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9.5"><path d="M22 148 Q 42 140 54 132 T 82 116 L 92 110" stroke="#FFFFFF"/><path d="M92 110 Q 108 112 112 100 T 100 88 Q 92 88 88 92" stroke="#2EA896"/><path d="M88 92 Q 104 84 112 70 T 132 44" stroke="#FFFFFF"/></g><circle cx="22" cy="148" r="6.5" fill="#FFFFFF"/><circle cx="136" cy="40" r="14" fill="#0A2233" stroke="#E06A42" stroke-width="4.5"/><circle cx="136" cy="40" r="6" fill="#E06A42"/></svg><div class="brand-txt"><h1>East Coast <em>Training</em></h1><div class="eyebrow">Shelter Island → Acadia → New York</div></div></div><div class="prog" id="prog"></div></div></header>
   <div class="route" id="route"><div class="line"></div><div class="track" id="track"></div></div>
   <section class="panel" id="panel"></section>
 </div>
@@ -233,12 +231,12 @@ swim:{t:"NATATION",c:"var(--k-swim)"},kayak:{t:"KAYAK",c:"var(--k-swim)"},
 rest:{t:"REPOS",c:"var(--k-rest)"}};
 
 const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
-const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1";
+const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END="2026-08-26";
 
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-06.6", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-06.7", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -324,8 +322,9 @@ function stats(){
       if(e.protein||e.alcohol!==""||e.vo2)logged++;
       if(e.vo2)vo2.push({k:day.d,v:parseFloat(e.vo2)});}
   });
-  const left=Math.max(0,Math.round((parse("2026-08-26")-parse(TODAY))/86400000));
-  return{done:done,total:total,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
+  const left=Math.max(0,Math.round((parse(END)-parse(TODAY))/86400000));
+  const span=Math.max(1,Math.round((parse(END)-parse(PLAN[0].d))/86400000));
+  return{done:done,total:total,span:span,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:km,drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
 }
 
 function vo2svg(v){
@@ -345,26 +344,35 @@ function vo2svg(v){
   return s;
 }
 
-function gauge(d,t,lab,col){
-  const C=2*Math.PI*19, on=t?(C*d/t):0;
-  return '<div class="gauge" title="'+d+' exercice'+(d>1?"s":"")+' tenu'+(d>1?"s":"")+' sur '+t+' — '+lab+'">'+
+/* frac : part remplie de l'anneau, 0 à 1. val/sub : ce qui s'affiche à côté. */
+function gauge(frac,val,sub,lab,col,title){
+  const C=2*Math.PI*19, on=C*Math.max(0,Math.min(1,frac||0));
+  return '<div class="gauge" title="'+esc(title)+'">'+
     '<svg class="ring" viewBox="0 0 44 44" aria-hidden="true">'+
       '<circle cx="22" cy="22" r="19" fill="none" style="stroke:var(--edge)" stroke-width="4"/>'+
       (on>0?'<circle cx="22" cy="22" r="19" fill="none" style="stroke:'+col+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+on.toFixed(2)+' '+(C-on).toFixed(2)+'"/>':'')+
     '</svg>'+
-    '<div><div class="g-val">'+(t?d+'<span class="g-sub">/'+t+'</span>':'<span class="g-sub">—</span>')+'</div>'+
+    '<div><div class="g-val">'+val+(sub?'<span class="g-sub">'+sub+'</span>':'')+'</div>'+
     '<div class="g-lab">'+lab+'</div></div></div>';
+}
+/* Jauge « tenus sur prévus ». t vaut 0 quand la date sort du plan. */
+function doneGauge(d,t,lab,col){
+  return gauge(t?d/t:0, t?d:'<span class="g-sub">—</span>', t?'/'+t:'', lab, col,
+    t? d+' sur '+t+' — '+lab : 'Rien de prévu — '+lab);
 }
 
 function render(){
   const st=stats();
+  const vLast=st.vo2.length?st.vo2[st.vo2.length-1].v:VO2_START;
   document.getElementById("prog").innerHTML=
-    gauge(st.dayDone,st.dayTotal,"du jour","var(--buoy)")+
-    gauge(st.done,st.total,"tout le plan","var(--depth)");
-
-  document.getElementById("readout").innerHTML=
-    '<div><div class="ro-val">'+st.left+'</div><div class="ro-lab">jours avant le retour</div></div>'+
-    '<div><div class="ro-val">'+(st.vo2.length?st.vo2[st.vo2.length-1].v.toFixed(0):VO2_START)+'<span class="ro-sub"> VO2max</span></div><div class="ro-lab">dernier relevé</div></div>';
+    doneGauge(st.dayDone,st.dayTotal,"du jour","var(--buoy)")+
+    doneGauge(st.done,st.total,"tout le plan","var(--depth)")+
+    /* Le séjour avance : l'anneau se remplit à mesure que les jours tombent. */
+    gauge((st.span-st.left)/st.span, st.left, ' j', 'avant le retour', 'var(--k-swim)',
+      st.left+' jours avant le retour, sur '+st.span)+
+    /* Progression de 42 (départ) vers 48 (référence d'il y a 3 mois). */
+    gauge((vLast-VO2_START)/(VO2_REF-VO2_START), vLast.toFixed(0), '/'+VO2_REF, 'VO2max', 'var(--brass)',
+      (st.vo2.length?'Dernier relevé '+vLast.toFixed(1):'Aucun relevé, valeur de départ '+VO2_START)+' — cible '+VO2_REF);
 
   const idx=PLAN.findIndex(d=>d.d===TODAY);
   document.getElementById("track").style.height=(idx<0?0:((idx+.5)/PLAN.length)*100)+"%";
