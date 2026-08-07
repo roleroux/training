@@ -189,9 +189,20 @@ const S=c=>({kind:"strength",label:CIRCUITS[c].name,circuit:c});
 const W=(l,c)=>({kind:"swim",label:l,cue:c});
 const K=(l,km,c)=>({kind:"kayak",label:l,km:km,cue:c});
 const Z=(l,c,v)=>({kind:"rest",label:l,cue:c,vo2:v?1:0});
+/* Séances importées du relevé : muscu libre et randonnée. La randonnée
+   porte sa distance dans le libellé pour ne pas entrer dans les
+   compteurs de km courus / pagayés. */
+const M=l=>({kind:"strength",label:l});
+const RD=l=>({kind:"hike",label:l,vo2:1});
 
 const PLAN=[
-{d:"2026-08-06",ph:0,bl:0,ss:[R("Course 80 min",null,"Faite ce matin. Coche-la et note la VO2max si la montre a produit un relevé."),W("Natation 60 min","En continu autant que possible. Si tu fatigues, alterne 200 m crawl / 100 m dos plutôt que de t'arrêter au mur.")]},
+/* ---- Réalisé, importé du relevé du 1er au 6 août (hist:1 = pas de bloc posture) ---- */
+{d:"2026-08-01",ph:0,bl:0,hist:1,ss:[K("Kayak 98 min",10.07),R("Course 38 min",6.02),W("Natation 31 min · 0.97 km")]},
+{d:"2026-08-02",ph:0,bl:0,hist:1,ss:[R("Course 84 min",12.01),K("Kayak 51 min",4.07),M("Musculation 30 min"),W("Natation 50 min · 2.02 km")]},
+{d:"2026-08-03",ph:0,bl:0,hist:1,ss:[RD("Randonnée 94 min · 12.02 km"),W("Natation 60 min · 2.19 km")]},
+{d:"2026-08-04",ph:0,bl:0,hist:1,ss:[K("Kayak 123 min",12.52),W("Natation 42 min · 1.51 km")]},
+{d:"2026-08-05",ph:0,bl:0,hist:1,ss:[K("Kayak 80 min",6.15),R("Course 60 min",9.03)]},
+{d:"2026-08-06",ph:0,bl:0,ss:[R("Course 36 min",5.27),R("Course 30 min",4.23),W("Natation 63 min · 2.44 km")]},
 {d:"2026-08-07",ph:0,bl:0,ss:[K("Kayak, rythme soutenu",16.2,"Fait en 2 h 35. Cadence haute, buste engagé — le kayak est du tirage, c'est ta séance de dos."),S("A"),W("Natation 30-45 min","Crawl en continu, pas de pause au mur.")]},
 {d:"2026-08-08",ph:0,bl:0,ss:[R("Course endurance",8,ENDU),S("B"),W("Natation 45-60 min","Alterne 200 m crawl / 100 m dos. Dernière grosse journée avant le rythme 1h30.")]},
 
@@ -217,7 +228,7 @@ const PLAN=[
 {d:"2026-08-25",ph:2,bl:2,ss:[R("Course facile",6,"Dernière sortie. Allure libre, pas de chrono.")]},
 {d:"2026-08-26",ph:3,bl:2,ss:[]}
 ];
-PLAN.forEach(d=>{if(d.ss.length)d.ss.push({kind:"posture",label:"Bloc posture",circuit:"P"})});
+PLAN.forEach(d=>{if(d.ss.length&&!d.hist)d.ss.push({kind:"posture",label:"Bloc posture",circuit:"P"})});
 
 const PHASES=[
 {l:"Shelter Island",s:"eau libre, kayak et natation"},
@@ -229,15 +240,15 @@ const KIND={
 run:{t:"COURSE",c:"var(--k-run)"},interval:{t:"FRACTIONNÉ",c:"var(--k-run)"},
 strength:{t:"FORCE",c:"var(--k-str)"},posture:{t:"POSTURE",c:"var(--k-pos)"},
 swim:{t:"NATATION",c:"var(--k-swim)"},kayak:{t:"KAYAK",c:"var(--k-swim)"},
-rest:{t:"REPOS",c:"var(--k-rest)"}};
+hike:{t:"RANDONNÉE",c:"var(--k-run)"},rest:{t:"REPOS",c:"var(--k-rest)"}};
 
 const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
-const PROTEIN=170, VO2_START=42, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END="2026-08-26";
+const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END="2026-08-26";
 
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-07.2", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-07.3", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -251,6 +262,24 @@ function save(){
   catch(e){memOnly=true; setSave("Enregistrement impossible");}
 }
 function setSave(t){const el=document.getElementById("save"); if(el)el.textContent=t;}
+
+/* Import du relevé réel du 1er au 6 août : au premier lancement de cette
+   version, chaque journée listée est cochée en entier et la VO2max du
+   jour est posée si le champ est vide. Le marqueur hist sur l'entrée
+   garantit un seul passage — décocher ensuite reste possible. */
+const HIST={"2026-08-01":"40.27","2026-08-02":"41.17","2026-08-03":"41.40","2026-08-04":"","2026-08-05":"41.95","2026-08-06":"41.77"};
+function seedHist(){
+  let ch=false;
+  PLAN.forEach(day=>{
+    if(!(day.d in HIST))return;
+    const e=entry(day.d);
+    if(e.hist)return;
+    units(day).forEach(k=>{e.done[k]=true;});
+    if(!e.vo2&&HIST[day.d])e.vo2=HIST[day.d];
+    e.hist=1; ch=true;
+  });
+  if(ch)save();
+}
 
 /* ---------------- Mise à jour du raccourci ----------------
    Le raccourci iOS sert la page depuis son cache et GitHub Pages ne permet
@@ -318,7 +347,7 @@ function stats(){
     if(day.d===TODAY){dayTotal=u.length;if(e)u.forEach(k=>{if(e.done[k])dayDone++;});}
     if(e)day.ss.forEach((s,i)=>{
       if(s.circuit){if(s.circuit!=="P"&&CIRCUITS[s.circuit].moves.every((_,j)=>e.done["s"+i+"e"+j]))strength++;}
-      else if(e.done["s"+i]&&s.km){if(s.kind==="kayak")paddled+=s.km;else km+=s.km;}});
+      else if(e.done["s"+i]&&s.km){if(s.kind==="kayak")paddled+=s.km;else if(s.kind==="run"||s.kind==="interval")km+=s.km;}});
     if(e){
       if(typeof e.alcohol==="number"){drinks+=e.alcohol;if(e.alcohol>0)drinkDays++;}
       if(e.protein)prot++;
@@ -338,7 +367,7 @@ function vo2svg(v){
   s+='<line x1="20" y1="'+y(VO2_REF)+'" x2="'+(Wd-20)+'" y2="'+y(VO2_REF)+'" class="gl-ref" stroke-dasharray="4 5"/>';
   s+='<text x="'+(Wd-20)+'" y="'+(y(VO2_REF)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">48 · il y a 3 mois</text>';
   s+='<line x1="20" y1="'+y(VO2_START)+'" x2="'+(Wd-20)+'" y2="'+y(VO2_START)+'" class="gl-start" stroke-dasharray="2 4"/>';
-  s+='<text x="'+(Wd-20)+'" y="'+(y(VO2_START)+13)+'" text-anchor="end" class="g-txt" font-size="10" font-family="monospace">42 · départ</text>';
+  s+='<text x="'+(Wd-20)+'" y="'+(y(VO2_START)+13)+'" text-anchor="end" class="g-txt" font-size="10" font-family="monospace">'+VO2_START+' · départ</text>';
   s+='<polyline points="'+v.map((e,i)=>X(i)+","+y(e.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
   v.forEach((e,i)=>{s+='<circle cx="'+X(i)+'" cy="'+y(e.v)+'" r="3.4" class="g-dot"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+fmt(e.k).num+'</text>';});
   s+='</svg>';
@@ -374,7 +403,7 @@ function render(){
     gauge((st.span-st.left)/st.span, st.left, ' j', 'avant le retour', 'var(--k-swim)',
       st.left+' jours avant le retour, sur '+st.span)+
     /* Progression de 42 (départ) vers 48 (référence d'il y a 3 mois). */
-    gauge((vLast-VO2_START)/(VO2_REF-VO2_START), vLast.toFixed(0), '/'+VO2_REF, 'VO2max', 'var(--brass)',
+    gauge((vLast-VO2_START)/(VO2_REF-VO2_START), String(parseFloat(vLast.toFixed(1))), '/'+VO2_REF, 'VO2max', 'var(--brass)',
       (st.vo2.length?'Dernier relevé '+vLast.toFixed(1):'Aucun relevé, valeur de départ '+VO2_START)+' — cible '+VO2_REF);
 
   const idx=PLAN.findIndex(d=>d.d===TODAY);
@@ -387,7 +416,7 @@ function render(){
       isT=day.d===TODAY,isO=open===day.d;
     if(day.ph!==lastPh){lastPh=day.ph;
       html+='<div class="phase" style="margin-left:-34px"><span class="phase-name">'+PHASES[day.ph].l+'</span><span class="phase-sub">'+PHASES[day.ph].s+'</span><span class="rule"></span></div>';}
-    const sum=day.ss.length?day.ss.filter(s=>s.circuit!=="P").map(s=>s.km?s.km+" km":(s.circuit?"circuit "+s.circuit:KIND[s.kind].t.toLowerCase())).join(" · ")+" · posture":"Vol retour";
+    const sum=day.ss.length?day.ss.map(s=>s.circuit==="P"?"posture":s.km?s.km+" km":(s.circuit?"circuit "+s.circuit:KIND[s.kind].t.toLowerCase())).join(" · "):"Vol retour";
 
     html+='<div class="day"><span class="node '+(isT?"now":full?"done":"")+'"></span><div class="card '+(isT?"now":"")+'">'+
       '<button class="card-head" data-open="'+day.d+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span><span class="sum">'+sum+'</span>'+
@@ -465,7 +494,7 @@ document.addEventListener("change",ev=>{
   const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();
 });
 
-bg();load();render();checkVersion();
+bg();load();seedHist();render();checkVersion();
 </script>
 </body>
 </html>
