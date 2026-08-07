@@ -52,11 +52,22 @@ button{user-select:none;-webkit-user-select:none;touch-action:manipulation}
    sinon le contenu défilerait dans les 18 px laissés de chaque côté. */
 header{
   position:sticky;top:0;z-index:5;
-  margin:0 -18px;padding:calc(24px + env(safe-area-inset-top)) 18px 18px;
+  margin:0 -18px;padding:calc(12px + env(safe-area-inset-top)) 18px 16px;
   border-bottom:1px solid var(--edge);
   background:var(--veil);
   -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+  transition:padding .18s ease;
 }
+/* Au défilement, le header se resserre : le bandeau de route disparaît,
+   le logo et le titre rétrécissent, les jauges remontent vers le logo. */
+header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:10px}
+.mark,h1,.eyebrow,.prog,.ring,.g-val{transition:all .18s ease}
+.compact .mark{flex-basis:40px;width:40px;height:40px}
+.compact h1{font-size:22px}
+.compact .eyebrow{max-height:0;opacity:0;margin-top:0}
+.compact .prog{margin-top:10px;gap:9px 22px}
+.compact .ring{width:31px;height:31px;flex-basis:31px}
+.compact .g-val{font-size:14px}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
   header{background:var(--paper)}
 }
@@ -64,7 +75,7 @@ header{
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
-.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:5px}
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:5px;max-height:22px;overflow:hidden}
 h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;margin:0;letter-spacing:-.01em}
 h1 em{font-style:italic;font-weight:400;color:var(--depth)}
 .ro-sub{color:var(--fog);font-size:14px}
@@ -260,7 +271,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-07.5", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-07.6", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -323,6 +334,15 @@ function checkVersion(){
     })
     .catch(()=>{});
 }
+/* Header compact au défilement. Les deux seuils évitent que la page,
+   raccourcie par le header qui rétrécit, ne repasse sous le seuil et
+   fasse osciller l'état. */
+addEventListener("scroll",()=>{
+  const h=document.querySelector("header"), on=h.classList.contains("compact");
+  if(!on&&scrollY>56)h.classList.add("compact");
+  else if(on&&scrollY<20)h.classList.remove("compact");
+},{passive:true});
+
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkVersion();});
 window.addEventListener("pageshow",e=>{if(e.persisted)checkVersion();});
 
