@@ -186,23 +186,23 @@ const FRAC="15 min d'échauffement, puis 8 × (1 min rapide / 1 min de marche), 
 const R=(l,km,c)=>({kind:"run",label:l,km:km,cue:c,vo2:1});
 const I=(l,c)=>({kind:"interval",label:l,cue:c,vo2:1});
 const S=c=>({kind:"strength",label:CIRCUITS[c].name,circuit:c});
-const W=(l,c)=>({kind:"swim",label:l,cue:c});
+const W=(l,c,km)=>({kind:"swim",label:l,cue:c,km:km});
 const K=(l,km,c)=>({kind:"kayak",label:l,km:km,cue:c});
 const Z=(l,c,v)=>({kind:"rest",label:l,cue:c,vo2:v?1:0});
 /* Séances importées du relevé : muscu libre et randonnée. La randonnée
-   porte sa distance dans le libellé pour ne pas entrer dans les
-   compteurs de km courus / pagayés. */
+   du 3 alternait course et marche rapide, ses kilomètres comptent donc
+   avec ceux de la course. */
 const M=l=>({kind:"strength",label:l});
-const RD=l=>({kind:"hike",label:l,vo2:1});
+const RD=(l,km,c)=>({kind:"hike",label:l,km:km,cue:c,vo2:1});
 
 const PLAN=[
 /* ---- Réalisé, importé du relevé du 1er au 6 août (hist:1 = pas de bloc posture) ---- */
-{d:"2026-08-01",ph:0,bl:0,hist:1,ss:[K("Kayak 98 min",10.07),R("Course 38 min",6.02),W("Natation 31 min · 0.97 km")]},
-{d:"2026-08-02",ph:0,bl:0,hist:1,ss:[R("Course 84 min",12.01),K("Kayak 51 min",4.07),M("Musculation 30 min"),W("Natation 50 min · 2.02 km")]},
-{d:"2026-08-03",ph:0,bl:0,hist:1,ss:[RD("Randonnée 94 min · 12.02 km"),W("Natation 60 min · 2.19 km")]},
-{d:"2026-08-04",ph:0,bl:0,hist:1,ss:[K("Kayak 123 min",12.52),W("Natation 42 min · 1.51 km")]},
+{d:"2026-08-01",ph:0,bl:0,hist:1,ss:[K("Kayak 98 min",10.07),R("Course 38 min",6.02),W("Natation 31 min",null,0.97)]},
+{d:"2026-08-02",ph:0,bl:0,hist:1,ss:[R("Course 84 min",12.01),K("Kayak 51 min",4.07),M("Musculation 30 min"),W("Natation 50 min",null,2.02)]},
+{d:"2026-08-03",ph:0,bl:0,hist:1,ss:[RD("Randonnée 94 min",12.02,"Alternance course et marche rapide — allure de course, comptée dans les kilomètres courus."),W("Natation 60 min",null,2.19)]},
+{d:"2026-08-04",ph:0,bl:0,hist:1,ss:[K("Kayak 123 min",12.52),W("Natation 42 min",null,1.51)]},
 {d:"2026-08-05",ph:0,bl:0,hist:1,ss:[K("Kayak 80 min",6.15),R("Course 60 min",9.03)]},
-{d:"2026-08-06",ph:0,bl:0,ss:[R("Course 36 min",5.27),R("Course 30 min",4.23),W("Natation 63 min · 2.44 km")]},
+{d:"2026-08-06",ph:0,bl:0,ss:[R("Course 36 min",5.27),R("Course 30 min",4.23),W("Natation 63 min",null,2.44)]},
 {d:"2026-08-07",ph:0,bl:0,ss:[K("Kayak, rythme soutenu",16.2,"Fait en 2 h 35. Cadence haute, buste engagé — le kayak est du tirage, c'est ta séance de dos."),S("A"),W("Natation 30-45 min","Crawl en continu, pas de pause au mur.")]},
 {d:"2026-08-08",ph:0,bl:0,ss:[R("Course endurance",8,ENDU),S("B"),W("Natation 45-60 min","Alterne 200 m crawl / 100 m dos. Dernière grosse journée avant le rythme 1h30.")]},
 
@@ -248,7 +248,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-07.3", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-07.4", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -339,7 +339,7 @@ function bg(){
 }
 
 function stats(){
-  let done=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,paddled=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
+  let done=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,paddled=0,swum=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
   PLAN.forEach(day=>{
     const e=log[day.d],u=units(day);
     total+=u.length;
@@ -347,7 +347,8 @@ function stats(){
     if(day.d===TODAY){dayTotal=u.length;if(e)u.forEach(k=>{if(e.done[k])dayDone++;});}
     if(e)day.ss.forEach((s,i)=>{
       if(s.circuit){if(s.circuit!=="P"&&CIRCUITS[s.circuit].moves.every((_,j)=>e.done["s"+i+"e"+j]))strength++;}
-      else if(e.done["s"+i]&&s.km){if(s.kind==="kayak")paddled+=s.km;else if(s.kind==="run"||s.kind==="interval")km+=s.km;}});
+      /* La randonnée du 3 était courue : elle rejoint les kilomètres courus. */
+      else if(e.done["s"+i]&&s.km){if(s.kind==="kayak")paddled+=s.km;else if(s.kind==="swim")swum+=s.km;else km+=s.km;}});
     if(e){
       if(typeof e.alcohol==="number"){drinks+=e.alcohol;if(e.alcohol>0)drinkDays++;}
       if(e.protein)prot++;
@@ -356,7 +357,7 @@ function stats(){
   });
   const left=Math.max(0,Math.round((parse(END)-parse(TODAY))/86400000));
   const span=Math.max(1,Math.round((parse(END)-parse(PLAN[0].d))/86400000));
-  return{done:done,total:total,span:span,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:r1(km),paddled:r1(paddled),drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
+  return{done:done,total:total,span:span,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:r1(km),paddled:r1(paddled),swum:r1(swum),drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
 }
 
 function vo2svg(v){
@@ -416,7 +417,9 @@ function render(){
       isT=day.d===TODAY,isO=open===day.d;
     if(day.ph!==lastPh){lastPh=day.ph;
       html+='<div class="phase" style="margin-left:-34px"><span class="phase-name">'+PHASES[day.ph].l+'</span><span class="phase-sub">'+PHASES[day.ph].s+'</span><span class="rule"></span></div>';}
-    const sum=day.ss.length?day.ss.map(s=>s.circuit==="P"?"posture":s.km?s.km+" km":(s.circuit?"circuit "+s.circuit:KIND[s.kind].t.toLowerCase())).join(" · "):"Vol retour";
+    /* La natation garde son nom plutôt que sa distance : trois nombres
+       à la suite sur une même ligne ne se distinguent plus. */
+    const sum=day.ss.length?day.ss.map(s=>s.circuit==="P"?"posture":(s.km&&s.kind!=="swim")?s.km+" km":(s.circuit?"circuit "+s.circuit:KIND[s.kind].t.toLowerCase())).join(" · "):"Vol retour";
 
     html+='<div class="day"><span class="node '+(isT?"now":full?"done":"")+'"></span><div class="card '+(isT?"now":"")+'">'+
       '<button class="card-head" data-open="'+day.d+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span><span class="sum">'+sum+'</span>'+
@@ -460,6 +463,7 @@ function render(){
     '<div class="cell"><div class="cell-v '+(st.strength>=4?"ok":"")+'">'+st.strength+'</div><div class="cell-l">Circuits complets<br>cible 4 / semaine</div></div>'+
     '<div class="cell"><div class="cell-v">'+st.km+'</div><div class="cell-l">Kilomètres courus<br>plafond 12 km / sortie</div></div>'+
     '<div class="cell"><div class="cell-v">'+st.paddled+'</div><div class="cell-l">Kilomètres pagayés<br>kayak, pas de plafond</div></div>'+
+    '<div class="cell"><div class="cell-v">'+st.swum+'</div><div class="cell-l">Kilomètres nagés<br>natation, pas de plafond</div></div>'+
     '<div class="cell"><div class="cell-v '+(st.drinks>DRINK_CAP?"warn":"")+'">'+st.drinks+'<span class="ro-sub" style="font-size:13px"> / '+st.drinkDays+' soirs</span></div><div class="cell-l">Verres cumulés<br>plafond '+DRINK_CAP+' sur le séjour</div></div>'+
     '<div class="cell"><div class="cell-v '+(st.logged>0&&st.prot>=st.logged?"ok":"")+'">'+st.prot+'</div><div class="cell-l">Jours à '+PROTEIN+' g de protéines<br>sur '+st.logged+' jours notés</div></div>'+
     '</div><div class="graph">'+vo2svg(st.vo2)+'</div>'+
