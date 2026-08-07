@@ -18,7 +18,7 @@
   --paper:#FFFFFF;--surface:#FFFFFF;--tint:#F7FAFB;--edge:#D6DFE4;
   --ink:#0A2233;--fog:#5E7180;
   --buoy:#C24A2C;--depth:#1E7F72;--brass:#8A6E1B;
-  --wave:#DCE6EB;--chart-grid:#C7D4DA;--press:rgba(10,34,51,.05);
+  --wave:#DCE6EB;--chart-grid:#C7D4DA;--press:rgba(10,34,51,.05);--veil:rgba(255,255,255,.82);
   --k-run:#C24A2C;--k-str:#1E7F72;--k-pos:#8A6E1B;--k-swim:#3E7FA3;--k-rest:#5E7180;
   --shadow:0 1px 2px rgba(10,34,51,.04),0 5px 16px rgba(10,34,51,.05);
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
@@ -29,14 +29,15 @@
   --paper:#0B151E;--surface:#121F2B;--tint:#1A2A39;--edge:#263B4D;
   --ink:#E9EFF4;--fog:#8FA5B5;
   --buoy:#E8764F;--depth:#3AA893;--brass:#CBA84C;
-  --wave:#152230;--chart-grid:#2A4054;--press:rgba(255,255,255,.06);
+  --wave:#152230;--chart-grid:#2A4054;--press:rgba(255,255,255,.06);--veil:rgba(11,21,30,.82);
   --k-run:#E8764F;--k-str:#3AA893;--k-pos:#CBA84C;--k-swim:#6FB0D6;--k-rest:#8296A6;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
 }}
 html,body{margin:0;background:var(--paper)}
 body{
   color:var(--ink);font-family:var(--sans);
-  padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 70px) env(safe-area-inset-left);
+  /* La marge haute passe au header, qui est collant et doit couvrir l'encoche. */
+  padding:0 env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 70px) env(safe-area-inset-left);
   -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
 }
 .wrap{max-width:640px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
@@ -47,7 +48,18 @@ button{user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .box,.pill,.tool{transition:transform .08s ease,background-color .12s ease,border-color .12s ease}
 .box:active,.pill:active,.tool:active{transform:scale(.93)}
 
-header{padding:26px 0 22px;border-bottom:1px solid var(--edge)}
+/* Header figé : marges négatives pour couvrir les gouttières de .wrap,
+   sinon le contenu défilerait dans les 18 px laissés de chaque côté. */
+header{
+  position:sticky;top:0;z-index:5;
+  margin:0 -18px;padding:calc(24px + env(safe-area-inset-top)) 18px 18px;
+  border-bottom:1px solid var(--edge);
+  background:var(--veil);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  header{background:var(--paper)}
+}
 .hdr-top{display:block}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
@@ -248,7 +260,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-07.4", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-07.5", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
