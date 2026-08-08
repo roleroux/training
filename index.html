@@ -232,11 +232,11 @@ const PLAN=[
 {d:"2026-08-07",ph:0,bl:0,ss:[K("Kayak, rythme soutenu",16.2,"Fait en 2 h 35. Cadence haute, buste engagé — le kayak est du tirage, c'est ta séance de dos."),S("A"),W("Natation 30 min",null,1.25)]},
 {d:"2026-08-08",ph:0,bl:0,ss:[R("Course endurance",8,ENDU),S("A","Circuit B impossible : élastiques non encore acquis. Circuit A à la place."),W("Natation 45-60 min","Alterne 200 m crawl / 100 m dos. Dernière grosse journée avant le rythme 1h30.")]},
 
-{d:"2026-08-09",ph:1,bl:0,ss:[Z("Repos — journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches.")]},
+{d:"2026-08-09",ph:1,bl:0,ss:[Z("Journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches."),I("Fractionné 8 × 1 min","Le soir à l'arrivée à Shady Knoll. "+FRAC)]},
 {d:"2026-08-10",ph:1,bl:0,ss:[R("Cape Cod Rail Trail",9,"Accès à 800 m du camping. Piste plate, goudronnée, ombragée, sans croisement routier. Allure conversationnelle."),S("A")]},
 {d:"2026-08-11",ph:1,bl:0,ss:[V("Vélo — Cape Cod Rail Trail","1h à 1h30. Location au 302 Underpass Road, à 1,5 km du camping : réserver la veille. Aller-retour vers Orleans ou Wellfleet. Reportable au 12."),S("B")]},
 {d:"2026-08-12",ph:1,bl:0,ss:[R("Course courte",6,ENDU),S("B"),S("A")]},
-{d:"2026-08-13",ph:1,bl:0,ss:[Z("Repos — journée de route","Cape Cod → Acadia, environ 7h. Marche de 45 min à l'arrivée si tu veux une mesure VO2max propre.",1)]},
+{d:"2026-08-13",ph:1,bl:0,ss:[Z("Journée de route","Cape Cod → Acadia, environ 7h."),I("Fractionné 8 × 1 min","Le soir à l'arrivée à Acadia, à la place de la marche — il fournit la même mesure VO2max. "+FRAC)]},
 
 {d:"2026-08-14",ph:1,bl:1,ss:[R("Ocean Path",9,"Départ à pied du camping, sentier plat au bord de l'océan. Allure conversationnelle."),S("A")]},
 {d:"2026-08-15",ph:1,bl:1,ss:[RD("Cadillac South Ridge — 11 km, 350 m D+",null,"Départ direct du camping, aller-retour. Format long, dénivelé, faible impact. Elle remplace la course, n'ajoute rien d'autre."),S("B")]},
@@ -274,7 +274,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-08.1", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-08.2", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -502,7 +502,7 @@ function render(){
     '<div class="cell"><div class="cell-v '+(st.drinks>DRINK_CAP?"warn":"")+'">'+st.drinks+'<span class="ro-sub" style="font-size:13px"> / '+st.drinkDays+' soirs</span></div><div class="cell-l">Verres cumulés<br>plafond '+DRINK_CAP+' sur le séjour</div></div>'+
     '<div class="cell"><div class="cell-v '+(st.logged>0&&st.prot>=st.logged?"ok":"")+'">'+st.prot+'</div><div class="cell-l">Jours à '+PROTEIN+' g de protéines<br>sur '+st.logged+' jours notés</div></div>'+
     '</div><div class="graph">'+vo2svg(st.vo2)+'</div>'+
-    '<p class="foot">Jour serré, 45 min seulement : circuit du jour + bloc posture, la course saute. Jour de longue route : repos complet, le circuit ne se rattrape pas. Douleur au tendon d\'Achille ou au tibia : la course s\'arrête, les circuits continuent. Matériel : le circuit B et le pull-apart demandent élastiques et sangle d\'ancrage, non encore acquis — sans eux, seuls tractions et squat du B sont réalisables.</p>'+
+    '<p class="foot">Jour serré, 45 min seulement : circuit du jour + bloc posture, la course saute. Jour de longue route : pas de circuit, il ne se rattrape pas — au mieux un fractionné le soir à l\'arrivée. Douleur au tendon d\'Achille ou au tibia : la course s\'arrête, les circuits continuent. Matériel : le circuit B et le pull-apart demandent élastiques et sangle d\'ancrage, non encore acquis — sans eux, seuls tractions et squat du B sont réalisables.</p>'+
     '<div class="tools"><button class="tool" id="exp">Exporter</button><button class="tool" id="imp">Importer</button></div>'+
     '<div class="save" id="save"></div>';
   setSave(stale||(memOnly?"Stockage indisponible":"Enregistré"));
