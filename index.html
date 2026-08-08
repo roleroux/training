@@ -208,15 +208,18 @@ const ENDU="Allure conversationnelle : tu dois pouvoir dire une phrase entière 
 const FRAC="15 min d'échauffement, puis 8 × (1 min rapide / 1 min de marche), puis 10 min de retour au calme.";
 const R=(l,km,c)=>({kind:"run",label:l,km:km,cue:c,vo2:1});
 const I=(l,c)=>({kind:"interval",label:l,cue:c,vo2:1});
-const S=c=>({kind:"strength",label:CIRCUITS[c].name,circuit:c});
+const S=(c,cue)=>({kind:"strength",label:CIRCUITS[c].name,circuit:c,cue:cue});
 const W=(l,c,km)=>({kind:"swim",label:l,cue:c,km:km});
 const K=(l,km,c)=>({kind:"kayak",label:l,km:km,cue:c});
 const Z=(l,c,v)=>({kind:"rest",label:l,cue:c,vo2:v?1:0});
-/* Séances importées du relevé : muscu libre et randonnée. La randonnée
-   du 3 alternait course et marche rapide, ses kilomètres comptent donc
-   avec ceux de la course. */
+/* Muscu libre, randonnée, vélo. Convention distances : seul un champ km
+   entre dans les compteurs du Bilan (course pour tout sauf kayak et
+   natation). Une randonnée ou un vélo dont la distance ne doit PAS
+   compter la porte dans son libellé — la rando du 3, courue, est la
+   seule à garder un champ km. */
 const M=l=>({kind:"strength",label:l});
 const RD=(l,km,c)=>({kind:"hike",label:l,km:km,cue:c,vo2:1});
+const V=(l,c)=>({kind:"bike",label:l,cue:c});
 
 const PLAN=[
 /* ---- Réalisé, importé du relevé du 1er au 6 août (hist:1 = pas de bloc posture) ---- */
@@ -227,26 +230,26 @@ const PLAN=[
 {d:"2026-08-05",ph:0,bl:0,hist:1,ss:[K("Kayak 80 min",6.15),R("Course 60 min",9.03)]},
 {d:"2026-08-06",ph:0,bl:0,ss:[R("Course 36 min",5.27),R("Course 30 min",4.23),W("Natation 63 min",null,2.44)]},
 {d:"2026-08-07",ph:0,bl:0,ss:[K("Kayak, rythme soutenu",16.2,"Fait en 2 h 35. Cadence haute, buste engagé — le kayak est du tirage, c'est ta séance de dos."),S("A"),W("Natation 30 min",null,1.25)]},
-{d:"2026-08-08",ph:0,bl:0,ss:[R("Course endurance",8,ENDU),S("B"),W("Natation 45-60 min","Alterne 200 m crawl / 100 m dos. Dernière grosse journée avant le rythme 1h30.")]},
+{d:"2026-08-08",ph:0,bl:0,ss:[R("Course endurance",8,ENDU),S("A","Circuit B impossible : élastiques non encore acquis. Circuit A à la place."),W("Natation 45-60 min","Alterne 200 m crawl / 100 m dos. Dernière grosse journée avant le rythme 1h30.")]},
 
-{d:"2026-08-09",ph:1,bl:0,ss:[Z("Repos — journée de route","Transfert vers le camping-car. Rien à faire, sinon marcher 15 min à chaque arrêt pour décoincer les hanches.")]},
-{d:"2026-08-10",ph:1,bl:0,ss:[R("Course endurance",9,ENDU),S("A")]},
-{d:"2026-08-11",ph:1,bl:0,ss:[I("Fractionné 8 × 1 min",FRAC),S("B")]},
+{d:"2026-08-09",ph:1,bl:0,ss:[Z("Repos — journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches.")]},
+{d:"2026-08-10",ph:1,bl:0,ss:[R("Cape Cod Rail Trail",9,"Accès à 800 m du camping. Piste plate, goudronnée, ombragée, sans croisement routier. Allure conversationnelle."),S("A")]},
+{d:"2026-08-11",ph:1,bl:0,ss:[V("Vélo — Cape Cod Rail Trail","1h à 1h30. Location au 302 Underpass Road, à 1,5 km du camping : réserver la veille. Aller-retour vers Orleans ou Wellfleet. Reportable au 12."),S("B")]},
 {d:"2026-08-12",ph:1,bl:0,ss:[R("Course courte",6,ENDU),S("B"),S("A")]},
-{d:"2026-08-13",ph:1,bl:0,ss:[Z("Repos ou marche facile","Marche 45 min minimum en extérieur si tu veux une mesure VO2max propre.",1)]},
+{d:"2026-08-13",ph:1,bl:0,ss:[Z("Repos — journée de route","Cape Cod → Acadia, environ 7h. Marche de 45 min à l'arrivée si tu veux une mesure VO2max propre.",1)]},
 
-{d:"2026-08-14",ph:1,bl:1,ss:[R("Course endurance",9,ENDU),S("A")]},
-{d:"2026-08-15",ph:1,bl:1,ss:[I("Fractionné 8 × 1 min",FRAC),S("B")]},
-{d:"2026-08-16",ph:1,bl:1,ss:[Z("Repos — journée de route","Longue étape. Circuit reporté à lundi, ne rattrape rien.")]},
+{d:"2026-08-14",ph:1,bl:1,ss:[R("Ocean Path",9,"Départ à pied du camping, sentier plat au bord de l'océan. Allure conversationnelle."),S("A")]},
+{d:"2026-08-15",ph:1,bl:1,ss:[RD("Cadillac South Ridge — 11 km, 350 m D+",null,"Départ direct du camping, aller-retour. Format long, dénivelé, faible impact. Elle remplace la course, n'ajoute rien d'autre."),S("B")]},
+{d:"2026-08-16",ph:1,bl:1,ss:[R("Carriage roads",8,"Chemins gravier fermés aux voitures, 72 km de réseau. Surface souple, moins traumatisante que le goudron. Navette Island Explorer gratuite depuis le camping."),S("A")]},
 {d:"2026-08-17",ph:1,bl:1,ss:[R("Course courte",6,ENDU),S("B"),S("A")]},
 
 {d:"2026-08-18",ph:1,bl:1,ss:[R("Course endurance",9,ENDU),S("A")]},
 {d:"2026-08-19",ph:1,bl:1,ss:[I("Fractionné 8 × 1 min",FRAC),S("B")]},
-{d:"2026-08-20",ph:1,bl:1,ss:[Z("Repos ou randonnée","Randonnée à Acadia : elle remplace la course, n'ajoute rien d'autre.",1)]},
+{d:"2026-08-20",ph:1,bl:1,ss:[Z("Repos — restitution et transfert","Camping-car rendu à Bay Shore à mi-journée, puis LIRR et métro vers Greenwich Village.")]},
 
-{d:"2026-08-21",ph:2,bl:2,ss:[R("Hudson River Greenway",8,ENDU),S("A")]},
-{d:"2026-08-22",ph:2,bl:2,ss:[Z("Repos actif — marche urbaine","Tu feras 15 000 pas sans y penser. Garde le GPS actif sur une marche de 30 min pour la mesure.",1),S("B")]},
-{d:"2026-08-23",ph:2,bl:2,ss:[R("Boucle complète de Central Park",10,ENDU),S("A")]},
+{d:"2026-08-21",ph:2,bl:2,ss:[R("Hudson River Greenway",10,"1,5 km plein ouest depuis l'appartement. Boucle vers Battery Park et retour : 10 km sans un feu rouge. Allure conversationnelle."),S("A")]},
+{d:"2026-08-22",ph:2,bl:2,ss:[Z("Repos actif — marche urbaine","15 000 pas sans y penser. Garde le GPS actif sur une marche de 30 min pour la mesure.",1),S("B")]},
+{d:"2026-08-23",ph:2,bl:2,ss:[R("Boucle complète de Central Park",10,"Central Park est à 4 km au nord : compte le métro à l'aller et au retour. Allure conversationnelle."),S("A")]},
 {d:"2026-08-24",ph:2,bl:2,ss:[I("Fractionné 25 min","10 min d'échauffement, 6 × (90 s rapide / 90 s marche), 5 min de retour au calme."),S("B")]},
 {d:"2026-08-25",ph:2,bl:2,ss:[R("Course facile",6,"Dernière sortie. Allure libre, pas de chrono.")]},
 {d:"2026-08-26",ph:3,bl:2,ss:[]}
@@ -255,7 +258,7 @@ PLAN.forEach(d=>{if(d.ss.length&&!d.hist)d.ss.push({kind:"posture",label:"Bloc p
 
 const PHASES=[
 {l:"Shelter Island",s:"eau libre, kayak et natation"},
-{l:"Camping-car",s:"Cape Cod, Boston, Acadia — rythme 1h30"},
+{l:"Camping-car",s:"Cape Cod puis Acadia — rythme 1h30"},
 {l:"New York",s:"course en ville, marche permanente"},
 {l:"Retour",s:""}];
 
@@ -263,7 +266,7 @@ const KIND={
 run:{t:"COURSE",c:"var(--k-run)"},interval:{t:"FRACTIONNÉ",c:"var(--k-run)"},
 strength:{t:"FORCE",c:"var(--k-str)"},posture:{t:"POSTURE",c:"var(--k-pos)"},
 swim:{t:"NATATION",c:"var(--k-swim)"},kayak:{t:"KAYAK",c:"var(--k-swim)"},
-hike:{t:"RANDONNÉE",c:"var(--k-run)"},rest:{t:"REPOS",c:"var(--k-rest)"}};
+hike:{t:"RANDONNÉE",c:"var(--k-run)"},bike:{t:"VÉLO",c:"var(--k-swim)"},rest:{t:"REPOS",c:"var(--k-rest)"}};
 
 const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
 const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END="2026-08-26";
@@ -271,7 +274,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-07.7", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-08.1", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -499,7 +502,7 @@ function render(){
     '<div class="cell"><div class="cell-v '+(st.drinks>DRINK_CAP?"warn":"")+'">'+st.drinks+'<span class="ro-sub" style="font-size:13px"> / '+st.drinkDays+' soirs</span></div><div class="cell-l">Verres cumulés<br>plafond '+DRINK_CAP+' sur le séjour</div></div>'+
     '<div class="cell"><div class="cell-v '+(st.logged>0&&st.prot>=st.logged?"ok":"")+'">'+st.prot+'</div><div class="cell-l">Jours à '+PROTEIN+' g de protéines<br>sur '+st.logged+' jours notés</div></div>'+
     '</div><div class="graph">'+vo2svg(st.vo2)+'</div>'+
-    '<p class="foot">Jour serré, 45 min seulement : circuit du jour + bloc posture, la course saute. Le circuit protège le muscle en déficit, la course est remplaçable. Douleur au tendon d\'Achille ou au tibia : la course s\'arrête, les circuits continuent.</p>'+
+    '<p class="foot">Jour serré, 45 min seulement : circuit du jour + bloc posture, la course saute. Jour de longue route : repos complet, le circuit ne se rattrape pas. Douleur au tendon d\'Achille ou au tibia : la course s\'arrête, les circuits continuent. Matériel : le circuit B et le pull-apart demandent élastiques et sangle d\'ancrage, non encore acquis — sans eux, seuls tractions et squat du B sont réalisables.</p>'+
     '<div class="tools"><button class="tool" id="exp">Exporter</button><button class="tool" id="imp">Importer</button></div>'+
     '<div class="save" id="save"></div>';
   setSave(stale||(memOnly?"Stockage indisponible":"Enregistré"));
