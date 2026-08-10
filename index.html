@@ -207,7 +207,7 @@ P:{name:"Bloc posture — 6 min",tours:["1 tour","1 tour","1 tour"],rest:"tous l
 const ENDU="Allure conversationnelle : tu dois pouvoir dire une phrase entière sans couper. Si tu ne peux pas, ralentis.";
 const FRAC="15 min d'échauffement, puis 8 × (1 min rapide / 1 min de marche), puis 10 min de retour au calme.";
 const R=(l,km,c)=>({kind:"run",label:l,km:km,cue:c,vo2:1});
-const I=(l,c)=>({kind:"interval",label:l,cue:c,vo2:1});
+const I=(l,c,km)=>({kind:"interval",label:l,cue:c,km:km,vo2:1});
 const S=(c,cue)=>({kind:"strength",label:CIRCUITS[c].name,circuit:c,cue:cue});
 const W=(l,c,km)=>({kind:"swim",label:l,cue:c,km:km});
 const K=(l,km,c)=>({kind:"kayak",label:l,km:km,cue:c});
@@ -232,7 +232,7 @@ const PLAN=[
 {d:"2026-08-07",ph:0,bl:0,ss:[K("Kayak, rythme soutenu",16.2,"Fait en 2 h 35. Cadence haute, buste engagé — le kayak est du tirage, c'est ta séance de dos."),S("A"),W("Natation 30 min",null,1.25)]},
 {d:"2026-08-08",ph:0,bl:0,ss:[R("Course 51 min",8.01,"Faite au matin, allure moyenne 6 min 19 s / km. Nouveau plus haut de la période sur la VO2max."),S("A","Circuit B impossible : élastiques non encore acquis. Circuit A à la place."),W("Natation 30 min",null,1.08)]},
 
-{d:"2026-08-09",ph:1,bl:0,ss:[Z("Journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches."),I("Fractionné 8 × 1 min","Le soir à l'arrivée à Shady Knoll. "+FRAC)]},
+{d:"2026-08-09",ph:1,bl:0,ss:[Z("Journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches."),I("Fractionné 38 min","Fait le soir à l'arrivée à Shady Knoll. Allure moyenne 7 min 16 s / km, récupérations comprises. Nouveau plus haut de la période sur la VO2max.",5.17)]},
 {d:"2026-08-10",ph:1,bl:0,ss:[R("Cape Cod Rail Trail",9,"Accès à 800 m du camping. Piste plate, goudronnée, ombragée, sans croisement routier. Allure conversationnelle."),S("A")]},
 {d:"2026-08-11",ph:1,bl:0,ss:[V("Vélo — Cape Cod Rail Trail","1h à 1h30. Location au 302 Underpass Road, à 1,5 km du camping : réserver la veille. Aller-retour vers Orleans ou Wellfleet. Reportable au 12."),S("B")]},
 {d:"2026-08-12",ph:1,bl:0,ss:[R("Course courte",6,ENDU),S("B"),S("A")]},
@@ -274,7 +274,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-08.4", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-10.1", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -297,7 +297,7 @@ const HIST={"2026-08-01":"40.27","2026-08-02":"41.17","2026-08-03":"41.40","2026
 /* Relevés de journées encore en cours : la valeur est posée si le champ
    est vide, mais la journée n'est PAS cochée — ses autres séances ne
    sont pas forcément faites. */
-const VO2_SEED={"2026-08-08":"42.23"};
+const VO2_SEED={"2026-08-08":"42.23","2026-08-09":"42.91"};
 function seedHist(){
   let ch=false;
   PLAN.forEach(day=>{
