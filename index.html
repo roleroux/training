@@ -218,14 +218,16 @@ const Z=(l,c,v)=>({kind:"rest",label:l,cue:c,vo2:v?1:0});
    compter la porte dans son libellé — la rando du 3, courue, est la
    seule à garder un champ km. */
 const M=l=>({kind:"strength",label:l});
-const RD=(l,km,c)=>({kind:"hike",label:l,km:km,cue:c,vo2:1});
+/* run:1 pour une randonnée effectivement courue — ses km rejoignent alors
+   ceux de la course au lieu du compteur de randonnée. */
+const RD=(l,km,c,run)=>({kind:"hike",label:l,km:km,cue:c,vo2:1,run:run?1:0});
 const V=(l,c)=>({kind:"bike",label:l,cue:c});
 
 const PLAN=[
 /* ---- Réalisé, importé du relevé du 1er au 6 août (hist:1 = pas de bloc posture) ---- */
 {d:"2026-08-01",ph:0,bl:0,hist:1,ss:[K("Kayak 98 min",10.07),R("Course 38 min",6.02),W("Natation 31 min",null,0.97)]},
 {d:"2026-08-02",ph:0,bl:0,hist:1,ss:[R("Course 84 min",12.01),K("Kayak 51 min",4.07),M("Musculation 30 min"),W("Natation 50 min",null,2.02)]},
-{d:"2026-08-03",ph:0,bl:0,hist:1,ss:[RD("Randonnée 94 min",12.02,"Alternance course et marche rapide — allure de course, comptée dans les kilomètres courus."),W("Natation 60 min",null,2.19)]},
+{d:"2026-08-03",ph:0,bl:0,hist:1,ss:[RD("Randonnée 94 min",12.02,"Alternance course et marche rapide — allure de course, comptée dans les kilomètres courus.",1),W("Natation 60 min",null,2.19)]},
 {d:"2026-08-04",ph:0,bl:0,hist:1,ss:[K("Kayak 123 min",12.52),W("Natation 42 min",null,1.51)]},
 {d:"2026-08-05",ph:0,bl:0,hist:1,ss:[K("Kayak 80 min",6.15),R("Course 60 min",9.03)]},
 {d:"2026-08-06",ph:0,bl:0,ss:[R("Course 36 min",5.27),R("Course 30 min",4.23),W("Natation 63 min",null,2.44)]},
@@ -233,21 +235,22 @@ const PLAN=[
 {d:"2026-08-08",ph:0,bl:0,ss:[R("Course 51 min",8.01,"Faite au matin, allure moyenne 6 min 19 s / km. Nouveau plus haut de la période sur la VO2max."),S("A","Circuit B impossible ce jour-là : élastiques pas encore achetés. Circuit A à la place."),W("Natation 30 min",null,1.08)]},
 
 {d:"2026-08-09",ph:1,bl:0,ss:[Z("Journée de route","Transfert vers le camping-car, arrivée à Shady Knoll en soirée. Marcher 15 min à chaque arrêt pour décoincer les hanches."),I("Fractionné 38 min","Fait le soir à l'arrivée à Shady Knoll. Allure moyenne 7 min 16 s / km, récupérations comprises. Nouveau plus haut de la période sur la VO2max.",5.17)]},
-{d:"2026-08-10",ph:1,bl:0,ss:[Z("Repos","Premier jour sans charge depuis le 1er août — neuf jours d'affilée. Au plus une marche facile ; 30 min GPS si tu veux une mesure VO2max.",1)]},
-{d:"2026-08-11",ph:1,bl:0,ss:[V("Vélo — Cape Cod Rail Trail","1h à 1h30. Location au 302 Underpass Road, à 1,5 km du camping : réserver la veille. Aller-retour vers Orleans ou Wellfleet. Reportable au 12."),S("B")]},
-{d:"2026-08-12",ph:1,bl:0,ss:[R("Course courte",6,ENDU),S("A")]},
-{d:"2026-08-13",ph:1,bl:0,ss:[Z("Journée de route","Cape Cod → Acadia, environ 7h."),I("Fractionné 8 × 1 min","Le soir à l'arrivée à Acadia, à la place de la marche — il fournit la même mesure VO2max. "+FRAC)]},
+/* ---- Réalisé, importé du relevé du 10 au 21 août ---- */
+{d:"2026-08-10",ph:1,bl:0,hist:1,ss:[RD("Randonnée 122 min",13.01)]},
+{d:"2026-08-11",ph:1,bl:0,hist:1,ss:[RD("Randonnée 92 min",3.01,"Allure de promenade : 30 min au kilomètre.")]},
+{d:"2026-08-12",ph:1,bl:0,hist:1,ss:[Z("Aucune activité enregistrée")]},
+{d:"2026-08-13",ph:1,bl:0,hist:1,ss:[Z("Aucune activité enregistrée","Journée de route Cape Cod → Acadia.")]},
 
-{d:"2026-08-14",ph:1,bl:1,ss:[R("Ocean Path",9,"Départ à pied du camping, sentier plat au bord de l'océan. Allure conversationnelle."),S("A")]},
-{d:"2026-08-15",ph:1,bl:1,ss:[RD("Cadillac South Ridge — 11 km, 350 m D+",null,"Départ direct du camping, aller-retour. Format long, dénivelé, faible impact. Elle remplace la course, n'ajoute rien d'autre."),S("B")]},
-{d:"2026-08-16",ph:1,bl:1,ss:[R("Carriage roads",8,"Chemins gravier fermés aux voitures, 72 km de réseau. Surface souple, moins traumatisante que le goudron. Navette Island Explorer gratuite depuis le camping."),S("A")]},
-{d:"2026-08-17",ph:1,bl:1,ss:[R("Course courte",6,ENDU),S("B")]},
+{d:"2026-08-14",ph:1,bl:1,hist:1,ss:[RD("Randonnée 153 min",14.01)]},
+{d:"2026-08-15",ph:1,bl:1,hist:1,ss:[RD("Randonnée 109 min",10.2)]},
+{d:"2026-08-16",ph:1,bl:1,hist:1,ss:[RD("Randonnée 89 min",5.22),RD("Randonnée 206 min",17.02)]},
+{d:"2026-08-17",ph:1,bl:1,hist:1,ss:[Z("Aucune activité enregistrée")]},
 
-{d:"2026-08-18",ph:1,bl:1,ss:[R("Course endurance",9,ENDU),S("A")]},
-{d:"2026-08-19",ph:1,bl:1,ss:[I("Fractionné 8 × 1 min",FRAC),S("B")]},
-{d:"2026-08-20",ph:1,bl:1,ss:[Z("Repos — restitution et transfert","Camping-car rendu à Bay Shore à mi-journée, puis LIRR et métro vers Greenwich Village.")]},
+{d:"2026-08-18",ph:1,bl:1,hist:1,ss:[R("Course 41 min",5.3),RD("Randonnée 30 min",4.23)]},
+{d:"2026-08-19",ph:1,bl:1,hist:1,ss:[Z("Aucune activité enregistrée")]},
+{d:"2026-08-20",ph:1,bl:1,hist:1,ss:[Z("Aucune activité enregistrée","Restitution du camping-car à Bay Shore, puis LIRR et métro vers Greenwich Village.")]},
 
-{d:"2026-08-21",ph:2,bl:2,ss:[R("Hudson River Greenway",10,"1,5 km plein ouest depuis l'appartement. Boucle vers Battery Park et retour : 10 km sans un feu rouge. Allure conversationnelle."),S("A")]},
+{d:"2026-08-21",ph:2,bl:2,hist:1,ss:[R("Course 37 min",6.02),M("Musculation 60 min")]},
 {d:"2026-08-22",ph:2,bl:2,ss:[Z("Repos actif — marche urbaine","15 000 pas sans y penser. Garde le GPS actif sur une marche de 30 min pour la mesure.",1),S("B")]},
 {d:"2026-08-23",ph:2,bl:2,ss:[R("Boucle complète de Central Park",10,"Central Park est à 4 km au nord : compte le métro à l'aller et au retour. Allure conversationnelle."),S("A")]},
 {d:"2026-08-24",ph:2,bl:2,ss:[I("Fractionné 25 min","10 min d'échauffement, 6 × (90 s rapide / 90 s marche), 5 min de retour au calme."),S("B")]},
@@ -274,7 +277,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-10.3", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-21.1", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -293,7 +296,11 @@ function setSave(t){const el=document.getElementById("save"); if(el)el.textConte
    version, chaque journée listée est cochée en entier et la VO2max du
    jour est posée si le champ est vide. Le marqueur hist sur l'entrée
    garantit un seul passage — décocher ensuite reste possible. */
-const HIST={"2026-08-01":"40.27","2026-08-02":"41.17","2026-08-03":"41.40","2026-08-04":"","2026-08-05":"41.95","2026-08-06":"41.77"};
+/* Journées terminées : toutes leurs séances sont cochées et le relevé du
+   jour posé. Quand la montre a produit deux mesures, on garde la
+   dernière chronologiquement — c'est l'estimation la plus à jour. */
+const HIST={"2026-08-01":"40.27","2026-08-02":"41.17","2026-08-03":"41.40","2026-08-04":"","2026-08-05":"41.95","2026-08-06":"41.77",
+"2026-08-10":"42.54","2026-08-11":"42.42","2026-08-14":"42.17","2026-08-15":"42.64","2026-08-16":"42.68","2026-08-18":"42.88","2026-08-21":"43.52"};
 /* Relevés de journées encore en cours : la valeur est posée si le champ
    est vide, mais la journée n'est PAS cochée — ses autres séances ne
    sont pas forcément faites. */
@@ -384,7 +391,7 @@ function bg(){
 }
 
 function stats(){
-  let done=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,paddled=0,swum=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
+  let done=0,total=0,dayDone=0,dayTotal=0,strength=0,km=0,hiked=0,paddled=0,swum=0,drinks=0,drinkDays=0,prot=0,logged=0;const vo2=[];
   PLAN.forEach(day=>{
     const e=log[day.d],u=units(day);
     total+=u.length;
@@ -393,7 +400,11 @@ function stats(){
     if(e)day.ss.forEach((s,i)=>{
       if(s.circuit){if(s.circuit!=="P"&&CIRCUITS[s.circuit].moves.every((_,j)=>e.done["s"+i+"e"+j]))strength++;}
       /* La randonnée du 3 était courue : elle rejoint les kilomètres courus. */
-      else if(e.done["s"+i]&&s.km){if(s.kind==="kayak")paddled+=s.km;else if(s.kind==="swim")swum+=s.km;else km+=s.km;}});
+      else if(e.done["s"+i]&&s.km){
+        if(s.kind==="kayak")paddled+=s.km;
+        else if(s.kind==="swim")swum+=s.km;
+        else if(s.kind==="hike"&&!s.run)hiked+=s.km;
+        else km+=s.km;}});
     if(e){
       if(typeof e.alcohol==="number"){drinks+=e.alcohol;if(e.alcohol>0)drinkDays++;}
       if(e.protein)prot++;
@@ -402,7 +413,7 @@ function stats(){
   });
   const left=Math.max(0,Math.round((parse(END)-parse(TODAY))/86400000));
   const span=Math.max(1,Math.round((parse(END)-parse(PLAN[0].d))/86400000));
-  return{done:done,total:total,span:span,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:r1(km),paddled:r1(paddled),swum:r1(swum),drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
+  return{done:done,total:total,span:span,dayDone:dayDone,dayTotal:dayTotal,strength:strength,km:r1(km),hiked:r1(hiked),paddled:r1(paddled),swum:r1(swum),drinks:drinks,drinkDays:drinkDays,prot:prot,logged:logged,vo2:vo2,left:left};
 }
 
 function vo2svg(v){
@@ -507,6 +518,7 @@ function render(){
     '<div class="grid">'+
     '<div class="cell"><div class="cell-v '+(st.strength>=4?"ok":"")+'">'+st.strength+'</div><div class="cell-l">Circuits complets<br>cible 4 / semaine</div></div>'+
     '<div class="cell"><div class="cell-v">'+st.km+'</div><div class="cell-l">Kilomètres courus<br>plafond 12 km / sortie</div></div>'+
+    '<div class="cell"><div class="cell-v">'+st.hiked+'</div><div class="cell-l">Kilomètres randonnés<br>marche, hors plafond course</div></div>'+
     '<div class="cell"><div class="cell-v">'+st.paddled+'</div><div class="cell-l">Kilomètres pagayés<br>kayak, pas de plafond</div></div>'+
     '<div class="cell"><div class="cell-v">'+st.swum+'</div><div class="cell-l">Kilomètres nagés<br>natation, pas de plafond</div></div>'+
     '<div class="cell"><div class="cell-v '+(st.drinks>DRINK_CAP?"warn":"")+'">'+st.drinks+'<span class="ro-sub" style="font-size:13px"> / '+st.drinkDays+' soirs</span></div><div class="cell-l">Verres cumulés<br>plafond '+DRINK_CAP+' sur le séjour</div></div>'+
