@@ -83,6 +83,26 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
 @media (max-width:430px){.prog{gap:14px 20px}}
 
+.tabs{position:sticky;z-index:4;margin:0 -18px;padding:0 18px;display:flex;gap:0;border-bottom:1px solid var(--edge);
+  background:var(--veil);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px)}
+.tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--fog);cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:13px 4px}
+.tab.on{color:var(--ink);border-bottom-color:var(--buoy)}
+.tab .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--buoy);margin-left:5px;vertical-align:middle}
+.mo{margin:26px 0 10px;display:flex;align-items:baseline;gap:10px}
+.mo-name{font-family:var(--serif);font-style:italic;font-size:18px;text-transform:capitalize}
+.mo-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog)}
+.jrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:inherit;
+  font:inherit;cursor:pointer;padding:11px 13px;border-bottom:1px solid var(--edge)}
+.jrow:last-child{border-bottom:none}
+.jrow:active{background:var(--press)}
+.jrow.today{background:var(--tint)}
+.jbox{border:1px solid var(--edge);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.jd{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;min-width:52px;color:var(--fog)}
+.jd b{color:var(--ink);font-weight:600}
+.js{font-size:12px;color:var(--fog);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jm{font-family:var(--mono);font-size:10px;color:var(--fog)}
+.jm.full{color:var(--depth)}
 .banners{margin-top:12px;display:grid;gap:6px}
 .banner{font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:7px;border-left:3px solid var(--fog);background:var(--tint);color:var(--ink)}
 .banner.warn{border-left-color:var(--buoy)}
@@ -188,11 +208,8 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 <svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
 <div class="wrap">
   <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
-  <section class="review" id="review"></section>
-  <div id="weeks"></div>
-  <section class="panel" id="targets"></section>
-  <section class="panel" id="refs"></section>
-  <section class="panel" id="tools"></section>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="view"></div>
 </div>
 
 <script>
@@ -204,7 +221,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-22.7", RKEY="pmp-reload", OKEY="pmp-open";
+const VERSION="2026-08-23.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -219,6 +236,7 @@ const MILES=[
 const MEASURE_START="2026-08-30";
 const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
+const WAIST_TARGET=94, VO2_TARGET=48;   /* cibles des jauges tour de taille et VO2max */
 
 const KIND={
   salle:{t:"SALLE",c:"var(--k-str)"},course:{t:"COURSE",c:"var(--k-run)"},
@@ -242,7 +260,7 @@ const FASCIA="Élévations talon lentes 3×12 (3 s de descente) + serviette sous
    supprimé et ne vivraient que sur le navigateur d'origine. */
 const H=(runKm,hikeKm,swimKm,kayakKm,vo2,alcohol,protein,note)=>
   ({runKm:runKm||"",hikeKm:hikeKm||"",swimKm:swimKm||"",bikeKm:"",kayakKm:kayakKm||"",
-    vo2:vo2||"",alcohol:alcohol,protein:!!protein,note:note||"",
+    vo2:vo2||"",alcohol:alcohol,protein:!!protein,note:note||"",bedTime:"",
     weight:"",waist:"",rhr:"",hrv:"",sleep:"",bed:false,heel:0,done:{},frozen:true});
 const HISTORY={
 "2026-08-01":H("6.0","","1.0","10.1","40.27",1),
@@ -345,7 +363,7 @@ function save(){
 function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
 function entry(k){
   if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
-    protein:false,alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",heel:0};
+    protein:false,alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0};
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
 }
 /* Seul runKm entre dans le plafond talon ; randonnée, natation, vélo et
@@ -381,7 +399,7 @@ function checkVersion(){
       stale="Version "+v+" publiée, cette page reste sur "+VERSION+" — ferme puis rouvre le raccourci.";
       setSave(stale); render(); return;
     }
-    ses("set",v+"|"+(n+1)); ses("set",open||"",OKEY);
+    ses("set",v+"|"+(n+1)); ses("set",open||"",OKEY); ses("set",tab,TKEY);
     /* Horodatage en plus du numéro de version : si un rechargement
        antérieur a été servi avant la propagation du CDN, l'URL
        ?v=<version> porte l'ancienne page en cache et la réutiliser la
@@ -419,7 +437,35 @@ function weekWeight(mon){const v=vals(weekDays(mon),"weight");return v.length>=3
 function weekRun(mon){return r1(total(vals(weekDays(mon),"runKm")));}
 function heelMax(keys){let m=0;keys.forEach(k=>{const e=DB.days[k];if(e&&+e.heel>m)m=+e.heel;});return m;}
 function drinksIn(keys){let n=0;keys.forEach(k=>{const e=DB.days[k];if(e&&typeof e.alcohol==="number")n+=e.alcohol;});return n;}
-function sleepCounts(keys){let n7=0,bed=0;keys.forEach(k=>{const e=DB.days[k];if(!e)return;const s=num(e.sleep);if(s!==null&&s>=SLEEP_H)n7++;if(e.bed)bed++;});return{n7:n7,bed:bed};}
+/* Heure de coucher : stockée en HH:MM. Un coucher après minuit appartient
+   à la nuit précédente, on le compte donc au-delà de 24 h pour que les
+   moyennes et les comparaisons restent ordonnées. */
+const BED_LIMIT=23*60+30;
+function bedMin(e){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(String(e&&e.bedTime||""));
+  if(!m)return null;
+  const h=+m[1],mi=+m[2]; if(h>23||mi>59)return null;
+  return h*60+mi+(h<12?24*60:0);
+}
+/* Repli sur l'ancienne case à cocher pour les jours saisis avant que
+   l'heure exacte n'existe. */
+function bedOk(e){const v=bedMin(e);return v!==null?v<BED_LIMIT:!!(e&&e.bed);}
+function fmtMin(v){const t=Math.round(v)%(24*60);return pad(Math.floor(t/60))+":"+pad(t%60);}
+function sleepCounts(keys){let n7=0,bed=0;keys.forEach(k=>{const e=DB.days[k];if(!e)return;const s=num(e.sleep);if(s!==null&&s>=SLEEP_H)n7++;if(bedOk(e))bed++;});return{n7:n7,bed:bed};}
+function bedAvg(keys){const a=[];keys.forEach(k=>{const v=bedMin(DB.days[k]);if(v!==null)a.push(v);});return avg(a);}
+function weekWaist(mon){const v=vals(weekDays(mon),"waist");return v.length?avg(v):null;}
+function weekVo2Max(mon){const v=vals(weekDays(mon),"vo2");return v.length?Math.max.apply(null,v):null;}
+function lastWeekly(f){
+  /* Dernière valeur hebdomadaire connue, en remontant les semaines. */
+  let m=mondayOf(TODAY);
+  for(let i=0;i<60;i++){const v=f(m);if(v!==null)return v;m=addDays(m,-7);}
+  return null;
+}
+function firstVo2(){
+  const ks=Object.keys(DB.days).sort();
+  for(const k of ks){const v=num(DB.days[k].vo2);if(v!==null)return v;}
+  return null;
+}
 function dryStreak(){let n=0,k=TODAY;for(let i=0;i<60;i++){const e=DB.days[k];if(!e||typeof e.alcohol!=="number")break;if(e.alcohol>0)break;n++;k=addDays(k,-1);}return n;}
 
 /* ================= Plan actif ================= */
@@ -536,79 +582,108 @@ function gauge(frac,val,sub,lab,col,title){
 const dash='<span class="g-sub">—</span>';
 
 /* ================= Rendu principal ================= */
-let open=null;
+let open=null, tab="today";
+const TABS=[["today","Aujourd'hui"],["plan","Plan"],["log","Journal"],["goals","Cibles"]];
 
 function render(){
-  const mon=mondayOf(TODAY),ap=activePlan();
-  const wk=weekWeight(mon),mile=currentMile();
-  const cap=capFor(mon),runKm=weekRun(mon),p1=p1Week(mon);
-  /* Sans saisie quotidienne, on retombe sur la dernière moyenne hebdo figée. */
-  const fw=lastFrozenWeek();
-  const rhr7=avg(vals(lastN(TODAY,7),"rhr"))||(fw?fw.rhr:null);
-  const hrv7=avg(vals(lastN(TODAY,7),"hrv"))||(fw?fw.hrv:null);
+  renderHeader();
+  renderTabs();
+  renderView();
+  setSave(stale||(memOnly?"Stockage indisponible":"Enregistré"));
+}
 
-  document.getElementById("eyebrow").textContent=
-    "Novembre "+MILES[0].w+" → Février "+MILES[1].w+" → Août "+MILES[2].w;
+/* Saisie d'un champ : seul l'en-tête est reconstruit. Reconstruire la
+   liste détruirait l'input en cours et refermerait le clavier entre
+   chaque valeur. */
+function refreshLive(){renderHeader();}
 
-  /* --- jauges (§7.1) --- */
-  /* Poids : aucune origine supposée. La progression se mesure depuis la
-     première moyenne hebdomadaire réellement enregistrée ; tant qu'elle
-     n'existe pas, la jauge reste en veille. */
-  const w0=firstWeekWeight();
+function renderHeader(){
+  const mon=mondayOf(TODAY),mile=currentMile();
+  const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
+  const wa=weekWaist(mon)!==null?weekWaist(mon):lastWeekly(weekWaist);
+  const vo=weekVo2Max(mon)!==null?weekVo2Max(mon):lastWeekly(weekVo2Max);
+  const bd=bedAvg(lastN(TODAY,7));
+  const w0=firstWeekWeight(),wb=num((DB.settings.refs||{}).waistBase),v0=firstVo2();
+
+  document.getElementById("eyebrow").textContent="";
+
+  /* 1 · poids moyen hebdo vs jalon — origine : première moyenne connue. */
   const wFrac=(wk===null||w0===null||w0<=mile.w)?0:(w0-wk)/(w0-mile.w);
-  const over=cap.cap!==null&&runKm>cap.cap;
+  /* 2 · tour de taille moyen vs 94 cm — origine : mesure de référence. */
+  const wtFrac=(wa===null||wb===null||wb<=WAIST_TARGET)?0:(wb-wa)/(wb-WAIST_TARGET);
+  /* 3 · coucher moyen 7 j — plein à 22:30, vide à 00:30. */
+  const bFrac=bd===null?0:(BED_LIMIT+60-bd)/120;
+  /* 4 · VO2max maxi hebdo vs 48 — origine : premier relevé enregistré. */
+  const vFrac=(vo===null||v0===null||v0>=VO2_TARGET)?0:(vo-v0)/(VO2_TARGET-v0);
+
   document.getElementById("prog").innerHTML=
     gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+mile.w,
-      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":"poids "+mile.lab.split(" ")[0].toLowerCase(),"var(--depth)",
-      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg, jalon "+mile.wTxt+" au "+mile.d)+
-    gauge(cap.cap?runKm/cap.cap:0,runKm,cap.cap===null?"":"/"+cap.cap,"volume course",over?"var(--buoy)":"var(--k-run)",
-      runKm+" km courus cette semaine"+(cap.cap===null?"":", plafond "+cap.cap+" km"))+
-    gauge(p1.planned?p1.done/p1.planned:0,p1.planned?p1.done:dash,p1.planned?"/"+p1.planned:"","séances p1","var(--brass)",
-      p1.done+" séance(s) P1 tenue(s) sur "+p1.planned)+
-    gauge(rhr7===null?0:(RHR_SPAN-(rhr7-RHR_TARGET))/RHR_SPAN,rhr7===null?dash:rhr7.toFixed(0),rhr7===null?"":"/"+RHR_TARGET,"fc repos","var(--k-swim)",
-      rhr7===null?"Aucune FC repos saisie":"Moyenne 7 jours "+rhr7.toFixed(1)+" bpm, cible ≤ "+RHR_TARGET);
+      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":"poids moy.","var(--depth)",
+      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg, jalon "+mile.wTxt)+
+    gauge(wtFrac,wa===null?dash:wa.toFixed(1),wa===null?"":"/"+WAIST_TARGET,
+      wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
+      wa===null?"Premier tour de taille prévu le "+MEASURE_START:"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+WAIST_TARGET)+
+    gauge(bFrac,bd===null?dash:fmtMin(bd),bd===null?"":"/"+fmtMin(BED_LIMIT),"coucher moy.","var(--brass)",
+      bd===null?"Aucune heure de coucher saisie":"Moyenne sur 7 jours "+fmtMin(bd)+", cible avant "+fmtMin(BED_LIMIT))+
+    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+VO2_TARGET,"vo2max hebdo","var(--k-run)",
+      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+VO2_TARGET);
 
-  /* --- bandeaux (§6) --- */
   const B=[];
-  if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée : salle P1, sortie longue P1 au plafond de la dernière semaine connue, bloc fascia."]);
-  if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+". Rien de prévu d'ici là."]);
-  if(cap.capped)B.push(["warn","Plafond ramené à "+cap.cap+" km : la semaine précédente totalise "+cap.prev+" km courus, et la progression est limitée à +10 %. Le plan demandait "+cap.planned+" km."]);
+  if(stale)B.push(["warn",stale]);
+  const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
+  if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
+  if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+"."]);
+  if(cap.capped)B.push(["warn","Plafond ramené à "+cap.cap+" km : la semaine précédente totalise "+cap.prev+" km courus, progression limitée à +10 %. Le plan demandait "+cap.planned+" km."]);
   if(over)B.push(["warn","Cumul course "+runKm+" km — plafond de "+cap.cap+" km dépassé."]);
   const hm=heelMax(lastN(TODAY,7));
-  if(hm===1)B.push(["warn","Talon signalé gênant sur les 7 derniers jours — volume −30 % cette semaine, pas d'intensité."]);
+  if(hm===1)B.push(["warn","Talon gênant sur les 7 derniers jours — volume −30 % cette semaine, pas d'intensité."]);
   if(hm===2)B.push(["warn","Talon douloureux sur les 7 derniers jours — course suspendue, salle et vélo/natation maintenus."]);
   const rec=recovery(); if(rec)B.push(["warn",rec]);
   const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
-  /* En tête des bandeaux : une app bloquée sur une vieille version ne
-     doit pas l'annoncer dans la ligne d'état en bas de page. */
-  if(stale)B.unshift(["warn",stale]);
-  const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
   const dw=drinksIn(weekDays(mon));
   if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
+  const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
   document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+'">'+esc(b[1])+'</div>').join("");
+}
 
-  /* --- revue dominicale (§8.1) --- */
-  const dowN=parseD(TODAY).getDay(),due=(dowN===6||dowN===0);
-  document.getElementById("review").innerHTML=
+function reviewDue(){const d=parseD(TODAY).getDay();return d===6||d===0;}
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=TABS.map(t=>
+    '<button class="tab '+(tab===t[0]?"on":"")+'" data-tab="'+t[0]+'">'+esc(t[1])+
+    (t[0]==="today"&&reviewDue()?'<span class="dot"></span>':"")+'</button>').join("");
+}
+
+function renderView(){
+  const v=document.getElementById("view");
+  if(tab==="today")v.innerHTML=viewToday();
+  else if(tab==="plan")v.innerHTML=viewPlan();
+  else if(tab==="log")v.innerHTML=viewLog();
+  else v.innerHTML='<section class="panel" id="targets"></section><section class="panel" id="refs"></section><section class="panel" id="tools"></section>';
+  if(tab==="goals"){renderTargets();renderRefs();renderTools();}
+}
+
+/* --- Onglet Aujourd'hui : la journée en cours, dépliée, puis la revue. --- */
+function viewToday(){
+  const d=dayOf(TODAY),froz=DB.days[TODAY]&&DB.days[TODAY].frozen;
+  const prev=open; open=TODAY;
+  let h='<div class="route" style="margin-top:22px"><div class="line"></div>';
+  h+= froz ? frozenCard(TODAY,true)
+     : dayCard(d||{d:TODAY,fascia:false,sessions:[]},weekOf(TODAY));
+  h+='</div>';
+  open=prev;
+  h+='<section class="review">'+
     '<div class="review-t">Revue dominicale</div>'+
-    '<div class="review-d">'+(due
+    '<div class="review-d">'+(reviewDue()
       ? "À faire : exporter, coller dans la session coach, puis importer le plan de 2 semaines qu'elle produit."
       : "Chaque dimanche soir. L'export est la seule source de données de la revue — l'app ne lit aucun service de santé.")+'</div>'+
-    '<button class="big" id="rev">Exporter la revue</button>';
+    '<button class="big" id="rev">Exporter la revue</button></section>';
+  return h;
+}
 
-  /* --- semaines et jours --- */
+/* --- Onglet Plan : les semaines chargées, comme avant. --- */
+function viewPlan(){
+  const ap=activePlan();
   let html="";
-  /* Jours figés que le plan ne couvre pas : regroupés au-dessus, repliés. */
-  const planned={};
-  ap.weeks.forEach(w=>(w.days||[]).forEach(d=>{planned[d.d]=1;}));
-  const orphans=Object.keys(HISTORY).filter(k=>!planned[k]).sort();
-  if(orphans.length){
-    html+='<div class="week"><span class="week-name">Historique</span>'+
-      '<span class="week-sub">'+orphans[0]+' → '+orphans[orphans.length-1]+' · relevé Apple Santé</span><span class="rule"></span></div>';
-    html+='<div class="route"><div class="line"></div>';
-    orphans.forEach(k=>{html+=frozenCard(k,false);});
-    html+='</div>';
-  }
   ap.weeks.forEach(w=>{
     const c=capFor(w.start),ks=weekDays(w.start);
     const vol=[["runKm","couru"],["hikeKm","rando"],["swimKm","nagé"],["bikeKm","vélo"],["kayakKm","kayak"]]
@@ -620,12 +695,60 @@ function render(){
     (w.days||[]).forEach(d=>{html+=(DB.days[d.d]&&DB.days[d.d].frozen)?frozenCard(d.d,true):dayCard(d,w);});
     html+='</div>';
   });
-  document.getElementById("weeks").innerHTML=html;
+  return html;
+}
 
-  renderTargets(wk,rhr7,hrv7,runKm,cap);
-  renderRefs();
-  renderTools();
-  setSave(stale||(memOnly?"Stockage indisponible":"Enregistré"));
+/* --- Onglet Journal : tous les jours connus, empilés par mois.
+   L'horizon s'arrête au dernier jour du plan chargé : au-delà il n'y a
+   ni séance ni saisie possible, des cartes vides jusqu'en 2027
+   n'apporteraient rien. --- */
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+function logRange(){
+  const ks=Object.keys(DB.days).sort(),ap=activePlan(),pd=[];
+  ap.weeks.forEach(w=>(w.days||[]).forEach(x=>pd.push(x.d)));
+  const all=ks.concat(pd).concat([TODAY]).sort();
+  return{from:all[0],to:all[all.length-1]};
+}
+function viewLog(){
+  const R=logRange();
+  if(!R.from)return'<p class="empty">Aucun jour enregistré.</p>';
+  const months={},order=[];
+  for(let k=R.from;k<=R.to;k=addDays(k,1)){
+    const mk=k.slice(0,7);
+    if(!months[mk]){months[mk]=[];order.push(mk);}
+    months[mk].push(k);
+  }
+  let h="";
+  order.forEach(mk=>{
+    const ks=months[mk],y=mk.slice(0,4),mi=+mk.slice(5,7)-1;
+    let km=0,done=0,tot=0;
+    ks.forEach(k=>{const e=DB.days[k];if(e){const r=num(e.runKm);if(r!==null)km+=r;}
+      const d=dayOf(k);if(d){tot+=dayUnits(d);done+=dayDone(k,d);}});
+    h+='<div class="mo"><span class="mo-name">'+MOIS[mi]+' '+y+'</span>'+
+       '<span class="mo-sub">'+(km>0?r1(km)+" km courus":"—")+(tot?" · "+done+"/"+tot:"")+'</span><span class="rule"></span></div>';
+    h+='<div class="jbox">';
+    ks.forEach(k=>{h+=logRow(k);});
+    h+='</div>';
+  });
+  return h;
+}
+function logRow(k){
+  const e=DB.days[k],d=dayOf(k),f=fmt(k);
+  const bits=[];
+  if(e){
+    if(num(e.runKm)!==null)bits.push(e.runKm+" km");
+    OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)bits.push(e[o[0]]+" "+o[1].toLowerCase().replace("km ",""));});
+    if(num(e.weight)!==null)bits.push(e.weight+" kg");
+    if(num(e.vo2)!==null)bits.push("vo2 "+e.vo2);
+  }
+  let lab=bits.join(" · ");
+  if(!lab&&d&&(d.sessions||[]).length)lab=(d.sessions||[]).map(s=>s.label).join(" · ");
+  if(!lab)lab=e&&e.frozen?"aucune activité":"—";
+  let chip="";
+  if(d&&dayUnits(d)){const u=dayUnits(d),n=dayDone(k,d);chip='<span class="jm '+(n===u?"full":"")+'">'+n+'/'+u+'</span>';}
+  else if(e&&e.frozen)chip='<span class="jm">figé</span>';
+  return'<button class="jrow '+(k===TODAY?"today":"")+'" data-open="'+k+'">'+
+    '<span class="jd">'+f.dow+' <b>'+f.num+'</b></span><span class="js">'+esc(lab)+'</span>'+chip+'</button>';
 }
 
 function dayCard(d,w){
@@ -679,7 +802,8 @@ function dayCard(d,w){
   h+=numRow(k,"runKm","Km courus","Seul volume soumis au plafond talon.","km","0.1");
   OTHER_KM.forEach(o=>{if(o[0]!=="kayakKm")h+=numRow(k,o[0],o[1],"",o[2],"0.1");});
   h+=numRow(k,"vo2","VO2max relevée","","ml","0.1");
-  h+='<div class="log-row"><span class="log-lab">Couché avant 23h30</span><button class="box" data-b="'+k+'" data-on="'+(e.bed?1:0)+'">'+(e.bed?chk(15):"")+'</button></div>';
+  h+='<div class="log-row"><span class="log-lab">Heure de coucher<span class="hint">Cible avant '+fmtMin(BED_LIMIT)+'.</span></span>'+
+     '<input type="time" value="'+esc(e.bedTime||"")+'" data-f="'+k+'|bedTime"><span class="unit"></span></div>';
   h+='<div class="log-row"><span class="log-lab">Protéines — '+PROTEIN+' g atteints</span><button class="box" data-p="'+k+'" data-on="'+(e.protein?1:0)+'">'+(e.protein?chk(15):"")+'</button></div>';
   h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof e.alcohol==="number"&&e.alcohol>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
   [0,1,2,3,4].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(e.alcohol===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+(n===4?"4+":n)+'</button>';});
@@ -731,9 +855,13 @@ function st(ok,mileD){
   if(ok)return'<span class="t-st ok">✓</span>';
   return TODAY>mileD?'<span class="t-st warn">✗</span>':'<span class="t-st dim">→</span>';
 }
-function renderTargets(wk,rhr7,hrv7,runKm,cap){
+/* Les valeurs sont recalculées ici : le panneau est rendu à la demande,
+   quand on ouvre son onglet, et non plus dans la foulée de l'en-tête. */
+function renderTargets(){
   const R=DB.settings.refs||{};
   const mon=mondayOf(TODAY);
+  const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
+  const runKm=weekRun(mon);
   const waist=lastVal("waist"),waistBase=num(R.waistBase),vo2=lastVal("vo2");
   const rhr30=avg(vals(lastN(TODAY,30),"rhr")),hrv30=avg(vals(lastN(TODAY,30),"hrv"));
   const sl=sleepCounts(lastN(TODAY,7)),slAvg=avg(vals(lastN(TODAY,7),"sleep"));
@@ -921,7 +1049,7 @@ function copyOut(s,msg){
    donc une saisie manuelle n'est jamais écrasée. Les champs déclaratifs
    — protéines, alcool, coucher, talon — en sont exclus : ils ne se
    lisent nulle part et personne d'autre que toi ne peut les affirmer. */
-const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist"];
+const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist","bedTime"];
 function applyBackfill(bf){
   let n=0,days=0;
   Object.keys(bf||{}).forEach(k=>{
@@ -978,7 +1106,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-open],[data-t],[data-b],[data-p],[data-a],[data-h],[data-alt],#exp,#imp,#impPlan,#rev");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-p],[data-a],[data-h],[data-alt],#exp,#imp,#impPlan,#rev");
   if(!t)return;
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
   if(t.id==="exp"){copyOut(JSON.stringify(DB),"Données copiées.");return;}
@@ -991,7 +1119,12 @@ document.addEventListener("click",ev=>{
     if(s){const r=importPlan(s);
       alert(r.err||("Plan importé."+(r.filled?"\n"+r.filled+" valeur"+(r.filled>1?"s":"")+" complétée"+(r.filled>1?"s":"")+" sur "+r.days+" jour"+(r.days>1?"s":"")+".":"")));}
     return;}
-  if(t.dataset.open!==undefined){open=(open===t.dataset.open)?null:t.dataset.open;render();return;}
+  if(t.dataset.tab!==undefined){tab=t.dataset.tab;ses("set",tab,TKEY);render();scrollTo(0,0);return;}
+  if(t.dataset.open!==undefined){
+    /* Depuis le journal, ouvrir un jour bascule sur la vue qui le porte. */
+    const k=t.dataset.open;
+    if(tab==="log"){open=k;tab=dayOf(k)?"plan":"log";ses("set",tab,TKEY);render();return;}
+    open=(open===k)?null:k;render();return;}
   if(t.dataset.alt!==undefined){const a=t.dataset.alt.split("|"),e=entry(a[0]);e.done["alt"+a[1]]=!e.done["alt"+a[1]];save();render();return;}
   if(t.dataset.t){const a=t.dataset.t.split("|"),e=entry(a[0]);e.done[a[1]]=!e.done[a[1]];save();render();return;}
   if(t.dataset.b){const e=entry(t.dataset.b);e.bed=!e.bed;save();render();return;}
@@ -1001,8 +1134,8 @@ document.addEventListener("click",ev=>{
 });
 document.addEventListener("change",ev=>{
   const f=ev.target.dataset.f,s=ev.target.dataset.s;
-  if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();render();return;}
-  if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();render();}
+  if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
+  if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();}
 });
 
 /* ================= Démarrage ================= */
@@ -1011,7 +1144,8 @@ const mt=document.querySelector('meta[name="apple-mobile-web-app-title"]');
 if(mt)mt.setAttribute("content",APP);
 document.getElementById("title").textContent=APP;
 load();
-{const o=ses("get",null,OKEY);if(o!==null){open=o||null;ses("del",null,OKEY);}}
+{const o=ses("get",null,OKEY);if(o!==null){open=o||null;ses("del",null,OKEY);}
+ const tb=ses("get",null,TKEY);if(tb&&TABS.some(x=>x[0]===tb)){tab=tb;ses("del",null,TKEY);}}
 if(open===null){
   const ap=activePlan();
   open=dayOf(TODAY)?TODAY:((ap.weeks[0].days||[])[0]||{}).d||null;
