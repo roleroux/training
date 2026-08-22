@@ -190,6 +190,14 @@ input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color
 /* Les deux créneaux qui font la journée sont marqués même décochés. */
 .pill.key{border-style:solid;border-color:var(--fog)}
 .pill.key[data-on="1"]{border-color:var(--depth);color:var(--depth);background:var(--tint)}
+.pill.sm{height:32px;min-width:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.pg{opacity:.55;font-size:10px}
+.alx{width:74px}
+.log-row.pair input{width:74px}
+.g-dot.hollow{fill:var(--surface);stroke:var(--depth);stroke-width:1.6}
+input.bad{border-color:var(--buoy)}
+.week-note{font-size:11.5px;line-height:1.5;color:var(--fog);margin:-6px 0 12px}
+.obs{margin-top:20px}
 
 .panel{margin-top:34px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);padding:20px 18px;box-shadow:var(--shadow)}
 .panel h2{font-family:var(--serif);font-style:italic;font-size:19px;margin:0 0 4px;font-weight:600}
@@ -241,7 +249,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.3", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.4", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -257,16 +265,30 @@ const MEASURE_START="2026-08-30";
 const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
 const WAIST_TARGET=94, VO2_TARGET=48;   /* cibles des jauges tour de taille et VO2max */
-/* Tension : objectif de santé daté à 12 mois. Une mesure par semaine
-   suffit, la variabilité d'une prise à l'autre dépasse le signal. */
+/* Tension : objectif de santé daté à 12 mois. Le verdict se rend sur une
+   série d'automesure trimestrielle — 3 mesures le matin et 3 le soir sur
+   3 jours, dont la moyenne est saisie le dernier jour. Une prise
+   opportuniste s'enregistre aussi mais ne conclut rien : ±10 mmHg de
+   variabilité debout après un café dépassent le signal cherché. */
 const BP_SYS=130, BP_DIA=80;
-/* Protéines : quatre prises de 40 g. Les deux premières sont les
-   créneaux à sécuriser — c'est là que la journée se joue ou se perd. */
-const PROT_UNIT=40;
-const PROT_SLOTS=[["whey","Whey matin",1],["diner","Dîner",1],["midi","Midi",0],["coll","Collation",0]];
-/* Plafond course : référence prise sur les meilleures semaines récentes,
-   pas sur la seule dernière. */
-const REF_WEEKS=4;
+/* Protéines : quatre prises, chacune sa valeur. La whey fait 30 g, un
+   déjeuner en brasserie 55. Total 165 g, soit la cible atteinte à 4/4
+   seulement — trois prises plafonnent à 135 g, sous la fourchette. Les
+   grammes ne sont pas une pesée : tout affichage est préfixé de « ≈ ».
+   [clé, libellé, grammes, créneau clé] */
+const PROT_SLOTS=[
+  ["whey","Whey matin",30,1],
+  ["midi","Déjeuner",55,0],
+  ["diner","Dîner",50,1],
+  ["coll","Collation",30,0]
+];
+const PROT_DAYS=5;   /* cible : 160 g atteints 5 jours sur 7 */
+/* Plafond dur course, valeur par défaut. Aucun plan, même importé, ne
+   peut autoriser davantage tant qu'elle n'est pas révisée en session
+   coach — d'où le champ éditable settings.refs.runAbsMax plutôt qu'une
+   constante figée : la décision ne doit pas attendre un déploiement. */
+const RUN_ABS_MAX=40;
+const TEST5K_TARGET=1590;   /* 26:30 en secondes, cible novembre */
 /* Sauvegarde : au-delà, le journal ne tient plus qu'à un appareil. */
 const EXPORT_MAX=10;
 
@@ -402,7 +424,8 @@ function save(){
 function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
 function entry(k){
   if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
-    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0,sys:"",dia:""};
+    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0,
+    sys:"",dia:"",bpSeries:false};
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
 }
 /* Prises de protéines. L'ancienne case unique « 160 g atteints » vaut les
@@ -414,7 +437,19 @@ function protSet(e){
   return {};
 }
 function protCount(e){const s=protSet(e);let n=0;PROT_SLOTS.forEach(x=>{if(s[x[0]])n++;});return n;}
-function protG(e){return protCount(e)*PROT_UNIT;}
+function protG(e){const s=protSet(e);let g=0;PROT_SLOTS.forEach(x=>{if(s[x[0]])g+=x[2];});return g;}
+/* Jours de la fenêtre atteignant la cible. La fenêtre s'arrête hier : la
+   journée en cours est incomplète par construction, l'inclure durcirait
+   la cible d'une unité chaque matin sans le dire. Un jour sans entrée en
+   base vaut 0 g — c'est une journée non tenue, pas une donnée manquante. */
+function protDays(n){
+  let c=0;lastN(addDays(TODAY,-1),n).forEach(k=>{if(protG(rd(k))>=PROTEIN)c++;});
+  return c;
+}
+function protAvgG(n){
+  let g=0;lastN(addDays(TODAY,-1),n).forEach(k=>{g+=protG(rd(k));});
+  return Math.round(g/n);
+}
 /* Lecture seule : le rendu passe par ici. entry() créait une journée vide
    pour chaque jour affiché, si bien que parcourir le plan ou le journal
    gonflait la base — et l'export — de journées jamais saisies. L'objet
@@ -488,7 +523,14 @@ function lastN(k,n){const a=[];for(let i=n-1;i>=0;i--)a.push(addDays(k,-i));retu
 function vals(keys,f){const o=[];keys.forEach(k=>{const e=DB.days[k];if(!e)return;const v=num(e[f]);if(v!==null)o.push(v);});return o;}
 function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null;}
 function total(a){return a.reduce((x,y)=>x+y,0);}
-function weekWeight(mon){const v=vals(weekDays(mon),"weight");return v.length>=3?avg(v):null;}
+/* Seuil à 2 pesées : avec 3 à 5 nuits hors domicile par mois, l'exiger à
+   3 éteignait la jauge, la ligne de cibles et l'alerte de perte sans
+   rien dire. weekWeight() garde son type de retour — un nombre ou null,
+   sept appelants en dépendent — et weekWeightN() dit sur combien de
+   pesées la moyenne repose, pour afficher « partiel » à 2. */
+const WEIGHT_MIN=2;
+function weekWeightN(mon){return vals(weekDays(mon),"weight").length;}
+function weekWeight(mon){const v=vals(weekDays(mon),"weight");return v.length>=WEIGHT_MIN?avg(v):null;}
 function weekRun(mon){return r1(total(vals(weekDays(mon),"runKm")));}
 function heelMax(keys){let m=0;keys.forEach(k=>{const e=DB.days[k];if(e&&+e.heel>m)m=+e.heel;});return m;}
 function drinksIn(keys){let n=0;keys.forEach(k=>{const e=DB.days[k];if(e&&typeof e.alcohol==="number")n+=e.alcohol;});return n;}
@@ -510,6 +552,12 @@ function sleepCounts(keys){let n7=0,bed=0;keys.forEach(k=>{const e=DB.days[k];if
 function bedAvg(keys){const a=[];keys.forEach(k=>{const v=bedMin(DB.days[k]);if(v!==null)a.push(v);});return avg(a);}
 function weekWaist(mon){const v=vals(weekDays(mon),"waist");return v.length?avg(v):null;}
 function weekVo2Max(mon){const v=vals(weekDays(mon),"vo2");return v.length?Math.max.apply(null,v):null;}
+/* Nombre de pesées de la dernière semaine ayant produit une moyenne. */
+function lastWeeklyN(){
+  let m=mondayOf(TODAY);
+  for(let i=0;i<60;i++){if(weekWeight(m)!==null)return weekWeightN(m);m=addDays(m,-7);}
+  return 0;
+}
 function lastWeekly(f){
   /* Dernière valeur hebdomadaire connue, en remontant les semaines. */
   let m=mondayOf(TODAY);
@@ -563,52 +611,67 @@ function dayOf(k){
 }
 
 /* ================= Règles automatiques (§6) ================= */
-/* Plafond effectif : le calcul +10 % prime sur le plan importé s'il est
-   plus bas.
-   La référence est la MEILLEURE des quatre semaines pleines qui
-   précèdent, pas la dernière. Une seule semaine creuse — déplacement,
-   semaine chargée, voyage — effondrerait sinon le plafond de la
-   suivante : 8 km courus donneraient 8,8 km autorisés alors que la
-   charge encaissée trois semaines plus tôt était de 31 km. La perte
-   d'adaptation ne va pas à cette vitesse.
-   Une semaine en cours est ignorée : son total est partiel et écrêterait
-   à tort. Aucun km saisi sur toute la fenêtre : le calcul ne s'applique
-   pas, sinon le plafond tomberait à zéro. */
+/* Plafond dur en vigueur. Éditable dans Références : une révision de
+   coaching ne doit pas dépendre d'un déploiement. */
+function runAbsMax(){
+  const v=num((DB.settings.refs||{}).runAbsMax);
+  return v!==null&&v>0?v:RUN_ABS_MAX;
+}
+/* L'app ne calcule plus le plafond, elle affiche celui du plan et alerte
+   au dépassement.
+   Toute référence assise sur les seuls km courus se trompait : calée sur
+   la semaine précédente elle effondrait le plafond après un déplacement
+   (8 km courus → 8,8 autorisés) ; calée sur la meilleure des quatre, elle
+   ne clippait plus rien pendant un mois (43,7 km début août → 48,1 de
+   plafond, quand les deux semaines suivantes faisaient 11,3 et 6 km). Le
+   volume de course est intermittent par construction : la randonnée s'y
+   substitue — 62 km randonnés la semaine du 10/08, comptés zéro.
+   Le seul garde-fou honnête est un plafond absolu, révisé à la main.
+   implicit : semaine hors plan, qui ne s'est jamais vu opposer de
+   plafond. La valeur sert l'alerte, pas la ligne de référence du graphe,
+   qui inventerait un plafond rétroactif. */
 function capFor(mon){
   const w=weekOf(mon)||weekOf(addDays(mon,1)),planned=w?num(w.runCapKm):null;
-  let prev=0,refMon=null,done=false;
-  for(let i=1;i<=REF_WEEKS;i++){
-    const m=addDays(mon,-7*i);
-    if(addDays(m,6)>=TODAY)continue;
-    done=true;
-    const t=total(vals(weekDays(m),"runKm"));
-    if(t>prev){prev=t;refMon=m;}
-  }
-  const growth=(done&&prev>0)?prev*1.10:null;
-  let cap=planned,capped=false;
-  if(planned===null)cap=growth;
-  else if(growth!==null&&growth<planned){cap=growth;capped=true;}
-  /* refDone : au moins une semaine pleine dans la fenêtre, donc une
-     référence exploitable. Ce n'est plus « la semaine d'avant est
-     terminée » : la fenêtre en couvre quatre. */
-  return{cap:cap===null?null:r1(cap),capped:capped,planned:planned,prev:r1(prev),refDone:done,refMon:refMon};
+  const max=runAbsMax();
+  return{
+    cap:planned===null?max:Math.min(planned,max),
+    clamped:planned!==null&&planned>max,
+    planned:planned,implicit:planned===null,max:max
+  };
 }
 /* Récupération : la valeur du jour est comparée à la moyenne des 7 jours
-   qui la précèdent, pour que la mesure ne dilue pas sa propre référence. */
+   qui la précèdent, pour que la mesure ne dilue pas sa propre référence.
+   Le message dépend de ce qui est réellement au programme. Promettre
+   qu'« une séance qualité passe en facile » un jour qui n'en porte pas —
+   c'est-à-dire presque tous — annonçait une décision qui n'était prise
+   nulle part. La séance est cherchée parmi celles RETENUES : sous régime
+   chargé une P2 qualité est masquée, le bandeau ne doit pas promettre
+   une conversion sur une séance invisible. */
+function hasQualityToday(){
+  const d=dayOf(TODAY);
+  return !!(d&&kept(d).some(x=>x.s.kind==="qualite"));
+}
 function recovery(){
   const base=lastN(addDays(TODAY,-1),7);
   const e=DB.days[TODAY]; if(!e)return null;
   const rhr=num(e.rhr),hrv=num(e.hrv);
   const rB=avg(vals(base,"rhr")),hB=avg(vals(base,"hrv"));
-  if(rhr!==null&&rB!==null&&rhr>rB+5)
-    return"FC repos "+rhr+" bpm, soit +"+r1(rhr-rB)+" vs moyenne 7 j — la séance qualité passe en facile.";
-  if(hrv!==null&&hB!==null&&hrv<hB*0.85)
-    return"VFC "+hrv+" ms, soit "+r1((hrv/hB-1)*100)+" % vs moyenne 7 j — la séance qualité passe en facile.";
-  return null;
+  let metric=null,head="";
+  if(rhr!==null&&rB!==null&&rhr>rB+5){
+    metric="rhr";head="FC repos "+rhr+" bpm, soit +"+r1(rhr-rB)+" vs moyenne 7 j";
+  }else if(hrv!==null&&hB!==null&&hrv<hB*0.85){
+    metric="hrv";head="VFC "+hrv+" ms, soit "+r1((hrv/hB-1)*100)+" % vs moyenne 7 j";
+  }else return null;
+  return{metric:metric,text:head+(hasQualityToday()
+    ?" — la séance qualité passe en facile."
+    :" — pas d'intensité ajoutée aujourd'hui, allure basse sur ce qui est prévu.")};
 }
 function weightDrop(mon){
   const a=weekWeight(mon),b=weekWeight(addDays(mon,-7));
   if(a===null||b===null)return null;
+  /* Une alerte de perte trop rapide assise sur deux pesées serait du
+     bruit : les deux semaines comparées doivent être pleines. */
+  if(weekWeightN(mon)<3||weekWeightN(addDays(mon,-7))<3)return null;
   /* Comparaison sur la valeur arrondie affichée : sans ça une baisse de
      0,7 kg pile déclenche l'alerte « au-delà de 0,7 kg » par flottant. */
   const d=r1(b-a);
@@ -721,10 +784,14 @@ function renderHeader(){
   /* 4 · VO2max maxi hebdo vs 48 — origine : premier relevé enregistré. */
   const vFrac=(vo===null||v0===null||v0>=VO2_TARGET)?0:(vo-v0)/(VO2_TARGET-v0);
 
+  /* Moyenne assise sur deux pesées seulement : elle compte, mais elle le
+     dit. Le repli sur une semaine antérieure garde son propre décompte. */
+  const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
+
   document.getElementById("prog").innerHTML=
     gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+mile.w,
-      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":"poids moy.","var(--depth)",
-      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg, jalon "+mile.wTxt)+
+      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":(wkN===2?"poids moy. partiel":"poids moy."),"var(--depth)",
+      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées, jalon "+mile.wTxt)+
     gauge(wtFrac,wa===null?dash:wa.toFixed(1),wa===null?"":"/"+WAIST_TARGET,
       wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
       wa===null?"Premier tour de taille prévu le "+MEASURE_START:"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+WAIST_TARGET)+
@@ -738,12 +805,14 @@ function renderHeader(){
   const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
   if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
   if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+"."]);
-  if(cap.capped)B.push(["warn","Plafond ramené à "+cap.cap+" km : la meilleure des "+REF_WEEKS+" dernières semaines pleines totalise "+cap.prev+" km courus"+(cap.refMon?" (semaine du "+fmt(cap.refMon).num+")":"")+", progression limitée à +10 %. Le plan demandait "+cap.planned+" km."]);
+  /* Un relèvement du plafond dur ne doit jamais être silencieux : le
+     bandeau nomme la valeur en vigueur, pas une constante supposée. */
+  if(cap.clamped)B.push(["warn","Plan à "+cap.planned+" km — ramené au plafond dur de "+cap.max+" km."]);
   if(over)B.push(["warn","Cumul course "+runKm+" km — plafond de "+cap.cap+" km dépassé."]);
   const hm=heelMax(lastN(TODAY,7));
   if(hm===1)B.push(["warn","Talon gênant sur les 7 derniers jours — volume −30 % cette semaine, pas d'intensité."]);
   if(hm===2)B.push(["warn","Talon douloureux sur les 7 derniers jours — course suspendue, salle et vélo/natation maintenus."]);
-  const rec=recovery(); if(rec)B.push(["warn",rec]);
+  const rec=recovery(); if(rec)B.push(["warn",rec.text]);
   const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
   const dw=drinksIn(weekDays(mon));
   if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
@@ -779,6 +848,11 @@ function viewToday(){
      : dayCard(d||{d:TODAY,fascia:false,sessions:[]},weekOf(TODAY));
   h+='</div>';
   open=prev;
+  /* Observance P1 et volume course : les deux chiffres consultés tous les
+     jours. p1Week() était calculé pour l'export sans jamais être montré. */
+  const mon=mondayOf(TODAY),p1=p1Week(mon),c=capFor(mon);
+  h+='<div class="meta obs">P1 de la semaine · '+p1.done+'/'+p1.planned+
+     ' · course '+weekRun(mon)+'/'+c.cap+' km</div>';
   h+='<section class="review">'+
     '<div class="review-t">Revue dominicale</div>'+
     '<div class="review-d">'+(reviewDue()
@@ -801,6 +875,11 @@ function viewPlan(){
       '<button class="reg'+(rg==="chargee"?" hot":"")+(regimeSet(w.start)?" man":"")+'" data-reg="'+w.start+'">'+esc(REGIME[rg]||rg)+'</button>'+
       '<span class="week-sub">'+(c.cap!==null?"plafond "+c.cap+" km":"")+
       (vol.length?(c.cap!==null?" · ":"")+vol.join(" · "):"")+'</span><span class="rule"></span></div>';
+    /* Un régime sans effet visible n'est qu'un libellé : la bascule dit
+       ce qu'elle engage. Vacances ne filtre rien — c'est une fenêtre de
+       surcharge, pas un allègement. */
+    if(rg==="vacances")html+='<div class="week-note">Fenêtre de surcharge. Le volume additionnel passe par le VTT, la natation, la randonnée. La course reste plafonnée.</div>';
+    else if(rg==="chargee")html+='<div class="week-note">Seules les P1 tiennent. Une semaine allégée n\'est pas une semaine perdue.</div>';
     html+='<div class="route"><div class="line"></div>';
     (w.days||[]).forEach(d=>{html+=(DB.days[d.d]&&DB.days[d.d].frozen)?frozenCard(d.d,true):dayCard(d,w);});
     html+='</div>';
@@ -933,26 +1012,37 @@ function dayDetail(d,extra){
   h+=numRow(k,"vo2","VO2max relevée","","ml","0.1");
   h+='<div class="log-row"><span class="log-lab">Heure de coucher<span class="hint">Cible avant '+fmtMin(BED_LIMIT)+'.</span></span>'+
      '<input type="time" value="'+esc(e.bedTime||"")+'" data-f="'+k+'|bedTime"><span class="unit"></span></div>';
-  /* Protéines : quatre prises de 40 g plutôt qu'une case tout-ou-rien.
-     Une coche unique ne disait ni l'écart ni où il s'est creusé. */
+  /* Protéines : quatre prises, chacune ses grammes. Le manque devient
+     lisible et localisé — il manque la collation, pas « la journée est
+     ratée ». Les grammes sont des ordres de grandeur, d'où le ≈. */
   const ps=protSet(e),pg=protG(e);
-  h+='<div class="log-row col"><span class="log-lab">Protéines<span class="hint'+(pg>=PROTEIN?"":" warn")+'">'+pg+' g sur '+PROTEIN+' — prises de '+PROT_UNIT+' g.</span></span><div class="pills">';
-  PROT_SLOTS.forEach(s=>{h+='<button class="pill'+(s[2]?" key":"")+'" data-pr="'+k+'|'+s[0]+'" data-on="'+(ps[s[0]]?1:0)+'">'+esc(s[1])+'</button>';});
+  h+='<div class="log-row col"><span class="log-lab">Protéines<span class="hint'+(pg>=PROTEIN?"":" warn")+'">≈ '+pg+' g sur '+PROTEIN+'.</span></span><div class="pills">';
+  PROT_SLOTS.forEach(s=>{h+='<button class="pill'+(s[3]?" key":"")+'" data-pr="'+k+'|'+s[0]+'" data-on="'+(ps[s[0]]?1:0)+'">'+esc(s[1])+' <span class="pg">'+s[2]+'</span></button>';});
   h+='</div></div>';
-  h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof e.alcohol==="number"&&e.alcohol>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
-  [0,1,2,3,4].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(e.alcohol===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+(n===4?"4+":n)+'</button>';});
+  /* Alcool : la pastille 4+ enregistrait 4. Sur deux à trois dîners
+     d'affaires par semaine contre une cible à 5 verres, c'est le seul
+     chiffre qui compte qu'on sous-estimait. Elle ouvre maintenant un
+     champ libre, et affiche la valeur réelle dès qu'elle dépasse 4. */
+  const al=e.alcohol,alBig=(typeof al==="number"&&al>=4);
+  h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof al==="number"&&al>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
+  [0,1,2,3].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(al===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+n+'</button>';});
+  h+='<button class="pill" data-a="'+k+'|4" data-on="'+(alBig?1:0)+'" data-over="1">'+(alBig?al:"4+")+'</button>';
+  if(alBig)h+='<input class="alx" type="number" min="4" step="1" inputmode="numeric" value="'+al+'" data-n="'+k+'|alcohol">';
   h+='</div></div>';
   h+='<div class="log-row"><span class="log-lab">État du talon</span><div class="pills">';
   ["muet","gêne légère","douloureux"].forEach((t,n)=>{h+='<button class="pill" data-h="'+k+'|'+n+'" data-on="'+((+e.heel||0)===n?1:0)+'" data-over="'+(n===2?1:0)+'">'+t+'</button>';});
   h+='</div></div>';
   if(k>=MEASURE_START)h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Ruban à mi-distance côte basse / crête iliaque.</span></span>'+
      '<input type="number" step="0.5" inputmode="decimal" placeholder="—" value="'+esc(e.waist||"")+'" data-f="'+k+'|waist"><span class="unit">cm</span></div>';
-  /* Tension : une prise par semaine. Le champ reste offert chaque jour —
-     imposer un jour fixe ferait perdre la mesure prise la veille. */
-  h+='<div class="log-row"><span class="log-lab">Tension<span class="hint">Une fois par semaine suffit. Assis, au repos depuis 5 min. Cible < '+BP_SYS+'/'+BP_DIA+'.</span></span>'+
+  /* Tension : le verdict se rend sur une série d'automesure, pas sur une
+     prise. La bascule « série » n'apparaît qu'une fois les deux chiffres
+     saisis — cocher une série vide n'aurait rien à qualifier. */
+  const bpFull=(num(e.sys)!==null&&num(e.dia)!==null);
+  h+='<div class="log-row"><span class="log-lab">Tension<span class="hint">Série trimestrielle, 3 matin + 3 soir sur 3 jours — saisis la moyenne de la série, pas une prise isolée. Cible < '+BP_SYS+'/'+BP_DIA+'.</span></span>'+
      '<div class="bp"><input type="number" step="1" inputmode="numeric" placeholder="sys" value="'+esc(e.sys||"")+'" data-f="'+k+'|sys">'+
-     '<span class="bp-sep">/</span><input type="number" step="1" inputmode="numeric" placeholder="dia" value="'+esc(e.dia||"")+'" data-f="'+k+'|dia"></div>'+
-     '<span class="unit">mmHg</span></div>';
+     '<span class="bp-sep">/</span><input type="number" step="1" inputmode="numeric" placeholder="dia" value="'+esc(e.dia||"")+'" data-f="'+k+'|dia">'+
+     (bpFull?'<button class="pill sm" data-bs="'+k+'" data-on="'+(e.bpSeries?1:0)+'">série</button>':'')+
+     '</div><span class="unit">mmHg</span></div>';
   h+='</div></div>';   /* .log puis .detail */
   return h;
 }
@@ -978,9 +1068,9 @@ function frozenDetail(k,extra){
   if(num(e.runKm)!==null)h+=row("Km courus",e.runKm,"km");
   OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)h+=row(o[1],e[o[0]],"km");});
   if(num(e.vo2)!==null)h+=row("VO2max relevée",e.vo2,"ml");
-  if(num(e.sys)!==null&&num(e.dia)!==null)h+=row("Tension",e.sys+"/"+e.dia,"mmHg");
+  if(num(e.sys)!==null&&num(e.dia)!==null)h+=row("Tension"+(e.bpSeries?" (série)":""),e.sys+"/"+e.dia,"mmHg");
   if(typeof e.alcohol==="number")h+=row("Verres d'alcool",String(e.alcohol),"");
-  h+=row("Protéines",protG(e)+" / "+PROTEIN,"g");
+  h+=row("Protéines","≈ "+protG(e)+" / "+PROTEIN,"g");
   if(e.note)h+=row("Séance",e.note,"");
   return h+'</div></div>';   /* .log puis .detail */
 }
@@ -1009,13 +1099,25 @@ function renderTargets(){
   const waist=lastVal("waist"),waistBase=num(R.waistBase),vo2=lastVal("vo2");
   const rhr30=avg(vals(lastN(TODAY,30),"rhr")),hrv30=avg(vals(lastN(TODAY,30),"hrv"));
   const sl=sleepCounts(lastN(TODAY,7)),slAvg=avg(vals(lastN(TODAY,7),"sleep"));
-  const drinks=drinksIn(weekDays(mon)),pull=num(R.pullups);
-  const bp=lastBP();
-  /* Protéines : moyenne des grammes cochés sur les 7 derniers jours. */
-  const pg=avg(lastN(TODAY,7).map(x=>DB.days[x]?protG(DB.days[x]):null).filter(v=>v!==null));
+  const drinks=drinksIn(weekDays(mon));
+  const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
+  /* Tension : la série fait foi seule, une prise opportuniste informe. */
+  const bpS=lastSeriesBP(),bpL=lastBP();
+  /* Protéines : décompte sur les 7 journées terminées, et l'état du jour
+     montré à part pour qu'il soit visible sans peser sur le verdict. */
+  const pd=protDays(7),pgToday=protG(rd(TODAY));
+  /* Force : le maintien ne se constate qu'en re-mesurant. */
+  const FORCE=[["bench","benchNow"],["pullups","pullupsNow"],["row","rowNow"],["press","pressNow"]];
+  const fPairs=FORCE.map(x=>[num(R[x[0]]),num(R[x[1]])]);
+  const fComplete=fPairs.every(p=>p[0]!==null&&p[1]!==null);
+  const fHeld=fComplete?fPairs.every(p=>p[1]>=p[0]):null;
+  const pullNow=num(R.pullupsNow);
+  /* Test 5 km : comparé sur la dernière semaine PLEINE, pas sur la
+     semaine en cours, dont le total est partiel par construction. */
+  const t5=parseMMSS(R.test5k),runFull=weekRun(addDays(mon,-7));
 
   const rows=[
-    {l:"Poids (moy. hebdo)",cur:wk===null?null:wk.toFixed(1)+" kg",
+    {l:"Poids (moy. hebdo)",cur:wk===null?null:wk.toFixed(1)+" kg"+(wkN===2?" · partiel":""),
      c:[{t:"91",ok:wk===null?null:wk<=91},{t:"89",ok:wk===null?null:wk<=89},{t:"86–87",ok:wk===null?null:wk<=87}]},
     {l:"Tour de taille",cur:waist===null?null:waist+" cm",
      c:[{t:"−4 cm vs réf.",ok:(waist===null||waistBase===null)?null:waistBase-waist>=4},
@@ -1026,26 +1128,36 @@ function renderTargets(){
      c:[{t:"—",ok:null},{t:"—",ok:null},{t:"≥ 50 ms",ok:hrv30===null?null:hrv30>=50}]},
     {l:"VO2max",cur:vo2===null?null:String(vo2),
      c:[{t:"—",ok:null},{t:"46",ok:vo2===null?null:vo2>=46},{t:"48–50",ok:vo2===null?null:vo2>=48}]},
-    {l:"Course",cur:runKm+" km/sem"+(R.test5k?" · 5 km "+R.test5k:""),
-     c:[{t:"5 km 26:30 · 30 km/sem",ok:runKm>=30},{t:"10 km 55:00 · 40 km/sem",ok:runKm>=40},{t:"Semi 1h50–52 · 10 km 51:00",ok:null}]},
-    {l:"Force",cur:pull===null?null:pull+" tractions",
-     c:[{t:"0 charge perdue",ok:null},{t:"—",ok:null},{t:"10 tractions strictes",ok:pull===null?null:pull>=10}]},
+    /* Les deux termes de la cellule de novembre sont évalués ensemble :
+       le chrono du test ET le volume de la dernière semaine pleine. */
+    {l:"Course",cur:runKm+" km/sem"+(t5!==null?" · 5 km "+R.test5k+(R.test5kDate?" le "+fmt(R.test5kDate).num+"/"+R.test5kDate.slice(5,7):""):""),
+     c:[{t:"5 km 26:30 · 30 km/sem",ok:t5===null?null:(t5<=TEST5K_TARGET&&runFull>=30)},
+        {t:"10 km 55:00 · 40 km/sem",ok:runFull>=40},
+        {t:"Semi 1h50–52 · 10 km 51:00",ok:null}]},
+    {l:"Force",cur:fComplete?"4 mouvements re-mesurés":(pullNow!==null?pullNow+" tractions":null),
+     c:[{t:"0 charge perdue",ok:fHeld},{t:"—",ok:null},
+        {t:"10 tractions strictes",ok:pullNow===null?null:pullNow>=10}]},
     {l:"Sommeil",cur:slAvg===null?null:slAvg.toFixed(1)+" h · "+sl.n7+"/7 nuits ≥ 7 h",
      c:[{t:"moy. ≥ 6h45",ok:slAvg===null?null:slAvg>=6.75},
         {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)},
         {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)}]},
     {l:"Alcool",cur:drinks+" verres/sem",
      c:[{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK}]},
-    /* Tension : objectif de santé n°1, échéance à 12 mois. Les deux
-       premières colonnes n'ont pas de palier chiffré — la ligne montre
-       quand même la dernière mesure, sinon rien ne la ferait remonter. */
-    {l:"Tension",cur:bp===null?null:bp.s+"/"+bp.d+" mmHg · "+fmt(bp.k).num+"/"+bp.k.slice(5,7),
+    /* Tension : objectif de santé n°1, échéance à 12 mois. Seule une
+       série d'automesure tranche. À défaut, la dernière prise s'affiche
+       et le dit : elle informe, elle ne conclut pas. Les deux premières
+       colonnes n'ont pas de palier chiffré. */
+    {l:"Tension",
+     cur:bpS!==null?bpS.s+"/"+bpS.d+" mmHg · série du "+dm(bpS.k)
+        :(bpL!==null?bpL.s+"/"+bpL.d+" mmHg · "+dm(bpL.k)+" — hors protocole, ne décide de rien":null),
      c:[{t:"—",ok:null},{t:"—",ok:null},
-        {t:"< "+BP_SYS+"/"+BP_DIA,ok:bp===null?null:(bp.s<BP_SYS&&bp.d<BP_DIA)}]},
-    {l:"Protéines (moy. 7 j)",cur:pg===null?null:Math.round(pg)+" g/j",
-     c:[{t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN},
-        {t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN},
-        {t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN}]}
+        {t:"< "+BP_SYS+"/"+BP_DIA,ok:bpS===null?null:(bpS.s<BP_SYS&&bpS.d<BP_DIA)}]},
+    /* Cible : 160 g atteints 5 jours sur 7. Un décompte, pas une
+       moyenne — une journée à 300 g ne rachète pas deux journées à 60. */
+    {l:"Protéines",cur:pd+"/7 jours ≥ "+PROTEIN+" g"+(pgToday?" · ≈ "+pgToday+" g aujourd'hui":""),
+     c:[{t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS},
+        {t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS},
+        {t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS}]}
   ];
   let h='<h2>Cibles</h2><p class="panel-sub">Trois échéances datées. Une ligne sans donnée de référence reste une estimation tant que le panneau Références n\'est pas rempli.</p>';
   h+='<div class="scroll"><table class="tgt"><tr><th></th>'+MILES.map(m=>"<th>"+m.lab+"</th>").join("")+"</tr>";
@@ -1071,14 +1183,27 @@ function lastVal(f){
   for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
   return null;
 }
-/* Dernière tension complète : les deux chiffres n'ont de sens qu'ensemble. */
-function lastBP(){
+/* Dernière tension complète : les deux chiffres n'ont de sens qu'ensemble.
+   serieOnly : ne retient que les journées portant une série d'automesure,
+   les seules sur lesquelles la ligne de cibles se prononce. */
+function lastBP(serieOnly){
   const ks=Object.keys(DB.days).sort();
   for(let i=ks.length-1;i>=0;i--){
     const e=DB.days[ks[i]],s=num(e.sys),d=num(e.dia);
-    if(s!==null&&d!==null)return{s:s,d:d,k:ks[i]};
+    if(s===null||d===null)continue;
+    if(serieOnly&&!e.bpSeries)continue;
+    return{s:s,d:d,k:ks[i]};
   }
   return null;
+}
+function lastSeriesBP(){return lastBP(true);}
+/* jj/mm — les dates d'un tableau tiennent en six caractères. */
+function dm(k){return fmt(k).num+"/"+k.slice(5,7);}
+/* Chrono mm:ss en secondes. null si le format n'est pas respecté : une
+   valeur en texte libre n'était comparée à rien. */
+function parseMMSS(s){
+  const m=/^\s*(\d{1,3}):([0-5]\d)\s*$/.exec(String(s||""));
+  return m?(+m[1])*60+(+m[2]):null;
 }
 function weekList(n){
   const a=[],m=mondayOf(TODAY);
@@ -1095,7 +1220,8 @@ function firstWeekWeight(){
 /* Tant qu'aucune moyenne n'existe, le graphe n'affiche que les jalons :
    aucune valeur de poids n'a été mesurée, il n'y a rien à tracer. */
 function weightChart(){
-  const pts=weekList(12).map(m=>({lab:fmt(m).num,v:weekWeight(m)})).filter(p=>p.v!==null);
+  /* partiel : moyenne assise sur deux pesées, tracée en point creux. */
+  const pts=weekList(12).map(m=>({lab:fmt(m).num,v:weekWeight(m),hollow:weekWeightN(m)===2})).filter(p=>p.v!==null);
   const refs=MILES.map(m=>({v:m.w,txt:m.wTxt+" · "+m.lab}));
   if(!pts.length)return'<div class="meta">Poids — moyenne hebdomadaire (kg)</div>'+refsOnly(refs)+
     '<p class="empty">Première pesée le '+MEASURE_START+'. Les trois jalons sont tracés, rien d\'autre n\'est mesuré.</p>';
@@ -1126,7 +1252,10 @@ function vo2Series(){
 }
 function volumeChart(){
   const ms=weekList(10),pts=[],refs=[];
-  ms.forEach(m=>{const c=capFor(m);if(c.cap!==null)refs.push(c.cap);pts.push({lab:fmt(m).num,v:weekRun(m)});});
+  /* Seuls les plafonds réellement portés par un plan comptent : une
+     semaine de juin ne s'est jamais vu opposer de plafond, le graphe ne
+     doit pas lui en inventer un rétroactivement. */
+  ms.forEach(m=>{const c=capFor(m);if(!c.implicit)refs.push(c.cap);pts.push({lab:fmt(m).num,v:weekRun(m)});});
   const capAvg=refs.length?r1(avg(refs)):null;
   return seriesChart("Volume course hebdomadaire (km)",pts.filter(p=>p.v>0),capAvg!==null?[{v:capAvg,txt:capAvg+" · plafond moyen"}]:[],1);
 }
@@ -1145,7 +1274,8 @@ function seriesChart(title,pts,refs,dec){
     s+='<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
   });
   s+='<polyline points="'+pts.map((p,i)=>X(i)+","+y(p.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
-  pts.forEach((p,i)=>{s+='<circle cx="'+X(i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
+  /* Point creux : moyenne partielle, tracée mais distinguée. */
+  pts.forEach((p,i)=>{s+='<circle cx="'+X(i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot'+(p.hollow?" hollow":"")+'"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
   s+='</svg><div class="meta" style="margin-top:2px">Dernier point '+pts[pts.length-1].v.toFixed(dec)+'</div>';
   return s;
 }
@@ -1155,22 +1285,40 @@ function renderRefs(){
   const R=DB.settings.refs,B=DB.settings.bloodwork;
   const f=(o,k,lab,unit,txt)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+'</span>'+
     '<input type="'+(txt?"text":"number")+'" '+(txt?"":'step="0.5" inputmode="decimal"')+' placeholder="—" value="'+esc(o[k]||"")+'" data-s="'+(o===R?"refs":"bloodwork")+'|'+k+'"><span class="unit">'+esc(unit)+'</span></div>';
+  /* Deux colonnes : la référence de départ et la re-mesure. « Aucune
+     charge perdue » ne peut se constater sans la seconde — une valeur
+     saisie une fois et jamais reprise ne bougera jamais. */
+  const p=(k,lab,unit)=>'<div class="log-row pair"><span class="log-lab">'+esc(lab)+'</span>'+
+    '<input type="number" step="0.5" inputmode="decimal" placeholder="réf." value="'+esc(R[k]||"")+'" data-s="refs|'+k+'">'+
+    '<input type="number" step="0.5" inputmode="decimal" placeholder="actuel" value="'+esc(R[k+"Now"]||"")+'" data-s="refs|'+k+'Now">'+
+    '<span class="unit">'+esc(unit)+'</span></div>';
   /* Rappel unique et non bloquant : il disparaît champ par champ. */
   const need28=["bench","pullups","row","press"].filter(x=>!R[x]).length;
   const need30=(lastVal("weight")===null?1:0)+(R.waistBase?0:1);
   const todo=[];
   if(need28)todo.push("<b>28/08</b> — charges des quatre mouvements ("+need28+" sur 4 manquantes), à la séance de référence");
   if(need30)todo.push("<b>30/08</b> — première pesée et tour de taille");
+  if(parseMMSS(R.test5k)===null)todo.push("<b>12/09</b> — test 5 km, effort maîtrisé, terrain plat");
+  const t5bad=R.test5k&&parseMMSS(R.test5k)===null;
   let h='<h2>Références</h2><p class="panel-sub">Mesures de départ, saisies une fois. Tant qu\'un champ reste vide, la ligne correspondante des cibles s\'affiche comme estimation.</p>';
-  if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le test 5 km et le bilan sanguin restent ouverts, sans date.</p>';
+  if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le bilan sanguin reste ouvert, sans date.</p>';
   h+='<div class="refs-grid">';
   h+=f(R,"waistBase","Tour de taille de référence","cm");
-  h+=f(R,"test5k","Test 5 km","",1);
-  h+='<div class="refs-h">Charges des quatre mouvements</div>';
-  h+=f(R,"bench","Développé couché","kg");
-  h+=f(R,"pullups","Tractions (max strictes)","reps");
-  h+=f(R,"row","Rowing barre","kg");
-  h+=f(R,"press","Presse ou squat","kg");
+  h+='<div class="log-row"><span class="log-lab">Test 5 km<span class="hint">Format mm:ss. Cible novembre 26:30.</span></span>'+
+     '<input type="text" inputmode="numeric" placeholder="mm:ss" class="'+(t5bad?"bad":"")+'" value="'+esc(R.test5k||"")+'" data-s="refs|test5k"><span class="unit"></span></div>';
+  h+='<div class="log-row"><span class="log-lab">Date du test</span>'+
+     '<input type="date" value="'+esc(R.test5kDate||"")+'" data-s="refs|test5kDate"><span class="unit"></span></div>';
+  /* Le plafond dur vit ici, pas dans le code : une décision de coaching
+     ne doit pas attendre un déploiement pour s'appliquer. */
+  h+='<div class="log-row"><span class="log-lab">Plafond dur course<span class="hint">Révisé en session coach, jamais à la volée. Par défaut '+RUN_ABS_MAX+' km.</span></span>'+
+     '<input type="number" step="1" inputmode="numeric" placeholder="'+RUN_ABS_MAX+'" value="'+esc(R.runAbsMax||"")+'" data-s="refs|runAbsMax"><span class="unit">km/sem</span></div>';
+  h+='<div class="refs-h">Charges des quatre mouvements — référence puis actuel</div>';
+  h+=p("bench","Développé couché","kg");
+  h+=p("pullups","Tractions (max strictes)","reps");
+  h+=p("row","Rowing barre","kg");
+  h+=p("press","Presse ou squat","kg");
+  h+='<div class="log-row"><span class="log-lab">Date de la re-mesure</span>'+
+     '<input type="date" value="'+esc(R.refsNowDate||"")+'" data-s="refs|refsNowDate"><span class="unit"></span></div>';
   h+='<div class="refs-h">Bilan sanguin</div>';
   h+=f(B,"ldl","LDL","g/L");h+=f(B,"hdl","HDL","g/L");h+=f(B,"tg","Triglycérides","g/L");
   h+=f(B,"hba1c","HbA1c","%");h+=f(B,"ferritin","Ferritine","µg/L");h+=f(B,"vitd","Vitamine D","ng/mL");
@@ -1196,14 +1344,26 @@ function contextBlock(){
     drinksWeek:drinksIn(weekDays(mon)),
     heelMax7:heelMax(lastN(TODAY,7)),
     p1Done:p1.done,p1Planned:p1.planned,
-    /* Référence du plafond : la meilleure des 4 semaines pleines, pour
-       que la session coach voie sur quoi les +10 % s'appuient. */
-    runRefKm:c.prev,runRefWeek:c.refMon,runCapCapped:c.capped,
+    /* Matière brute de la progression, sans règle qui en soit tirée :
+       l'app ne calcule plus le plafond, c'est la session coach qui
+       décide. impactWeeks agrège course + randonnée, parce que la
+       randonnée se substitue à la course et que la compter zéro fausse
+       la lecture de la charge. */
+    runWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm")))})),
+    impactWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm"))+total(vals(weekDays(m),"hikeKm")))})),
     regimeWeek:regimeOf(mon),regimeManual:regimeSet(mon),
-    proteinAvg7:(()=>{const v=avg(lastN(TODAY,7).map(x=>DB.days[x]?protG(DB.days[x]):null).filter(y=>y!==null));return v===null?null:Math.round(v);})(),
-    bp:(()=>{const b=lastBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
+    proteinDays7:protDays(7),proteinAvgG7:protAvgG(7),
+    /* La série tranche, la prise informe : deux champs distincts. */
+    bpSeries:(()=>{const b=lastSeriesBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
+    bpLast:(()=>{const b=lastBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
     lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge()
   };
+}
+/* Les n dernières semaines terminées, ordre chronologique. */
+function lastFullWeeks(n){
+  const a=[],mon=mondayOf(TODAY);
+  for(let i=n;i>=1;i--)a.push(addDays(mon,-7*i));
+  return a;
 }
 function reviewJSON(){
   const days={},start=addDays(TODAY,-13);
@@ -1211,10 +1371,15 @@ function reviewJSON(){
   return JSON.stringify({app:APP,version:VERSION,exported:TODAY,from:start,to:TODAY,
     days:days,plan:DB.plan,settings:DB.settings,context:contextBlock()},null,1);
 }
-function copyOut(s,msg){
+/* onDone n'est appelé que si quelque chose est réellement sorti : le
+   presse-papiers a accepté, ou la boîte de repli a été validée. Dater la
+   sauvegarde avant de le savoir affichait « sauvegardé aujourd'hui »
+   quand l'utilisateur venait d'annuler. */
+function copyOut(s,msg,onDone){
+  const fallback=()=>{if(prompt("Copie ce texte :",s)!==null&&onDone)onDone();};
   if(navigator.clipboard&&navigator.clipboard.writeText)
-    navigator.clipboard.writeText(s).then(()=>alert(msg),()=>prompt("Copie ce texte :",s));
-  else prompt("Copie ce texte :",s);
+    navigator.clipboard.writeText(s).then(()=>{alert(msg);if(onDone)onDone();},fallback);
+  else fallback();
 }
 /* Rattrapage : le plan importé peut porter un bloc `backfill`, des
    mesures par date relevées dans Santé au moment de la revue. Elles ne
@@ -1287,14 +1452,15 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-h],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-bs],[data-pr],[data-a],[data-h],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
   if(!t)return;
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
   if(t.id==="exp"){
     /* L'export est la seule sauvegarde : on date celui-ci pour pouvoir
        dire depuis quand le journal ne tient plus qu'à cet appareil. */
-    copyOut(JSON.stringify(DB),"Données copiées. Colle-les dans une note ou un mail — c'est ta seule sauvegarde.");
-    DB.settings.lastExport=TODAY;save();render();return;}
+    copyOut(JSON.stringify(DB),"Données copiées. Colle-les dans une note ou un mail — c'est ta seule sauvegarde.",
+      ()=>{DB.settings.lastExport=TODAY;save();render();});
+    return;}
   if(t.id==="imp"){
     const s=prompt("Colle ici les données exportées :");
     if(s){try{const p=JSON.parse(s);if(!p||typeof p!=="object"||Array.isArray(p))throw 0;
@@ -1328,12 +1494,28 @@ document.addEventListener("click",ev=>{
     const nx=ord[(ord.indexOf(regimeOf(m))+1)%3];
     if(!DB.settings.regime)DB.settings.regime={};
     DB.settings.regime[m]=nx;save();render();return;}
-  if(t.dataset.a){const a=t.dataset.a.split("|"),e=entry(a[0]),n=Number(a[1]);e.alcohol=(e.alcohol===n)?"":n;save();render();return;}
+  if(t.dataset.bs!==undefined){const e=entry(t.dataset.bs);e.bpSeries=!e.bpSeries;save();render();return;}
+  if(t.dataset.a){const a=t.dataset.a.split("|"),e=entry(a[0]),n=Number(a[1]);
+    /* La pastille 4+ n'enregistre plus 4 : elle ouvre le champ libre,
+       qui reçoit le focus. Un second clic dessus efface la valeur. */
+    const isBig=(n===4),cur=e.alcohol;
+    if(isBig&&typeof cur==="number"&&cur>=4)e.alcohol="";
+    else e.alcohol=(!isBig&&cur===n)?"":n;
+    save();render();
+    if(isBig&&typeof e.alcohol==="number"){
+      const f=document.querySelector('.alx[data-n="'+a[0]+'|alcohol"]');
+      if(f){f.focus();f.select();}
+    }
+    return;}
   if(t.dataset.h){const a=t.dataset.h.split("|"),e=entry(a[0]),n=Number(a[1]);e.heel=(+e.heel===n)?0:n;save();render();}
 });
 document.addEventListener("change",ev=>{
-  const f=ev.target.dataset.f,s=ev.target.dataset.s;
+  const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n;
   if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
+  /* Champ numérique dont le type compte : drinksIn() n'additionne que les
+     nombres, une chaîne sortirait la journée du comptage. */
+  if(n){const a=n.split("|"),v=num(ev.target.value);
+    entry(a[0])[a[1]]=(v===null||v<0)?"":v;save();refreshLive();return;}
   if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();}
 });
 
