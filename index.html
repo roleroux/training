@@ -2,7 +2,10 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<!-- Pas de maximum-scale : brider le zoom prive de l'agrandissement
+     tactile. Le zoom automatique au focus se règle par la taille de
+     police des champs, pas en interdisant le geste. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -23,6 +26,10 @@
   /* Posé sur --depth : blanc en clair, encre en sombre. Le blanc sur
      l'accent sombre ne donnait que 2,92:1, sous le seuil de 3:1. */
   --on-accent:#FFFFFF;
+  /* Fond du monogramme. En sombre, le bleu nuit d'origine tombait à
+     1,13:1 contre la page : le disque disparaissait et les quatre
+     repères orange flottaient sans ancrage. */
+  --mark-bg:#0A2233;
   --k-run:#C24A2C;--k-str:#1E7F72;--k-pos:#8A6E1B;--k-swim:#3E7FA3;--k-rest:#5E7180;
   --shadow:0 1px 2px rgba(10,34,51,.04),0 5px 16px rgba(10,34,51,.05);
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
@@ -35,6 +42,7 @@
   --buoy:#E8764F;--depth:#3AA893;--brass:#CBA84C;
   --wave:#152230;--chart-grid:#2A4054;--press:rgba(255,255,255,.06);--veil:rgba(11,21,30,.82);
   --on-accent:#08121A;
+  --mark-bg:#1B3149;
   --k-run:#E8764F;--k-str:#3AA893;--k-pos:#CBA84C;--k-swim:#6FB0D6;--k-rest:#8296A6;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
 }}
@@ -47,6 +55,7 @@ body{
 .wrap{max-width:640px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
 .bg{position:fixed;inset:0;pointer-events:none;opacity:.9;z-index:0}
 #bg path{stroke:var(--wave)}
+.mark-bg{fill:var(--mark-bg)}
 button{user-select:none;-webkit-user-select:none;touch-action:manipulation}
 :focus-visible{outline:2px solid var(--depth);outline-offset:2px;border-radius:4px}
 .box,.pill,.tool{transition:transform .08s ease,background-color .12s ease,border-color .12s ease}
@@ -87,7 +96,10 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
 @media (max-width:430px){.prog{gap:14px 20px}}
 
-.tabs{position:sticky;z-index:4;margin:0 -18px;padding:0 18px;display:flex;gap:0;border-bottom:1px solid var(--edge);
+/* Pas de position:sticky ici : sans « top » elle n'a jamais collé, et
+   l'en-tête figé porte déjà le repère. Le fond voilé reste nécessaire,
+   les vagues du fond défilent derrière. */
+.tabs{margin:0 -18px;padding:0 18px;display:flex;gap:0;border-bottom:1px solid var(--edge);
   background:var(--veil);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px)}
 .tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--fog);cursor:pointer;
   font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:13px 4px}
@@ -101,7 +113,9 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .jrow:last-child{border-bottom:none}
 .jrow:active{background:var(--press)}
 .jrow.today{background:var(--tint)}
-.jrow.on{background:var(--tint)}
+/* today et « ouvert » partageaient le même fond : on ne savait plus
+   laquelle des deux lignes était le jour courant. */
+.jrow.on{background:var(--tint);box-shadow:inset 3px 0 0 var(--depth)}
 .jdet{border-bottom:1px solid var(--edge)}
 .jbox>.jdet:last-child{border-bottom:none}
 .jbox{border:1px solid var(--edge);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
@@ -118,7 +132,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .review{margin-top:20px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:15px}
 .review-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog)}
 .review-d{font-size:12px;color:var(--fog);line-height:1.5;margin-top:6px}
-.big{display:block;width:100%;margin-top:11px;padding:13px;border-radius:9px;border:none;background:var(--depth);color:#FFFFFF;font-family:var(--mono);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
+.big{display:block;width:100%;margin-top:11px;padding:13px;border-radius:9px;border:none;background:var(--depth);color:var(--on-accent);font-family:var(--mono);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
 .big.sec{background:none;border:1px solid var(--edge);color:var(--fog)}
 
 /* Le nom, la bascule de régime et le trait tiennent la première ligne ;
@@ -194,7 +208,10 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);flex:1;min-width:120px}
 .log-lab .hint{text-transform:none;letter-spacing:0;display:block;font-family:var(--sans);font-size:11px;margin-top:3px;line-height:1.4}
 .log-lab .hint.warn{color:var(--buoy)}
+/* 16 px partout : en dessous, iOS zoome la page à la prise de focus et
+   ne la dézoome jamais. Les champs date et heure en héritaient pas. */
 input[type=number],input[type=text]{background:none;border:none;border-bottom:1px solid var(--edge);color:var(--ink);font-family:var(--mono);font-size:16px;width:76px;text-align:right;padding:4px;border-radius:0}
+input[type=date],input[type=time]{font-family:var(--mono);font-size:16px;color:var(--ink);background:none;border:none;border-bottom:1px solid var(--edge);padding:4px;border-radius:0}
 input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color:var(--brass)}
 .unit{font-family:var(--mono);font-size:9.5px;color:var(--fog);width:34px}
 .pills{display:flex;gap:6px;flex-wrap:wrap}
@@ -212,7 +229,7 @@ input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color
 .log-row.pair{display:grid;grid-template-columns:1fr 68px 68px 30px;gap:8px;align-items:center}
 .log-row.pair input{width:100%}
 .pair-h span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);text-align:center}
-.g-dot.hollow{fill:var(--surface);stroke:var(--depth);stroke-width:1.6}
+.g-dot.hollow{fill:var(--surface);stroke:var(--brass);stroke-width:1.6}
 input.bad{border-color:var(--buoy)}
 .week-note{font-size:11.5px;line-height:1.5;color:var(--fog);margin:-6px 0 12px}
 .obs{margin-top:20px}
@@ -253,7 +270,7 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 <body>
 <svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
 <div class="wrap">
-  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" fill="#0A2233"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
+  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" class="mark-bg"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
   <nav class="tabs" id="tabs"></nav>
   <div id="view"></div>
 </div>
@@ -267,7 +284,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.6", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.7", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
