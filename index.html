@@ -204,7 +204,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-22.5", RKEY="pmp-reload", OKEY="pmp-open";
+const VERSION="2026-08-22.6", RKEY="pmp-reload", OKEY="pmp-open";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -368,15 +368,25 @@ function lastFrozenWeek(){
 
 /* ================= Mise à jour du raccourci ================= */
 function ses(op,v,k){const key=k||RKEY;try{return op==="get"?sessionStorage.getItem(key):op==="set"?sessionStorage.setItem(key,v):sessionStorage.removeItem(key);}catch(e){return null;}}
+const MAX_TRIES=3;
 function checkVersion(){
   const now=Date.now(); if(now-lastCheck<60000)return; lastCheck=now;
-  const tried=ses("get");
+  const rec=String(ses("get")||"").split("|"), triedV=rec[0], tries=+rec[1]||0;
   fetch("version.txt",{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{
     const v=t&&t.trim();
-    if(!v||v===VERSION){ses("del");return;}
-    if(tried===v){stale="Nouvelle version disponible — ferme puis rouvre le raccourci";setSave(stale);return;}
-    ses("set",v); ses("set",open||"",OKEY);
-    location.replace(location.pathname+"?v="+encodeURIComponent(v));
+    if(!v||v===VERSION){ses("del"); if(stale){stale="";render();} return;}
+    const n=(triedV===v)?tries:0;
+    if(n>=MAX_TRIES){
+      /* Trois URL neuves n'ont pas suffi : le cache ne cédera pas seul. */
+      stale="Version "+v+" publiée, cette page reste sur "+VERSION+" — ferme puis rouvre le raccourci.";
+      setSave(stale); render(); return;
+    }
+    ses("set",v+"|"+(n+1)); ses("set",open||"",OKEY);
+    /* Horodatage en plus du numéro de version : si un rechargement
+       antérieur a été servi avant la propagation du CDN, l'URL
+       ?v=<version> porte l'ancienne page en cache et la réutiliser la
+       resservirait indéfiniment. Chaque tentative vise une URL inédite. */
+    location.replace(location.pathname+"?v="+encodeURIComponent(v)+"."+Date.now());
   }).catch(()=>{});
 }
 addEventListener("scroll",()=>{
@@ -569,6 +579,9 @@ function render(){
   if(hm===2)B.push(["warn","Talon douloureux sur les 7 derniers jours — course suspendue, salle et vélo/natation maintenus."]);
   const rec=recovery(); if(rec)B.push(["warn",rec]);
   const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
+  /* En tête des bandeaux : une app bloquée sur une vieille version ne
+     doit pas l'annoncer dans la ligne d'état en bas de page. */
+  if(stale)B.unshift(["warn",stale]);
   const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
   const dw=drinksIn(weekDays(mon));
   if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
