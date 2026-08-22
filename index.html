@@ -204,7 +204,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-22.6", RKEY="pmp-reload", OKEY="pmp-open";
+const VERSION="2026-08-22.7", RKEY="pmp-reload", OKEY="pmp-open";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -915,23 +915,62 @@ function copyOut(s,msg){
     navigator.clipboard.writeText(s).then(()=>alert(msg),()=>prompt("Copie ce texte :",s));
   else prompt("Copie ce texte :",s);
 }
+/* Rattrapage : le plan importé peut porter un bloc `backfill`, des
+   mesures par date relevées dans Santé au moment de la revue. Elles ne
+   s'appliquent qu'aux jours passés et seulement là où le champ est vide,
+   donc une saisie manuelle n'est jamais écrasée. Les champs déclaratifs
+   — protéines, alcool, coucher, talon — en sont exclus : ils ne se
+   lisent nulle part et personne d'autre que toi ne peut les affirmer. */
+const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist"];
+function applyBackfill(bf){
+  let n=0,days=0;
+  Object.keys(bf||{}).forEach(k=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>TODAY)return;
+    const src=bf[k]; if(!src||typeof src!=="object")return;
+    const e=entry(k); let touched=0;
+    BACKFILL_FIELDS.forEach(f=>{
+      if(!(f in src))return;
+      /* Poids et taille n'existent pas avant la première pesée : les
+         remplir avant alimenterait une jauge avec une valeur que l'app
+         n'affiche pas et qu'on ne pourrait pas corriger. */
+      if((f==="weight"||f==="waist")&&k<MEASURE_START)return;
+      const cur=e[f];
+      if(cur!==""&&cur!==null&&cur!==undefined)return;
+      const v=src[f];
+      if(v===null||v===undefined||v==="")return;
+      e[f]=String(v);n++;touched=1;
+    });
+    if(touched)days++;
+  });
+  return{n:n,days:days};
+}
 function importPlan(txt){
-  let p;try{p=JSON.parse(txt);}catch(e){return"Plan non reconnu";}
-  if(!p||typeof p!=="object"||!Array.isArray(p.weeks)||!p.weeks.length)return"Plan non reconnu";
+  let p;try{p=JSON.parse(txt);}catch(e){return{err:"Plan non reconnu"};}
+  if(!p||typeof p!=="object"||!Array.isArray(p.weeks)||!p.weeks.length)return{err:"Plan non reconnu"};
   const dre=/^\d{4}-\d{2}-\d{2}$/;
   for(const w of p.weeks){
-    if(!w||typeof w.start!=="string"||!dre.test(w.start)||!Array.isArray(w.days))return"Plan non reconnu";
+    if(!w||typeof w.start!=="string"||!dre.test(w.start)||!Array.isArray(w.days))return{err:"Plan non reconnu"};
     for(const d of w.days){
-      if(!d||typeof d.d!=="string"||!dre.test(d.d))return"Plan non reconnu";
-      if(d.sessions!==undefined&&!Array.isArray(d.sessions))return"Plan non reconnu";
-      for(const s of (d.sessions||[]))if(!s||typeof s.label!=="string")return"Plan non reconnu";
+      if(!d||typeof d.d!=="string"||!dre.test(d.d))return{err:"Plan non reconnu"};
+      if(d.sessions!==undefined&&!Array.isArray(d.sessions))return{err:"Plan non reconnu"};
+      for(const s of (d.sessions||[]))if(!s||typeof s.label!=="string")return{err:"Plan non reconnu"};
     }
   }
-  DB.plan=p;save();open=null;render();return null;
+  if(p.backfill!==undefined){
+    if(!p.backfill||typeof p.backfill!=="object"||Array.isArray(p.backfill))return{err:"Plan non reconnu"};
+    for(const k in p.backfill){
+      const o=p.backfill[k];
+      if(!dre.test(k)||!o||typeof o!=="object"||Array.isArray(o))return{err:"Plan non reconnu"};
+    }
+  }
+  DB.plan=p;
+  const bf=applyBackfill(p.backfill);
+  save();open=null;render();
+  return{filled:bf.n,days:bf.days};
 }
 function renderTools(){
   document.getElementById("tools").innerHTML=
-    '<h2>Données</h2><p class="panel-sub">Tout est stocké sur cet appareil. L\'import d\'un plan ne touche ni les cases cochées ni les saisies, indexées par date.</p>'+
+    '<h2>Données</h2><p class="panel-sub">Tout est stocké sur cet appareil. L\'import d\'un plan ne touche ni les cases cochées ni les saisies, indexées par date. Un plan peut porter un rattrapage de mesures : il ne remplit que les champs restés vides sur les jours passés.</p>'+
     '<button class="big sec" id="impPlan">Importer un plan</button>'+
     '<div class="tools"><button class="tool" id="exp">Exporter les données</button><button class="tool" id="imp">Importer les données</button></div>'+
     '<div class="save" id="save"></div>';
@@ -949,7 +988,8 @@ document.addEventListener("click",ev=>{
     return;}
   if(t.id==="impPlan"){
     const s=prompt("Colle ici le plan de 2 semaines :");
-    if(s){const err=importPlan(s);alert(err||"Plan importé.");}
+    if(s){const r=importPlan(s);
+      alert(r.err||("Plan importé."+(r.filled?"\n"+r.filled+" valeur"+(r.filled>1?"s":"")+" complétée"+(r.filled>1?"s":"")+" sur "+r.days+" jour"+(r.days>1?"s":"")+".":"")));}
     return;}
   if(t.dataset.open!==undefined){open=(open===t.dataset.open)?null:t.dataset.open;render();return;}
   if(t.dataset.alt!==undefined){const a=t.dataset.alt.split("|"),e=entry(a[0]);e.done["alt"+a[1]]=!e.done["alt"+a[1]];save();render();return;}
