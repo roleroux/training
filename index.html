@@ -117,9 +117,16 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .big{display:block;width:100%;margin-top:11px;padding:13px;border-radius:9px;border:none;background:var(--depth);color:#FFFFFF;font-family:var(--mono);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
 .big.sec{background:none;border:1px solid var(--edge);color:var(--fog)}
 
-.week{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px}
-.week-name{font-family:var(--serif);font-style:italic;font-size:19px}
-.week-sub{font-size:11.5px;color:var(--fog)}
+/* Le nom, la bascule de régime et le trait tiennent la première ligne ;
+   les volumes passent dessous plutôt que de casser le nom en deux. */
+.week{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;flex-wrap:wrap}
+.week-name{font-family:var(--serif);font-style:italic;font-size:19px;flex:0 0 auto}
+.week-sub{font-size:11.5px;color:var(--fog);flex:0 0 100%;order:9}
+.reg{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--fog);
+  background:none;border:1px solid var(--edge);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.reg.hot{color:var(--buoy);border-color:var(--buoy)}
+.reg.man{background:var(--tint)}
+.reg:active{background:var(--press)}
 .rule{height:1px;background:var(--edge);flex:1;min-width:14px}
 
 .route{position:relative;padding-left:34px}
@@ -165,6 +172,11 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 
 .log{margin-top:14px;padding-top:13px;border-top:1px solid var(--edge);display:grid;gap:13px}
 .log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.log-row.col{align-items:flex-start;flex-direction:column;gap:8px}
+.log-row.col .pills{width:100%}
+.bp{display:flex;align-items:center;gap:6px}
+.bp input{width:64px}
+.bp-sep{color:var(--fog);font-family:var(--mono)}
 .log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);flex:1;min-width:120px}
 .log-lab .hint{text-transform:none;letter-spacing:0;display:block;font-family:var(--sans);font-size:11px;margin-top:3px;line-height:1.4}
 .log-lab .hint.warn{color:var(--buoy)}
@@ -175,6 +187,9 @@ input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color
 .pill{min-width:40px;height:38px;border:1px solid var(--edge);background:none;border-radius:9px;color:var(--fog);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0 9px}
 .pill[data-on="1"]{border-color:var(--depth);color:var(--depth)}
 .pill[data-on="1"][data-over="1"]{border-color:var(--buoy);color:var(--buoy)}
+/* Les deux créneaux qui font la journée sont marqués même décochés. */
+.pill.key{border-style:solid;border-color:var(--fog)}
+.pill.key[data-on="1"]{border-color:var(--depth);color:var(--depth);background:var(--tint)}
 
 .panel{margin-top:34px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);padding:20px 18px;box-shadow:var(--shadow)}
 .panel h2{font-family:var(--serif);font-style:italic;font-size:19px;margin:0 0 4px;font-weight:600}
@@ -201,6 +216,8 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 .tools{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
 .tool{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);background:none;border:1px solid var(--edge);border-radius:8px;padding:10px 14px;cursor:pointer}
 .save{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);margin-top:12px}
+.backup{font-size:11.5px;color:var(--fog);margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+.backup.warn{color:var(--buoy)}
 .refs-grid{display:grid;gap:12px}
 .refs-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -224,7 +241,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.2", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.3", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -240,6 +257,18 @@ const MEASURE_START="2026-08-30";
 const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
 const WAIST_TARGET=94, VO2_TARGET=48;   /* cibles des jauges tour de taille et VO2max */
+/* Tension : objectif de santé daté à 12 mois. Une mesure par semaine
+   suffit, la variabilité d'une prise à l'autre dépasse le signal. */
+const BP_SYS=130, BP_DIA=80;
+/* Protéines : quatre prises de 40 g. Les deux premières sont les
+   créneaux à sécuriser — c'est là que la journée se joue ou se perd. */
+const PROT_UNIT=40;
+const PROT_SLOTS=[["whey","Whey matin",1],["diner","Dîner",1],["midi","Midi",0],["coll","Collation",0]];
+/* Plafond course : référence prise sur les meilleures semaines récentes,
+   pas sur la seule dernière. */
+const REF_WEEKS=4;
+/* Sauvegarde : au-delà, le journal ne tient plus qu'à un appareil. */
+const EXPORT_MAX=10;
 
 const KIND={
   salle:{t:"SALLE",c:"var(--k-str)"},course:{t:"COURSE",c:"var(--k-run)"},
@@ -361,6 +390,7 @@ function normalize(){
   if(!DB.settings)DB.settings={};
   if(!DB.settings.refs)DB.settings.refs={};
   if(!DB.settings.bloodwork)DB.settings.bloodwork={};
+  if(!DB.settings.regime)DB.settings.regime={};
   if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
   return seedHistory();
 }
@@ -372,9 +402,19 @@ function save(){
 function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
 function entry(k){
   if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
-    protein:false,alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0};
+    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0,sys:"",dia:""};
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
 }
+/* Prises de protéines. L'ancienne case unique « 160 g atteints » vaut les
+   quatre prises : elle affirmait la même chose, sans dire où. Elle est
+   lue, jamais réécrite — la conversion n'a lieu qu'à la première coche. */
+function protSet(e){
+  if(e&&e.prot&&typeof e.prot==="object")return e.prot;
+  if(e&&e.protein===true){const o={};PROT_SLOTS.forEach(s=>{o[s[0]]=true;});return o;}
+  return {};
+}
+function protCount(e){const s=protSet(e);let n=0;PROT_SLOTS.forEach(x=>{if(s[x[0]])n++;});return n;}
+function protG(e){return protCount(e)*PROT_UNIT;}
 /* Lecture seule : le rendu passe par ici. entry() créait une journée vide
    pour chaque jour affiché, si bien que parcourir le plan ou le journal
    gonflait la base — et l'export — de journées jamais saisies. L'objet
@@ -524,21 +564,34 @@ function dayOf(k){
 
 /* ================= Règles automatiques (§6) ================= */
 /* Plafond effectif : le calcul +10 % prime sur le plan importé s'il est
-   plus bas. Semaine précédente sans aucun km saisi : le calcul ne
-   s'applique pas, sinon le plafond tomberait à zéro. */
+   plus bas.
+   La référence est la MEILLEURE des quatre semaines pleines qui
+   précèdent, pas la dernière. Une seule semaine creuse — déplacement,
+   semaine chargée, voyage — effondrerait sinon le plafond de la
+   suivante : 8 km courus donneraient 8,8 km autorisés alors que la
+   charge encaissée trois semaines plus tôt était de 31 km. La perte
+   d'adaptation ne va pas à cette vitesse.
+   Une semaine en cours est ignorée : son total est partiel et écrêterait
+   à tort. Aucun km saisi sur toute la fenêtre : le calcul ne s'applique
+   pas, sinon le plafond tomberait à zéro. */
 function capFor(mon){
   const w=weekOf(mon)||weekOf(addDays(mon,1)),planned=w?num(w.runCapKm):null;
-  const prevMon=addDays(mon,-7);
-  const prev=total(vals(weekDays(prevMon),"runKm"));
-  /* La règle des +10 % suppose une semaine précédente terminée. Tant
-     qu'elle est en cours, son total est partiel et écrêterait à tort le
-     plafond d'une semaine à venir. */
-  const done=addDays(prevMon,6)<TODAY;
+  let prev=0,refMon=null,done=false;
+  for(let i=1;i<=REF_WEEKS;i++){
+    const m=addDays(mon,-7*i);
+    if(addDays(m,6)>=TODAY)continue;
+    done=true;
+    const t=total(vals(weekDays(m),"runKm"));
+    if(t>prev){prev=t;refMon=m;}
+  }
   const growth=(done&&prev>0)?prev*1.10:null;
   let cap=planned,capped=false;
   if(planned===null)cap=growth;
   else if(growth!==null&&growth<planned){cap=growth;capped=true;}
-  return{cap:cap===null?null:r1(cap),capped:capped,planned:planned,prev:r1(prev),prevDone:done};
+  /* refDone : au moins une semaine pleine dans la fenêtre, donc une
+     référence exploitable. Ce n'est plus « la semaine d'avant est
+     terminée » : la fenêtre en couvre quatre. */
+  return{cap:cap===null?null:r1(cap),capped:capped,planned:planned,prev:r1(prev),refDone:done,refMon:refMon};
 }
 /* Récupération : la valeur du jour est comparée à la moyenne des 7 jours
    qui la précèdent, pour que la mesure ne dilue pas sa propre référence. */
@@ -565,12 +618,45 @@ function currentMile(){
   for(const m of MILES)if(TODAY<=m.d)return m;
   return MILES[MILES.length-1];
 }
+/* Ancienneté du dernier export. null = jamais exporté. Le journal ne
+   vit que dans le stockage de ce navigateur : un effacement de données
+   de site, un téléphone perdu, et il n'en reste rien. */
+function exportAge(){
+  const k=(DB.settings||{}).lastExport;
+  if(!k||!/^\d{4}-\d{2}-\d{2}$/.test(k))return null;
+  return Math.round((parseD(TODAY)-parseD(k))/86400000);
+}
+function exportTxt(){
+  const a=exportAge();
+  if(a===null)return"jamais exporté";
+  return a<=0?"aujourd'hui":a===1?"hier":"il y a "+a+" jours";
+}
+
+/* ================= Régime de la semaine ================= */
+/* Le plan importé propose un régime ; la bascule manuelle le remplace.
+   Une semaine dérape un mardi, pas le dimanche de la revue — sans ce
+   bouton le dispositif à trois régimes ne sert qu'une fois par semaine. */
+function regimeOf(mon){
+  const ov=(DB.settings.regime||{})[mon];
+  if(ov)return ov;
+  const w=weekOf(mon)||weekOf(addDays(mon,1));
+  return (w&&w.regime)||"normale";
+}
+function regimeSet(mon){return !!(DB.settings.regime||{})[mon];}
+/* Séances retenues, avec leur indice d'origine : les cases cochées sont
+   indexées par position dans le plan, masquer une séance ne doit pas
+   décaler celles qui restent. */
+function kept(d){
+  const ss=(d.sessions||[]).map((s,i)=>({s:s,i:i}));
+  return regimeOf(mondayOf(d.d))==="chargee"?ss.filter(x=>x.s.rank==="P1"):ss;
+}
+function cut(d){return (d.sessions||[]).length-kept(d).length;}
 
 /* ================= Séances ================= */
 function sessDone(k,i){const d=rd(k).done||{};return!!(d["s"+i]||d["s"+i+"f"]);}
-function dayUnits(d){const n=(d.sessions||[]).length;return n+(d.fascia?1:0);}
+function dayUnits(d){return kept(d).length+(d.fascia?1:0);}
 function dayDone(k,d){
-  let n=0;(d.sessions||[]).forEach((s,i)=>{if(sessDone(k,i))n++;});
+  let n=0;kept(d).forEach(x=>{if(sessDone(k,x.i))n++;});
   if(d.fascia&&(rd(k).done||{}).fascia)n++;
   return n;
 }
@@ -652,7 +738,7 @@ function renderHeader(){
   const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
   if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
   if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+"."]);
-  if(cap.capped)B.push(["warn","Plafond ramené à "+cap.cap+" km : la semaine précédente totalise "+cap.prev+" km courus, progression limitée à +10 %. Le plan demandait "+cap.planned+" km."]);
+  if(cap.capped)B.push(["warn","Plafond ramené à "+cap.cap+" km : la meilleure des "+REF_WEEKS+" dernières semaines pleines totalise "+cap.prev+" km courus"+(cap.refMon?" (semaine du "+fmt(cap.refMon).num+")":"")+", progression limitée à +10 %. Le plan demandait "+cap.planned+" km."]);
   if(over)B.push(["warn","Cumul course "+runKm+" km — plafond de "+cap.cap+" km dépassé."]);
   const hm=heelMax(lastN(TODAY,7));
   if(hm===1)B.push(["warn","Talon gênant sur les 7 derniers jours — volume −30 % cette semaine, pas d'intensité."]);
@@ -662,6 +748,9 @@ function renderHeader(){
   const dw=drinksIn(weekDays(mon));
   if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
   const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
+  const xa=exportAge();
+  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur. Cibles › Exporter les données."]);
+  else if(xa!==null&&xa>EXPORT_MAX)B.push(["warn","Dernière sauvegarde "+exportTxt()+" — au-delà de "+EXPORT_MAX+" jours, un effacement coûterait tout ce qui a suivi."]);
   document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+'">'+esc(b[1])+'</div>').join("");
 }
 
@@ -707,9 +796,11 @@ function viewPlan(){
     const c=capFor(w.start),ks=weekDays(w.start);
     const vol=[["runKm","couru"],["hikeKm","rando"],["swimKm","nagé"],["bikeKm","vélo"],["kayakKm","kayak"]]
       .map(o=>{const t=r1(total(vals(ks,o[0])));return t>0?t+" "+o[1]:null;}).filter(Boolean);
+    const rg=regimeOf(w.start);
     html+='<div class="week"><span class="week-name">Semaine du '+fmt(w.start).num+'</span>'+
-      '<span class="week-sub">'+esc(REGIME[w.regime]||w.regime||"")+(c.cap!==null?" · plafond "+c.cap+" km":"")+
-      (vol.length?" · "+vol.join(" · "):"")+'</span><span class="rule"></span></div>';
+      '<button class="reg'+(rg==="chargee"?" hot":"")+(regimeSet(w.start)?" man":"")+'" data-reg="'+w.start+'">'+esc(REGIME[rg]||rg)+'</button>'+
+      '<span class="week-sub">'+(c.cap!==null?"plafond "+c.cap+" km":"")+
+      (vol.length?(c.cap!==null?" · ":"")+vol.join(" · "):"")+'</span><span class="rule"></span></div>';
     html+='<div class="route"><div class="line"></div>';
     (w.days||[]).forEach(d=>{html+=(DB.days[d.d]&&DB.days[d.d].frozen)?frozenCard(d.d,true):dayCard(d,w);});
     html+='</div>';
@@ -778,7 +869,7 @@ function logRow(k){
 function dayCard(d,w){
   const k=d.d,u=dayUnits(d),dn=dayDone(k,d),f=fmt(k);
   const isT=k===TODAY,isO=open===k,full=u>0&&dn===u;
-  const parts=(d.sessions||[]).map(s=>s.label);
+  const parts=kept(d).map(x=>x.s.label);
   if(d.fascia)parts.push("fascia");
   const sum=parts.length?parts.join(" · "):"repos";
   let h='<div class="day"><span class="node '+(isT?"now":full?"done":"")+'"></span><div class="card '+(isT?"now":"")+'">'+
@@ -796,12 +887,16 @@ function dayDetail(d,extra){
   /* Le 30/08 est la bascule : premières mesures et première revue. */
   if(k===MEASURE_START)h+='<div class="pivot">Mesures de référence + première revue dominicale</div>';
   /* La règle de récupération lit les valeurs du jour même : elle ne
-     requalifie que la séance qualité d'aujourd'hui, pas celles à venir. */
+     requalifie que la séance qualité d'aujourd'hui, pas celles à venir.
+     C'est le type qui porte l'intensité, pas le rang : une P2 de salle
+     n'est pas la séance dure, et la convertir laissait le fractionné
+     intact — l'inverse exact de ce que le bandeau annonce. */
   const conv=(k===TODAY)&&recovery();
-  (d.sessions||[]).forEach((s,i)=>{
+  kept(d).forEach(x=>{
+    const s=x.s,i=x.i;
     const on=!!e.done["s"+i],onF=!!e.done["s"+i+"f"],altOpen=e.done["alt"+i];
     const kd=KIND[s.kind]||{t:String(s.kind||"SÉANCE").toUpperCase(),c:"var(--fog)"};
-    const converted=conv&&s.rank==="P2";
+    const converted=conv&&s.kind==="qualite";
     h+='<div class="sess"><div class="sess-head">'+
       '<button class="box" data-t="'+k+'|s'+i+'" data-on="'+(on?1:0)+'">'+(on?chk(15):"")+'</button>'+
       '<div style="flex:1;min-width:0"><div class="tags"><span class="rank '+(s.rank==="P1"?"p1":"")+'">'+esc(s.rank||"P3")+'</span>'+
@@ -819,7 +914,9 @@ function dayDetail(d,extra){
       '<div style="flex:1;min-width:0"><div class="tags"><span class="rank">FASCIA</span></div>'+
       '<div class="sess-lab '+(fo?"off":"")+'">Bloc fascia</div><div class="cue">'+esc(FASCIA)+'</div></div></div></div>';
   }
-  if(!(d.sessions||[]).length&&!d.fascia)h+='<p class="empty">Rien de prévu. Une séance manquée ne se rattrape pas.</p>';
+  const nCut=cut(d);
+  if(nCut)h+='<p class="empty">'+nCut+' séance'+(nCut>1?"s":"")+' écartée'+(nCut>1?"s":"")+' — semaine chargée, seules les P1 tiennent.</p>';
+  if(!kept(d).length&&!d.fascia&&!nCut)h+='<p class="empty">Rien de prévu. Une séance manquée ne se rattrape pas.</p>';
 
   /* --- saisie quotidienne (§8) --- */
   const wkAvg=weekWeight(mondayOf(k)),dayW=num(e.weight);
@@ -836,7 +933,12 @@ function dayDetail(d,extra){
   h+=numRow(k,"vo2","VO2max relevée","","ml","0.1");
   h+='<div class="log-row"><span class="log-lab">Heure de coucher<span class="hint">Cible avant '+fmtMin(BED_LIMIT)+'.</span></span>'+
      '<input type="time" value="'+esc(e.bedTime||"")+'" data-f="'+k+'|bedTime"><span class="unit"></span></div>';
-  h+='<div class="log-row"><span class="log-lab">Protéines — '+PROTEIN+' g atteints</span><button class="box" data-p="'+k+'" data-on="'+(e.protein?1:0)+'">'+(e.protein?chk(15):"")+'</button></div>';
+  /* Protéines : quatre prises de 40 g plutôt qu'une case tout-ou-rien.
+     Une coche unique ne disait ni l'écart ni où il s'est creusé. */
+  const ps=protSet(e),pg=protG(e);
+  h+='<div class="log-row col"><span class="log-lab">Protéines<span class="hint'+(pg>=PROTEIN?"":" warn")+'">'+pg+' g sur '+PROTEIN+' — prises de '+PROT_UNIT+' g.</span></span><div class="pills">';
+  PROT_SLOTS.forEach(s=>{h+='<button class="pill'+(s[2]?" key":"")+'" data-pr="'+k+'|'+s[0]+'" data-on="'+(ps[s[0]]?1:0)+'">'+esc(s[1])+'</button>';});
+  h+='</div></div>';
   h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof e.alcohol==="number"&&e.alcohol>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
   [0,1,2,3,4].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(e.alcohol===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+(n===4?"4+":n)+'</button>';});
   h+='</div></div>';
@@ -845,6 +947,12 @@ function dayDetail(d,extra){
   h+='</div></div>';
   if(k>=MEASURE_START)h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Ruban à mi-distance côte basse / crête iliaque.</span></span>'+
      '<input type="number" step="0.5" inputmode="decimal" placeholder="—" value="'+esc(e.waist||"")+'" data-f="'+k+'|waist"><span class="unit">cm</span></div>';
+  /* Tension : une prise par semaine. Le champ reste offert chaque jour —
+     imposer un jour fixe ferait perdre la mesure prise la veille. */
+  h+='<div class="log-row"><span class="log-lab">Tension<span class="hint">Une fois par semaine suffit. Assis, au repos depuis 5 min. Cible < '+BP_SYS+'/'+BP_DIA+'.</span></span>'+
+     '<div class="bp"><input type="number" step="1" inputmode="numeric" placeholder="sys" value="'+esc(e.sys||"")+'" data-f="'+k+'|sys">'+
+     '<span class="bp-sep">/</span><input type="number" step="1" inputmode="numeric" placeholder="dia" value="'+esc(e.dia||"")+'" data-f="'+k+'|dia"></div>'+
+     '<span class="unit">mmHg</span></div>';
   h+='</div></div>';   /* .log puis .detail */
   return h;
 }
@@ -870,8 +978,9 @@ function frozenDetail(k,extra){
   if(num(e.runKm)!==null)h+=row("Km courus",e.runKm,"km");
   OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)h+=row(o[1],e[o[0]],"km");});
   if(num(e.vo2)!==null)h+=row("VO2max relevée",e.vo2,"ml");
+  if(num(e.sys)!==null&&num(e.dia)!==null)h+=row("Tension",e.sys+"/"+e.dia,"mmHg");
   if(typeof e.alcohol==="number")h+=row("Verres d'alcool",String(e.alcohol),"");
-  h+=row("Protéines — "+PROTEIN+" g",e.protein?"atteints":"non atteints","");
+  h+=row("Protéines",protG(e)+" / "+PROTEIN,"g");
   if(e.note)h+=row("Séance",e.note,"");
   return h+'</div></div>';   /* .log puis .detail */
 }
@@ -901,6 +1010,9 @@ function renderTargets(){
   const rhr30=avg(vals(lastN(TODAY,30),"rhr")),hrv30=avg(vals(lastN(TODAY,30),"hrv"));
   const sl=sleepCounts(lastN(TODAY,7)),slAvg=avg(vals(lastN(TODAY,7),"sleep"));
   const drinks=drinksIn(weekDays(mon)),pull=num(R.pullups);
+  const bp=lastBP();
+  /* Protéines : moyenne des grammes cochés sur les 7 derniers jours. */
+  const pg=avg(lastN(TODAY,7).map(x=>DB.days[x]?protG(DB.days[x]):null).filter(v=>v!==null));
 
   const rows=[
     {l:"Poids (moy. hebdo)",cur:wk===null?null:wk.toFixed(1)+" kg",
@@ -923,7 +1035,17 @@ function renderTargets(){
         {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)},
         {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)}]},
     {l:"Alcool",cur:drinks+" verres/sem",
-     c:[{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK}]}
+     c:[{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK}]},
+    /* Tension : objectif de santé n°1, échéance à 12 mois. Les deux
+       premières colonnes n'ont pas de palier chiffré — la ligne montre
+       quand même la dernière mesure, sinon rien ne la ferait remonter. */
+    {l:"Tension",cur:bp===null?null:bp.s+"/"+bp.d+" mmHg · "+fmt(bp.k).num+"/"+bp.k.slice(5,7),
+     c:[{t:"—",ok:null},{t:"—",ok:null},
+        {t:"< "+BP_SYS+"/"+BP_DIA,ok:bp===null?null:(bp.s<BP_SYS&&bp.d<BP_DIA)}]},
+    {l:"Protéines (moy. 7 j)",cur:pg===null?null:Math.round(pg)+" g/j",
+     c:[{t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN},
+        {t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN},
+        {t:"≥ "+PROTEIN+" g/j",ok:pg===null?null:pg>=PROTEIN}]}
   ];
   let h='<h2>Cibles</h2><p class="panel-sub">Trois échéances datées. Une ligne sans donnée de référence reste une estimation tant que le panneau Références n\'est pas rempli.</p>';
   h+='<div class="scroll"><table class="tgt"><tr><th></th>'+MILES.map(m=>"<th>"+m.lab+"</th>").join("")+"</tr>";
@@ -947,6 +1069,15 @@ function renderTargets(){
 function lastVal(f){
   const ks=Object.keys(DB.days).sort();
   for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
+  return null;
+}
+/* Dernière tension complète : les deux chiffres n'ont de sens qu'ensemble. */
+function lastBP(){
+  const ks=Object.keys(DB.days).sort();
+  for(let i=ks.length-1;i>=0;i--){
+    const e=DB.days[ks[i]],s=num(e.sys),d=num(e.dia);
+    if(s!==null&&d!==null)return{s:s,d:d,k:ks[i]};
+  }
   return null;
 }
 function weekList(n){
@@ -1064,7 +1195,14 @@ function contextBlock(){
     bedBefore2330:sl.bed,
     drinksWeek:drinksIn(weekDays(mon)),
     heelMax7:heelMax(lastN(TODAY,7)),
-    p1Done:p1.done,p1Planned:p1.planned
+    p1Done:p1.done,p1Planned:p1.planned,
+    /* Référence du plafond : la meilleure des 4 semaines pleines, pour
+       que la session coach voie sur quoi les +10 % s'appuient. */
+    runRefKm:c.prev,runRefWeek:c.refMon,runCapCapped:c.capped,
+    regimeWeek:regimeOf(mon),regimeManual:regimeSet(mon),
+    proteinAvg7:(()=>{const v=avg(lastN(TODAY,7).map(x=>DB.days[x]?protG(DB.days[x]):null).filter(y=>y!==null));return v===null?null:Math.round(v);})(),
+    bp:(()=>{const b=lastBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
+    lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge()
   };
 }
 function reviewJSON(){
@@ -1084,7 +1222,7 @@ function copyOut(s,msg){
    donc une saisie manuelle n'est jamais écrasée. Les champs déclaratifs
    — protéines, alcool, coucher, talon — en sont exclus : ils ne se
    lisent nulle part et personne d'autre que toi ne peut les affirmer. */
-const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist","bedTime"];
+const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist","bedTime","sys","dia"];
 function applyBackfill(bf){
   let n=0,days=0;
   Object.keys(bf||{}).forEach(k=>{
@@ -1130,6 +1268,9 @@ function importPlan(txt){
     }
   }
   DB.plan=p;
+  /* Un plan neuf reprend la main sur les bascules manuelles : elles
+     visaient les semaines qu'il remplace. */
+  (p.weeks||[]).forEach(w=>{if(DB.settings.regime)delete DB.settings.regime[w.start];});
   const bf=applyBackfill(p.backfill);
   save();open=null;render();
   return{filled:bf.n,days:bf.days};
@@ -1139,15 +1280,21 @@ function renderTools(){
     '<h2>Données</h2><p class="panel-sub">Tout est stocké sur cet appareil. L\'import d\'un plan ne touche ni les cases cochées ni les saisies, indexées par date. Un plan peut porter un rattrapage de mesures : il ne remplit que les champs restés vides sur les jours passés.</p>'+
     '<button class="big sec" id="impPlan">Importer un plan</button>'+
     '<div class="tools"><button class="tool" id="exp">Exporter les données</button><button class="tool" id="imp">Importer les données</button></div>'+
+    '<div class="backup'+((exportAge()===null||exportAge()>EXPORT_MAX)?" warn":"")+'">Dernière sauvegarde : '+exportTxt()+
+      ' · '+Object.keys(DB.days).length+' journée'+(Object.keys(DB.days).length>1?"s":"")+' en base</div>'+
     '<div class="save" id="save"></div>';
 }
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-p],[data-a],[data-h],[data-alt],#exp,#imp,#impPlan,#rev");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-h],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
   if(!t)return;
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
-  if(t.id==="exp"){copyOut(JSON.stringify(DB),"Données copiées.");return;}
+  if(t.id==="exp"){
+    /* L'export est la seule sauvegarde : on date celui-ci pour pouvoir
+       dire depuis quand le journal ne tient plus qu'à cet appareil. */
+    copyOut(JSON.stringify(DB),"Données copiées. Colle-les dans une note ou un mail — c'est ta seule sauvegarde.");
+    DB.settings.lastExport=TODAY;save();render();return;}
   if(t.id==="imp"){
     const s=prompt("Colle ici les données exportées :");
     if(s){try{const p=JSON.parse(s);if(!p||typeof p!=="object"||Array.isArray(p))throw 0;
@@ -1171,7 +1318,16 @@ document.addEventListener("click",ev=>{
   if(t.dataset.alt!==undefined){const a=t.dataset.alt.split("|"),e=entry(a[0]);e.done["alt"+a[1]]=!e.done["alt"+a[1]];save();render();return;}
   if(t.dataset.t){const a=t.dataset.t.split("|"),e=entry(a[0]);e.done[a[1]]=!e.done[a[1]];save();render();return;}
   if(t.dataset.b){const e=entry(t.dataset.b);e.bed=!e.bed;save();render();return;}
-  if(t.dataset.p){const e=entry(t.dataset.p);e.protein=!e.protein;save();render();return;}
+  if(t.dataset.pr){const a=t.dataset.pr.split("|"),e=entry(a[0]);
+    /* Première coche sur une journée d'avant : la case unique est
+       convertie en ses quatre prises, puis c'est prot qui fait foi. */
+    if(!e.prot||typeof e.prot!=="object")e.prot=protSet(e);
+    e.prot[a[1]]=!e.prot[a[1]];save();render();return;}
+  if(t.dataset.reg!==undefined){
+    const m=t.dataset.reg,ord=["normale","chargee","vacances"];
+    const nx=ord[(ord.indexOf(regimeOf(m))+1)%3];
+    if(!DB.settings.regime)DB.settings.regime={};
+    DB.settings.regime[m]=nx;save();render();return;}
   if(t.dataset.a){const a=t.dataset.a.split("|"),e=entry(a[0]),n=Number(a[1]);e.alcohol=(e.alcohol===n)?"":n;save();render();return;}
   if(t.dataset.h){const a=t.dataset.h.split("|"),e=entry(a[0]),n=Number(a[1]);e.heel=(+e.heel===n)?0:n;save();render();}
 });
