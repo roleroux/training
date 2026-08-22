@@ -97,6 +97,9 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .jrow:last-child{border-bottom:none}
 .jrow:active{background:var(--press)}
 .jrow.today{background:var(--tint)}
+.jrow.on{background:var(--tint)}
+.jdet{border-bottom:1px solid var(--edge)}
+.jbox>.jdet:last-child{border-bottom:none}
 .jbox{border:1px solid var(--edge);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
 .jd{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;min-width:52px;color:var(--fog)}
 .jd b{color:var(--ink);font-weight:600}
@@ -221,7 +224,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.2", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -345,15 +348,21 @@ function load(){
     else fresh=true;
     setSave("Synchronisé");
   }catch(e){memOnly=true;setSave("Stockage indisponible — données de cette session uniquement");}
+  const seeded=normalize();
+  /* Le premier lancement écrit l'état initial : sans ça la clé n'existe
+     qu'après la première saisie, et un export lancé avant ne verrait rien. */
+  if(fresh||seeded)save();
+}
+/* Complète une base venue du disque ou d'un import : les champs absents
+   sont recréés et l'historique figé réamorcé. Ne relit jamais le disque —
+   un import doit pouvoir s'appuyer dessus sans être écrasé. */
+function normalize(){
   if(!DB.days||typeof DB.days!=="object")DB.days={};
   if(!DB.settings)DB.settings={};
   if(!DB.settings.refs)DB.settings.refs={};
   if(!DB.settings.bloodwork)DB.settings.bloodwork={};
   if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
-  const seeded=seedHistory();
-  /* Le premier lancement écrit l'état initial : sans ça la clé n'existe
-     qu'après la première saisie, et un export lancé avant ne verrait rien. */
-  if(fresh||seeded)save();
+  return seedHistory();
 }
 function save(){
   if(memOnly)return;
@@ -366,6 +375,12 @@ function entry(k){
     protein:false,alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0};
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
 }
+/* Lecture seule : le rendu passe par ici. entry() créait une journée vide
+   pour chaque jour affiché, si bien que parcourir le plan ou le journal
+   gonflait la base — et l'export — de journées jamais saisies. L'objet
+   renvoyé est partagé : ne jamais y écrire. */
+const NODAY=Object.freeze({done:Object.freeze({}),heel:0});
+function rd(k){return DB.days[k]||NODAY;}
 /* Seul runKm entre dans le plafond talon ; randonnée, natation, vélo et
    kayak sont suivis mais ne consomment pas le volume course. */
 const OTHER_KM=[["hikeKm","Km randonnés","km"],["swimKm","Km nagés","km"],["bikeKm","Km vélo","km"],["kayakKm","Km kayak","km"]];
@@ -540,7 +555,11 @@ function recovery(){
 }
 function weightDrop(mon){
   const a=weekWeight(mon),b=weekWeight(addDays(mon,-7));
-  return(a!==null&&b!==null&&b-a>0.7)?r1(b-a):null;
+  if(a===null||b===null)return null;
+  /* Comparaison sur la valeur arrondie affichée : sans ça une baisse de
+     0,7 kg pile déclenche l'alerte « au-delà de 0,7 kg » par flottant. */
+  const d=r1(b-a);
+  return d>0.7?d:null;
 }
 function currentMile(){
   for(const m of MILES)if(TODAY<=m.d)return m;
@@ -548,11 +567,11 @@ function currentMile(){
 }
 
 /* ================= Séances ================= */
-function sessDone(k,i){const e=entry(k);return!!(e.done["s"+i]||e.done["s"+i+"f"]);}
+function sessDone(k,i){const d=rd(k).done||{};return!!(d["s"+i]||d["s"+i+"f"]);}
 function dayUnits(d){const n=(d.sessions||[]).length;return n+(d.fascia?1:0);}
 function dayDone(k,d){
   let n=0;(d.sessions||[]).forEach((s,i)=>{if(sessDone(k,i))n++;});
-  if(d.fascia&&entry(k).done.fascia)n++;
+  if(d.fascia&&(rd(k).done||{}).fascia)n++;
   return n;
 }
 function p1Week(mon){
@@ -747,12 +766,17 @@ function logRow(k){
   let chip="";
   if(d&&dayUnits(d)){const u=dayUnits(d),n=dayDone(k,d);chip='<span class="jm '+(n===u?"full":"")+'">'+n+'/'+u+'</span>';}
   else if(e&&e.frozen)chip='<span class="jm">figé</span>';
-  return'<button class="jrow '+(k===TODAY?"today":"")+'" data-open="'+k+'">'+
+  let h='<button class="jrow '+(k===TODAY?"today":"")+(open===k?" on":"")+'" data-open="'+k+'">'+
     '<span class="jd">'+f.dow+' <b>'+f.num+'</b></span><span class="js">'+esc(lab)+'</span>'+chip+'</button>';
+  /* Le journal déplie sur place, y compris les jours hors plan : ils
+     n'existent nulle part ailleurs, un tapotement sans effet était une
+     impasse. */
+  if(open===k)h+=(e&&e.frozen)?frozenDetail(k,"jdet"):dayDetail(d||{d:k,fascia:false,sessions:[]},"jdet");
+  return h;
 }
 
 function dayCard(d,w){
-  const k=d.d,e=entry(k),f=fmt(k),u=dayUnits(d),dn=dayDone(k,d);
+  const k=d.d,u=dayUnits(d),dn=dayDone(k,d),f=fmt(k);
   const isT=k===TODAY,isO=open===k,full=u>0&&dn===u;
   const parts=(d.sessions||[]).map(s=>s.label);
   if(d.fascia)parts.push("fascia");
@@ -761,11 +785,19 @@ function dayCard(d,w){
     '<button class="card-head" data-open="'+k+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span>'+
     '<span class="sum">'+esc(sum)+'</span>'+(u?'<span class="count '+(full?"full":"")+'">'+dn+'/'+u+'</span>':'')+'</div></button>';
   if(!isO)return h+'</div></div>';
-
-  h+='<div class="detail">';
+  return h+dayDetail(d)+'</div></div>';
+}
+/* Corps déplié d'une journée : séances puis saisie. Isolé du bandeau
+   pour que le journal puisse déplier un jour sur place, sans la
+   chronologie du plan autour. */
+function dayDetail(d,extra){
+  const k=d.d,e=rd(k);
+  let h='<div class="detail '+(extra||"")+'">';
   /* Le 30/08 est la bascule : premières mesures et première revue. */
   if(k===MEASURE_START)h+='<div class="pivot">Mesures de référence + première revue dominicale</div>';
-  const conv=recovery();
+  /* La règle de récupération lit les valeurs du jour même : elle ne
+     requalifie que la séance qualité d'aujourd'hui, pas celles à venir. */
+  const conv=(k===TODAY)&&recovery();
   (d.sessions||[]).forEach((s,i)=>{
     const on=!!e.done["s"+i],onF=!!e.done["s"+i+"f"],altOpen=e.done["alt"+i];
     const kd=KIND[s.kind]||{t:String(s.kind||"SÉANCE").toUpperCase(),c:"var(--fog)"};
@@ -813,7 +845,7 @@ function dayCard(d,w){
   h+='</div></div>';
   if(k>=MEASURE_START)h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Ruban à mi-distance côte basse / crête iliaque.</span></span>'+
      '<input type="number" step="0.5" inputmode="decimal" placeholder="—" value="'+esc(e.waist||"")+'" data-f="'+k+'|waist"><span class="unit">cm</span></div>';
-  h+='</div></div></div>';
+  h+='</div></div>';   /* .log puis .detail */
   return h;
 }
 
@@ -829,7 +861,11 @@ function frozenCard(k,inPlan){
     '<button class="card-head" data-open="'+k+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span>'+
     '<span class="sum">'+esc(sum)+'</span><span class="count">figé</span></div></button>';
   if(!isO)return h+'</div></div>';
-  h+='<div class="detail"><div class="frozen-tag">Réalisé — relevé Apple Santé</div><div class="log">';
+  return h+frozenDetail(k)+'</div></div>';
+}
+function frozenDetail(k,extra){
+  const e=DB.days[k]||{};
+  let h='<div class="detail '+(extra||"")+'"><div class="frozen-tag">Réalisé — relevé Apple Santé</div><div class="log">';
   const row=(lab,v,unit)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+'</span><span class="ro">'+esc(v)+(unit?' <span class="unit">'+esc(unit)+'</span>':'')+'</span></div>';
   if(num(e.runKm)!==null)h+=row("Km courus",e.runKm,"km");
   OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)h+=row(o[1],e[o[0]],"km");});
@@ -837,11 +873,10 @@ function frozenCard(k,inPlan){
   if(typeof e.alcohol==="number")h+=row("Verres d'alcool",String(e.alcohol),"");
   h+=row("Protéines — "+PROTEIN+" g",e.protein?"atteints":"non atteints","");
   if(e.note)h+=row("Séance",e.note,"");
-  h+='</div></div></div></div>';
-  return h;
+  return h+'</div></div>';   /* .log puis .detail */
 }
 function numRow(k,f,lab,hint,unit,step){
-  const e=entry(k);
+  const e=rd(k);
   return'<div class="log-row"><span class="log-lab">'+esc(lab)+(hint?'<span class="hint">'+esc(hint)+'</span>':"")+'</span>'+
     '<input type="number" step="'+step+'" inputmode="decimal" placeholder="—" value="'+esc(e[f]||"")+'" data-f="'+k+'|'+f+'"><span class="unit">'+esc(unit)+'</span></div>';
 }
@@ -1055,17 +1090,20 @@ function applyBackfill(bf){
   Object.keys(bf||{}).forEach(k=>{
     if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>TODAY)return;
     const src=bf[k]; if(!src||typeof src!=="object")return;
-    const e=entry(k); let touched=0;
+    /* La journée n'est créée qu'au premier champ réellement rempli :
+       un rattrapage sans rien à dire ne doit pas ajouter de jour vide. */
+    let e=DB.days[k]||null,touched=0;
     BACKFILL_FIELDS.forEach(f=>{
       if(!(f in src))return;
       /* Poids et taille n'existent pas avant la première pesée : les
          remplir avant alimenterait une jauge avec une valeur que l'app
          n'affiche pas et qu'on ne pourrait pas corriger. */
       if((f==="weight"||f==="waist")&&k<MEASURE_START)return;
-      const cur=e[f];
+      const cur=e?e[f]:"";
       if(cur!==""&&cur!==null&&cur!==undefined)return;
       const v=src[f];
       if(v===null||v===undefined||v==="")return;
+      if(!e)e=entry(k);
       e[f]=String(v);n++;touched=1;
     });
     if(touched)days++;
@@ -1112,7 +1150,10 @@ document.addEventListener("click",ev=>{
   if(t.id==="exp"){copyOut(JSON.stringify(DB),"Données copiées.");return;}
   if(t.id==="imp"){
     const s=prompt("Colle ici les données exportées :");
-    if(s){try{const p=JSON.parse(s);if(!p||typeof p!=="object")throw 0;DB=p;load();save();render();}catch(e){alert("Format non reconnu.");}}
+    if(s){try{const p=JSON.parse(s);if(!p||typeof p!=="object"||Array.isArray(p))throw 0;
+      /* normalize() complète la base importée sans relire le disque :
+         repasser par load() rechargerait l'ancienne et perdrait l'import. */
+      DB=p;normalize();save();render();}catch(e){alert("Format non reconnu.");}}
     return;}
   if(t.id==="impPlan"){
     const s=prompt("Colle ici le plan de 2 semaines :");
@@ -1121,10 +1162,12 @@ document.addEventListener("click",ev=>{
     return;}
   if(t.dataset.tab!==undefined){tab=t.dataset.tab;ses("set",tab,TKEY);render();scrollTo(0,0);return;}
   if(t.dataset.open!==undefined){
-    /* Depuis le journal, ouvrir un jour bascule sur la vue qui le porte. */
-    const k=t.dataset.open;
-    if(tab==="log"){open=k;tab=dayOf(k)?"plan":"log";ses("set",tab,TKEY);render();return;}
-    open=(open===k)?null:k;render();return;}
+    const k=t.dataset.open,was=open===k;
+    open=was?null:k;render();
+    /* Le journal est long : rouvrir en gardant la ligne sous les yeux. */
+    if(!was&&tab==="log"){const r=document.querySelector('.jrow[data-open="'+k+'"]');
+      if(r)r.scrollIntoView({block:"nearest"});}
+    return;}
   if(t.dataset.alt!==undefined){const a=t.dataset.alt.split("|"),e=entry(a[0]);e.done["alt"+a[1]]=!e.done["alt"+a[1]];save();render();return;}
   if(t.dataset.t){const a=t.dataset.t.split("|"),e=entry(a[0]);e.done[a[1]]=!e.done[a[1]];save();render();return;}
   if(t.dataset.b){const e=entry(t.dataset.b);e.bed=!e.bed;save();render();return;}
