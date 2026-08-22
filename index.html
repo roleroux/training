@@ -20,6 +20,9 @@
   --ink:#0A2233;--fog:#5E7180;
   --buoy:#C24A2C;--depth:#1E7F72;--brass:#8A6E1B;
   --wave:#DCE6EB;--chart-grid:#C7D4DA;--press:rgba(10,34,51,.05);--veil:rgba(255,255,255,.82);
+  /* Posé sur --depth : blanc en clair, encre en sombre. Le blanc sur
+     l'accent sombre ne donnait que 2,92:1, sous le seuil de 3:1. */
+  --on-accent:#FFFFFF;
   --k-run:#C24A2C;--k-str:#1E7F72;--k-pos:#8A6E1B;--k-swim:#3E7FA3;--k-rest:#5E7180;
   --shadow:0 1px 2px rgba(10,34,51,.04),0 5px 16px rgba(10,34,51,.05);
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
@@ -31,6 +34,7 @@
   --ink:#E9EFF4;--fog:#8FA5B5;
   --buoy:#E8764F;--depth:#3AA893;--brass:#CBA84C;
   --wave:#152230;--chart-grid:#2A4054;--press:rgba(255,255,255,.06);--veil:rgba(11,21,30,.82);
+  --on-accent:#08121A;
   --k-run:#E8764F;--k-str:#3AA893;--k-pos:#CBA84C;--k-swim:#6FB0D6;--k-rest:#8296A6;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
 }}
@@ -127,6 +131,8 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .reg.hot{color:var(--buoy);border-color:var(--buoy)}
 .reg.man{background:var(--tint)}
 .reg:active{background:var(--press)}
+.reg{position:relative}
+.reg::after{width:100%;height:40px}
 .rule{height:1px;background:var(--edge);flex:1;min-width:14px}
 
 .route{position:relative;padding-left:34px}
@@ -145,14 +151,21 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .date b{font-weight:600}
 .sum{font-size:12.5px;color:var(--fog);flex:1}
 .count{font-family:var(--mono);font-size:10.5px;color:var(--fog);background:var(--tint);border:1px solid var(--edge);border-radius:99px;padding:3px 9px}
-.count.full{color:#FFFFFF;background:var(--depth);border-color:var(--depth)}
+.count.full{color:var(--on-accent);background:var(--depth);border-color:var(--depth)}
 
 .detail{border-top:1px solid var(--edge);padding:13px 15px 15px}
 .sess{padding:10px 0;border-bottom:1px solid var(--edge)}
 .sess:last-of-type{border-bottom:none}
 .sess-head{display:flex;align-items:flex-start;gap:11px}
-.box{flex:0 0 26px;width:26px;height:26px;border:1.5px solid var(--fog);border-radius:8px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.box{flex:0 0 26px;width:26px;height:26px;border:1.5px solid var(--fog);border-radius:8px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;position:relative}
+/* Zone de touche élargie sans toucher au dessin. La case fait 26 px à
+   l'œil — c'est le geste le plus répété de l'app, et il tombait sous le
+   minimum de 44 px recommandé sur iOS. Le halo reste sous les 44 px pour
+   ne pas mordre sur la commande voisine, mesurée à 6 px d'écart. */
+.box::after,.alt::after,.reg::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.box::after{width:40px;height:40px}
 .box[data-on="1"]{background:var(--depth);border-color:var(--depth)}
+.box svg path{stroke:var(--on-accent)}
 .box.sm{flex:0 0 22px;width:22px;height:22px;border-radius:7px}
 .tags{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase}
@@ -161,7 +174,8 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .sess-lab{font-size:14px;margin-top:4px;line-height:1.35;font-weight:500}
 .sess-lab.off{color:var(--fog);text-decoration:line-through}
 .cue{font-size:12px;color:var(--fog);line-height:1.5;margin-top:5px}
-.alt{margin-top:8px;background:none;border:1px solid var(--edge);border-radius:7px;color:var(--fog);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 9px;cursor:pointer}
+.alt{margin-top:8px;background:none;border:1px solid var(--edge);border-radius:7px;color:var(--fog);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 9px;cursor:pointer;position:relative}
+.alt::after{width:100%;height:40px}
 .fallback{margin-top:9px;padding:10px 11px;background:var(--tint);border-left:2px solid var(--brass);border-radius:0 8px 8px 0;display:flex;gap:10px;align-items:flex-start}
 .fallback .fb-t{font-size:12.5px;line-height:1.45;flex:1}
 .conv{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--buoy);margin-top:6px}
@@ -253,7 +267,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.5", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.6", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -506,8 +520,13 @@ addEventListener("scroll",()=>{
   if(!on&&scrollY>56)h.classList.add("compact");
   else if(on&&scrollY<20)h.classList.remove("compact");
 },{passive:true});
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkVersion();});
-addEventListener("pageshow",e=>{if(e.persisted)checkVersion();});
+/* Retour au premier plan : d'abord la date, ensuite la version. Le
+   changement de jour doit être pris en compte même si la vérification de
+   version est encore sous son délai de garde. */
+function onResume(){if(dayRoll())render();checkVersion();}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")onResume();});
+addEventListener("pageshow",e=>{if(e.persisted)onResume();});
+addEventListener("focus",onResume);
 
 /* ================= Dates ================= */
 const pad=n=>String(n).padStart(2,"0");
@@ -518,7 +537,22 @@ function mondayOf(k){const d=parseD(k),o=(d.getDay()+6)%7;d.setDate(d.getDate()-
 function fmt(k){const d=parseD(k);return{dow:DOW[d.getDay()],num:pad(d.getDate())};}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const r1=n=>Math.round(n*10)/10;
-const TODAY=iso(new Date());
+/* Volontairement une variable, pas une constante. iOS suspend l'app sans
+   relancer le script : au retour le lendemain matin, un TODAY figé au
+   chargement valait encore la veille — la carte « Aujourd'hui » montrait
+   hier, et toute saisie s'écrivait sur la mauvaise journée. dayRoll() la
+   remet à l'heure à chaque retour au premier plan. */
+let TODAY=iso(new Date());
+function dayRoll(){
+  const now=iso(new Date());
+  if(now===TODAY)return false;
+  /* Si la journée en cours était dépliée, elle le reste — c'est la
+     nouvelle qu'on veut sous les yeux, pas celle d'hier. */
+  const wasToday=(open===TODAY);
+  TODAY=now;
+  if(wasToday)open=TODAY;
+  return true;
+}
 
 /* ================= Agrégats ================= */
 function num(v){if(v===""||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:null;}
