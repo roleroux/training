@@ -135,6 +135,10 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .fallback{margin-top:9px;padding:10px 11px;background:var(--tint);border-left:2px solid var(--brass);border-radius:0 8px 8px 0;display:flex;gap:10px;align-items:flex-start}
 .fallback .fb-t{font-size:12.5px;line-height:1.45;flex:1}
 .conv{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--buoy);margin-top:6px}
+.frozen-tag{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);border:1px solid var(--edge);border-radius:99px;padding:4px 10px;display:inline-block}
+.ro{font-family:var(--mono);font-size:14px;color:var(--ink)}
+.pivot{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--buoy);border-left:3px solid var(--buoy);background:var(--tint);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:12px}
+.todo{font-size:11.5px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
 
 .log{margin-top:14px;padding-top:13px;border-top:1px solid var(--edge);display:grid;gap:13px}
 .log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -200,7 +204,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-22.4", RKEY="pmp-reload", OKEY="pmp-open";
+const VERSION="2026-08-22.5", RKEY="pmp-reload", OKEY="pmp-open";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -208,14 +212,18 @@ const MILES=[
   {d:"2027-02-28",lab:"Fév 2027",w:89,wTxt:"89"},
   {d:"2027-08-31",lab:"Août 2027",w:87,wTxt:"86–87"}
 ];
-const WEIGHT_START=95;      /* point de départ déclaré, sert d'origine aux jauges */
+/* Première pesée : la balance à impédance est en France. Avant cette date
+   il n'existe aucune mesure de poids ni de tour de taille — les champs
+   sont masqués et la jauge poids reste en veille. Aucune valeur de
+   départ n'est supposée. */
+const MEASURE_START="2026-08-30";
 const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
 
 const KIND={
   salle:{t:"SALLE",c:"var(--k-str)"},course:{t:"COURSE",c:"var(--k-run)"},
   qualite:{t:"QUALITÉ",c:"var(--k-run)"},vtt:{t:"VTT",c:"var(--k-swim)"},
-  natation:{t:"NATATION",c:"var(--k-swim)"},rando:{t:"RANDONNÉE",c:"var(--k-pos)"},
+  natation:{t:"NATATION",c:"var(--k-swim)"},rando:{t:"RANDONNÉE",c:"var(--k-pos)"},mesures:{t:"MESURES",c:"var(--brass)"},
   marche:{t:"MARCHE",c:"var(--k-rest)"},repos:{t:"REPOS",c:"var(--k-rest)"}
 };
 const REGIME={normale:"semaine normale",chargee:"semaine chargée",vacances:"vacances"};
@@ -226,28 +234,86 @@ const SALLE={rank:"P1",kind:"salle",label:"Salle 60 min",
   fallback:"30 min : les 4 mouvements de référence, 2 séries chacun, rien d'autre."};
 const FASCIA="Élévations talon lentes 3×12 (3 s de descente) + serviette sous les orteils 3×15.";
 
+/* ================= Historique figé (relevé Apple Santé) =================
+   Chargé une fois dans DB.days, uniquement sur les clés absentes : une
+   saisie ultérieure n'est jamais écrasée. Ces jours portent frozen:true,
+   s'affichent en lecture seule et ne proposent aucun champ éditable.
+   Pas de migration depuis jdb-v1 : ses cases sont indexées sur un plan
+   supprimé et ne vivraient que sur le navigateur d'origine. */
+const H=(runKm,hikeKm,swimKm,kayakKm,vo2,alcohol,protein,note)=>
+  ({runKm:runKm||"",hikeKm:hikeKm||"",swimKm:swimKm||"",bikeKm:"",kayakKm:kayakKm||"",
+    vo2:vo2||"",alcohol:alcohol,protein:!!protein,note:note||"",
+    weight:"",waist:"",rhr:"",hrv:"",sleep:"",bed:false,heel:0,done:{},frozen:true});
+const HISTORY={
+"2026-08-01":H("6.0","","1.0","10.1","40.27",1),
+"2026-08-02":H("12.0","","2.0","4.1","41.17",1,0,"Musculation 30 min"),
+"2026-08-03":H("12.0","","2.2","","41.40",1),
+"2026-08-04":H("","","1.5","12.5","",1),
+"2026-08-05":H("9.0","","","6.2","41.95",1),
+"2026-08-06":H("9.5","","2.4","","41.77",1),
+"2026-08-07":H("","","1.3","16.2","",1,0,"Circuit A"),
+"2026-08-08":H("8.0","","1.1","","42.23",1,0,"Circuit A"),
+"2026-08-09":H("5.2","","","","42.91",0,1),
+"2026-08-10":H("","13.0","","","42.54",0,1),
+"2026-08-11":H("","3.0","","","42.42",0),
+"2026-08-12":H("","","","","",0),
+"2026-08-13":H("","","","","",0,1),
+"2026-08-14":H("","14.0","","","42.17",0),
+"2026-08-15":H("","10.2","","","42.64",0,1),
+"2026-08-16":H("","22.2","","","42.68",0,1),
+"2026-08-17":H("","","","","",0),
+"2026-08-18":H("5.3","4.2","","","42.88",0,1),
+"2026-08-19":H("","","","","",0),
+"2026-08-20":H("","","","","",0),
+"2026-08-21":H("6.0","","","","43.52",0,0,"Musculation 60 min")
+};
+/* Récupération figée : la montre ne fournit que des moyennes
+   hebdomadaires sur cette période, pas de valeurs quotidiennes. Elles
+   alimentent le graphe FC repos et servent de repli à la jauge et au
+   bloc context tant qu'aucune saisie quotidienne n'existe. */
+const HISTORY_WEEKS={
+"2026-07-27":{rhr:64.8,hrv:45.2},
+"2026-08-03":{rhr:65.2,hrv:41.8},
+"2026-08-10":{rhr:54.7,hrv:52.4},
+"2026-08-17":{rhr:57.7,hrv:47.4}
+};
+
 /* ================= Plan embarqué (§5.5) ================= */
 /* Premier contenu uniquement : le premier import de plan le remplace. */
 const SEED_PLAN={
 generated:"2026-08-22",
 weeks:[
-{start:"2026-08-24",regime:"normale",runCapKm:6,days:[
- {d:"2026-08-24",fascia:true,sessions:[{rank:"P3",kind:"marche",label:"Marche 40 min",detail:"Allure libre, en extérieur.",fallback:"20 min autour du pâté de maisons."}]},
- {d:"2026-08-25",fascia:false,sessions:[]},
- {d:"2026-08-26",fascia:true,sessions:[{rank:"P3",kind:"marche",label:"Marche 40 min",detail:"Allure libre, en extérieur.",fallback:"20 min autour du pâté de maisons."}]},
- {d:"2026-08-27",fascia:false,sessions:[]},
- {d:"2026-08-28",fascia:true,sessions:[]},
- {d:"2026-08-29",fascia:false,sessions:[{rank:"P3",kind:"course",label:"Sortie facile 5–6 km",detail:"Endurance, 6:20–7:15/km. Plafond de la semaine de transition.",fallback:"3 km, ou marche rapide 30 min."}]},
- {d:"2026-08-30",fascia:true,sessions:[{rank:"P3",kind:"marche",label:"Marche 40 min",detail:"Allure libre, en extérieur.",fallback:"20 min autour du pâté de maisons."}]}
+/* Semaine du 17/08 : les jours 17 à 21 sont couverts par HISTORY et ne
+   portent aucune séance ; seuls le 22 et le 23 sont planifiés. */
+{start:"2026-08-17",regime:"vacances",runCapKm:25,days:[
+ {d:"2026-08-17",fascia:false,sessions:[]},
+ {d:"2026-08-18",fascia:false,sessions:[]},
+ {d:"2026-08-19",fascia:false,sessions:[]},
+ {d:"2026-08-20",fascia:false,sessions:[]},
+ {d:"2026-08-21",fascia:false,sessions:[]},
+ {d:"2026-08-22",fascia:true,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Endurance 6:20–7:15/km, Central Park.",fallback:"5 km, allure libre."},
+   {rank:"P2",kind:"salle",label:"Circuit tirage élastiques",detail:"Rowing 3×15 · face pull 3×20 · curl 3×15 · tractions 3×max si barre disponible.",fallback:"Rowing + face pull, 2 séries."}]},
+ {d:"2026-08-23",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Même allure, terrain plat.",fallback:"5 km."}]}
 ]},
-{start:"2026-08-31",regime:"normale",runCapKm:18,days:[
- {d:"2026-08-31",fascia:true,sessions:[SALLE]},
- {d:"2026-09-01",fascia:false,sessions:[]},
- {d:"2026-09-02",fascia:true,sessions:[]},
- {d:"2026-09-03",fascia:false,sessions:[]},
- {d:"2026-09-04",fascia:true,sessions:[]},
- {d:"2026-09-05",fascia:false,sessions:[{rank:"P1",kind:"course",label:"Sortie longue 10 km",detail:"Endurance 6:20–7:15/km, sous le plafond de la semaine.",fallback:"6 km à la même allure."}]},
- {d:"2026-09-06",fascia:true,sessions:[{rank:"P3",kind:"course",label:"Sortie facile 5–6 km",detail:"Volume facile. Les sorties avec les enfants comptent ici.",fallback:"Marche 40 min."}]}
+{start:"2026-08-24",regime:"normale",runCapKm:22,days:[
+ {d:"2026-08-24",fascia:true,sessions:[
+   {rank:"P2",kind:"salle",label:"Circuit poussée poids du corps",detail:"Pompes déclinées 4×12 · pompes piquées 3×10 · pompes diamant 3×10 · gainage 3×45 s.",fallback:"Pompes + gainage, 2 séries."},
+   {rank:"P3",kind:"marche",label:"Marche urbaine 45 min",detail:"GPS actif."}]},
+ {d:"2026-08-25",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Footing tranquille 6 km",detail:"Le matin, avant le vol. Allure basse, aucune intensité.",fallback:"4 km."}]},
+ {d:"2026-08-26",fascia:true,sessions:[
+   {rank:"P1",kind:"course",label:"Footing tranquille 5 km",detail:"Fin d'après-midi à Versailles, après le vol de nuit. Décalage : allure libre, ne pas chercher le chrono.",fallback:"Marche 40 min."}]},
+ {d:"2026-08-27",fascia:false,sessions:[
+   {rank:"P3",kind:"marche",label:"Marche 40 min ou repos complet",detail:"Journée de récupération."}]},
+ {d:"2026-08-28",fascia:true,sessions:[
+   {rank:"P1",kind:"salle",label:"Séance de référence",detail:"1re séance à Versailles. Développé couché 4×5-6 · tractions 4×max · rowing barre 4×8 · presse ou squat 4×8 · gainage 5 min · mollets lents 3×15. Noter les charges des 4 mouvements dans Références.",fallback:"Les 4 mouvements, 2 séries, charges notées quand même."}]},
+ {d:"2026-08-29",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 11 km",detail:"Endurance 6:20–7:15/km.",fallback:"7 km."}]},
+ {d:"2026-08-30",fascia:true,sessions:[
+   {rank:"P1",kind:"mesures",label:"Pesée + tour de taille",detail:"Ruban à mi-distance côte basse / crête iliaque, puis export de la revue.",fallback:"Pesée seule si le ruban manque."},
+   {rank:"P3",kind:"vtt",label:"Sortie souple 1 h",detail:"VTT, ou marche 45 min. Sans intensité.",fallback:"Marche 30 min."}]}
 ]}]};
 
 /* ================= Stockage ================= */
@@ -266,9 +332,10 @@ function load(){
   if(!DB.settings.refs)DB.settings.refs={};
   if(!DB.settings.bloodwork)DB.settings.bloodwork={};
   if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
+  const seeded=seedHistory();
   /* Le premier lancement écrit l'état initial : sans ça la clé n'existe
      qu'après la première saisie, et un export lancé avant ne verrait rien. */
-  if(fresh)save();
+  if(fresh||seeded)save();
 }
 function save(){
   if(memOnly)return;
@@ -277,8 +344,26 @@ function save(){
 }
 function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
 function entry(k){
-  if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,protein:false,alcohol:"",runKm:"",heel:0};
+  if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
+    protein:false,alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",heel:0};
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
+}
+/* Seul runKm entre dans le plafond talon ; randonnée, natation, vélo et
+   kayak sont suivis mais ne consomment pas le volume course. */
+const OTHER_KM=[["hikeKm","Km randonnés","km"],["swimKm","Km nagés","km"],["bikeKm","Km vélo","km"],["kayakKm","Km kayak","km"]];
+function seedHistory(){
+  let ch=false;
+  Object.keys(HISTORY).forEach(k=>{
+    if(DB.days[k])return;                       /* jamais d'écrasement */
+    DB.days[k]=JSON.parse(JSON.stringify(HISTORY[k])); ch=true;
+  });
+  return ch;
+}
+/* Repli figé : la période 27/07 – 17/08 n'a que des moyennes hebdo. */
+function frozenWeek(mon){return HISTORY_WEEKS[mon]||null;}
+function lastFrozenWeek(){
+  const ks=Object.keys(HISTORY_WEEKS).sort();
+  return ks.length?HISTORY_WEEKS[ks[ks.length-1]]:null;
 }
 
 /* ================= Mise à jour du raccourci ================= */
@@ -372,12 +457,17 @@ function dayOf(k){
    s'applique pas, sinon le plafond tomberait à zéro. */
 function capFor(mon){
   const w=weekOf(mon)||weekOf(addDays(mon,1)),planned=w?num(w.runCapKm):null;
-  const prev=total(vals(weekDays(addDays(mon,-7)),"runKm"));
-  const growth=prev>0?prev*1.10:null;
+  const prevMon=addDays(mon,-7);
+  const prev=total(vals(weekDays(prevMon),"runKm"));
+  /* La règle des +10 % suppose une semaine précédente terminée. Tant
+     qu'elle est en cours, son total est partiel et écrêterait à tort le
+     plafond d'une semaine à venir. */
+  const done=addDays(prevMon,6)<TODAY;
+  const growth=(done&&prev>0)?prev*1.10:null;
   let cap=planned,capped=false;
   if(planned===null)cap=growth;
   else if(growth!==null&&growth<planned){cap=growth;capped=true;}
-  return{cap:cap===null?null:r1(cap),capped:capped,planned:planned,prev:r1(prev)};
+  return{cap:cap===null?null:r1(cap),capped:capped,planned:planned,prev:r1(prev),prevDone:done};
 }
 /* Récupération : la valeur du jour est comparée à la moyenne des 7 jours
    qui la précèdent, pour que la mesure ne dilue pas sa propre référence. */
@@ -442,17 +532,25 @@ function render(){
   const mon=mondayOf(TODAY),ap=activePlan();
   const wk=weekWeight(mon),mile=currentMile();
   const cap=capFor(mon),runKm=weekRun(mon),p1=p1Week(mon);
-  const rhr7=avg(vals(lastN(TODAY,7),"rhr")),hrv7=avg(vals(lastN(TODAY,7),"hrv"));
+  /* Sans saisie quotidienne, on retombe sur la dernière moyenne hebdo figée. */
+  const fw=lastFrozenWeek();
+  const rhr7=avg(vals(lastN(TODAY,7),"rhr"))||(fw?fw.rhr:null);
+  const hrv7=avg(vals(lastN(TODAY,7),"hrv"))||(fw?fw.hrv:null);
 
   document.getElementById("eyebrow").textContent=
     "Novembre "+MILES[0].w+" → Février "+MILES[1].w+" → Août "+MILES[2].w;
 
   /* --- jauges (§7.1) --- */
-  const wFrac=wk===null?0:(WEIGHT_START-wk)/(WEIGHT_START-mile.w);
+  /* Poids : aucune origine supposée. La progression se mesure depuis la
+     première moyenne hebdomadaire réellement enregistrée ; tant qu'elle
+     n'existe pas, la jauge reste en veille. */
+  const w0=firstWeekWeight();
+  const wFrac=(wk===null||w0===null||w0<=mile.w)?0:(w0-wk)/(w0-mile.w);
   const over=cap.cap!==null&&runKm>cap.cap;
   document.getElementById("prog").innerHTML=
-    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+mile.w,"poids "+mile.lab.split(" ")[0].toLowerCase(),"var(--depth)",
-      wk===null?"Moins de 3 pesées cette semaine":"Moyenne hebdomadaire "+wk.toFixed(1)+" kg, jalon "+mile.wTxt+" au "+mile.d)+
+    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+mile.w,
+      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":"poids "+mile.lab.split(" ")[0].toLowerCase(),"var(--depth)",
+      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg, jalon "+mile.wTxt+" au "+mile.d)+
     gauge(cap.cap?runKm/cap.cap:0,runKm,cap.cap===null?"":"/"+cap.cap,"volume course",over?"var(--buoy)":"var(--k-run)",
       runKm+" km courus cette semaine"+(cap.cap===null?"":", plafond "+cap.cap+" km"))+
     gauge(p1.planned?p1.done/p1.planned:0,p1.planned?p1.done:dash,p1.planned?"/"+p1.planned:"","séances p1","var(--brass)",
@@ -487,12 +585,26 @@ function render(){
 
   /* --- semaines et jours --- */
   let html="";
-  ap.weeks.forEach(w=>{
-    const c=capFor(w.start);
-    html+='<div class="week"><span class="week-name">Semaine du '+fmt(w.start).num+'</span>'+
-      '<span class="week-sub">'+esc(REGIME[w.regime]||w.regime||"")+(c.cap!==null?" · plafond "+c.cap+" km":"")+'</span><span class="rule"></span></div>';
+  /* Jours figés que le plan ne couvre pas : regroupés au-dessus, repliés. */
+  const planned={};
+  ap.weeks.forEach(w=>(w.days||[]).forEach(d=>{planned[d.d]=1;}));
+  const orphans=Object.keys(HISTORY).filter(k=>!planned[k]).sort();
+  if(orphans.length){
+    html+='<div class="week"><span class="week-name">Historique</span>'+
+      '<span class="week-sub">'+orphans[0]+' → '+orphans[orphans.length-1]+' · relevé Apple Santé</span><span class="rule"></span></div>';
     html+='<div class="route"><div class="line"></div>';
-    (w.days||[]).forEach(d=>{html+=dayCard(d,w);});
+    orphans.forEach(k=>{html+=frozenCard(k,false);});
+    html+='</div>';
+  }
+  ap.weeks.forEach(w=>{
+    const c=capFor(w.start),ks=weekDays(w.start);
+    const vol=[["runKm","couru"],["hikeKm","rando"],["swimKm","nagé"],["bikeKm","vélo"],["kayakKm","kayak"]]
+      .map(o=>{const t=r1(total(vals(ks,o[0])));return t>0?t+" "+o[1]:null;}).filter(Boolean);
+    html+='<div class="week"><span class="week-name">Semaine du '+fmt(w.start).num+'</span>'+
+      '<span class="week-sub">'+esc(REGIME[w.regime]||w.regime||"")+(c.cap!==null?" · plafond "+c.cap+" km":"")+
+      (vol.length?" · "+vol.join(" · "):"")+'</span><span class="rule"></span></div>';
+    html+='<div class="route"><div class="line"></div>';
+    (w.days||[]).forEach(d=>{html+=(DB.days[d.d]&&DB.days[d.d].frozen)?frozenCard(d.d,true):dayCard(d,w);});
     html+='</div>';
   });
   document.getElementById("weeks").innerHTML=html;
@@ -515,6 +627,8 @@ function dayCard(d,w){
   if(!isO)return h+'</div></div>';
 
   h+='<div class="detail">';
+  /* Le 30/08 est la bascule : premières mesures et première revue. */
+  if(k===MEASURE_START)h+='<div class="pivot">Mesures de référence + première revue dominicale</div>';
   const conv=recovery();
   (d.sessions||[]).forEach((s,i)=>{
     const on=!!e.done["s"+i],onF=!!e.done["s"+i+"f"],altOpen=e.done["alt"+i];
@@ -543,11 +657,14 @@ function dayCard(d,w){
   const wkAvg=weekWeight(mondayOf(k)),dayW=num(e.weight);
   const gap=(wkAvg!==null&&dayW!==null&&Math.abs(dayW-wkAvg)>1);
   h+='<div class="log">';
-  h+=numRow(k,"weight","Poids",gap?"Variation quotidienne — la moyenne fait foi.":"","kg","0.1");
+  /* Poids et tour de taille n'apparaissent qu'à partir de la première
+     pesée : un champ masqué n'est pas un champ vide à reprocher. */
+  if(k>=MEASURE_START)h+=numRow(k,"weight","Poids",gap?"Variation quotidienne — la moyenne fait foi.":"","kg","0.1");
   h+=numRow(k,"rhr","FC repos","","bpm","1");
   h+=numRow(k,"hrv","VFC (SDNN)","","ms","1");
   h+=numRow(k,"sleep","Sommeil","","h","0.1");
-  h+=numRow(k,"runKm","Km courus","","km","0.1");
+  h+=numRow(k,"runKm","Km courus","Seul volume soumis au plafond talon.","km","0.1");
+  OTHER_KM.forEach(o=>{if(o[0]!=="kayakKm")h+=numRow(k,o[0],o[1],"",o[2],"0.1");});
   h+=numRow(k,"vo2","VO2max relevée","","ml","0.1");
   h+='<div class="log-row"><span class="log-lab">Couché avant 23h30</span><button class="box" data-b="'+k+'" data-on="'+(e.bed?1:0)+'">'+(e.bed?chk(15):"")+'</button></div>';
   h+='<div class="log-row"><span class="log-lab">Protéines — '+PROTEIN+' g atteints</span><button class="box" data-p="'+k+'" data-on="'+(e.protein?1:0)+'">'+(e.protein?chk(15):"")+'</button></div>';
@@ -557,9 +674,33 @@ function dayCard(d,w){
   h+='<div class="log-row"><span class="log-lab">État du talon</span><div class="pills">';
   ["muet","gêne légère","douloureux"].forEach((t,n)=>{h+='<button class="pill" data-h="'+k+'|'+n+'" data-on="'+((+e.heel||0)===n?1:0)+'" data-over="'+(n===2?1:0)+'">'+t+'</button>';});
   h+='</div></div>';
-  h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Saisie occasionnelle.</span></span>'+
+  if(k>=MEASURE_START)h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Ruban à mi-distance côte basse / crête iliaque.</span></span>'+
      '<input type="number" step="0.5" inputmode="decimal" placeholder="—" value="'+esc(e.waist||"")+'" data-f="'+k+'|waist"><span class="unit">cm</span></div>';
   h+='</div></div></div>';
+  return h;
+}
+
+/* Journée figée : relevé importé, affiché tel quel et non modifiable. */
+function frozenCard(k,inPlan){
+  const e=DB.days[k]||{},f=fmt(k);
+  const isO=open===k;
+  const bits=[];
+  if(num(e.runKm)!==null)bits.push(e.runKm+" km courus");
+  OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)bits.push(e[o[0]]+" "+o[1].toLowerCase().replace("km ",""));});
+  const sum=bits.length?bits.join(" · "):(e.note?e.note:"aucune activité");
+  let h='<div class="day"><span class="node done"></span><div class="card">'+
+    '<button class="card-head" data-open="'+k+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span>'+
+    '<span class="sum">'+esc(sum)+'</span><span class="count">figé</span></div></button>';
+  if(!isO)return h+'</div></div>';
+  h+='<div class="detail"><div class="frozen-tag">Réalisé — relevé Apple Santé</div><div class="log">';
+  const row=(lab,v,unit)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+'</span><span class="ro">'+esc(v)+(unit?' <span class="unit">'+esc(unit)+'</span>':'')+'</span></div>';
+  if(num(e.runKm)!==null)h+=row("Km courus",e.runKm,"km");
+  OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)h+=row(o[1],e[o[0]],"km");});
+  if(num(e.vo2)!==null)h+=row("VO2max relevée",e.vo2,"ml");
+  if(typeof e.alcohol==="number")h+=row("Verres d'alcool",String(e.alcohol),"");
+  h+=row("Protéines — "+PROTEIN+" g",e.protein?"atteints":"non atteints","");
+  if(e.note)h+=row("Séance",e.note,"");
+  h+='</div></div></div></div>';
   return h;
 }
 function numRow(k,f,lab,hint,unit,step){
@@ -637,13 +778,39 @@ function weekList(n){
   for(let i=n-1;i>=0;i--)a.push(addDays(m,-7*i));
   return a;
 }
+/* Première moyenne hebdomadaire enregistrée, origine de la jauge poids. */
+function firstWeekWeight(){
+  const ms=Object.keys(DB.days).sort().map(mondayOf);
+  const seen={};
+  for(const m of ms){if(seen[m])continue;seen[m]=1;const v=weekWeight(m);if(v!==null)return v;}
+  return null;
+}
+/* Tant qu'aucune moyenne n'existe, le graphe n'affiche que les jalons :
+   aucune valeur de poids n'a été mesurée, il n'y a rien à tracer. */
 function weightChart(){
   const pts=weekList(12).map(m=>({lab:fmt(m).num,v:weekWeight(m)})).filter(p=>p.v!==null);
   const refs=MILES.map(m=>({v:m.w,txt:m.wTxt+" · "+m.lab}));
+  if(!pts.length)return'<div class="meta">Poids — moyenne hebdomadaire (kg)</div>'+refsOnly(refs)+
+    '<p class="empty">Première pesée le '+MEASURE_START+'. Les trois jalons sont tracés, rien d\'autre n\'est mesuré.</p>';
   return seriesChart("Poids — moyenne hebdomadaire (kg)",pts,refs,1);
 }
+function refsOnly(refs){
+  const W=600,H=110;
+  let lo=Math.min.apply(null,refs.map(r=>r.v)),hi=Math.max.apply(null,refs.map(r=>r.v));
+  const pad=(hi-lo)*0.35||2; lo-=pad; hi+=pad;
+  const y=v=>18+((hi-v)/(hi-lo))*(H-40);
+  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  refs.forEach(r=>{
+    s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>'+
+       '<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
+  });
+  return s+'</svg>';
+}
+/* Série FC repos : moyennes hebdomadaires figées, puis moyennes mobiles
+   7 jours dès qu'il y a des saisies quotidiennes. */
 function rhrSeries(){
   const a=[];
+  Object.keys(HISTORY_WEEKS).sort().forEach(m=>a.push({lab:fmt(m).num,v:HISTORY_WEEKS[m].rhr}));
   for(let i=27;i>=0;i-=2){const k=addDays(TODAY,-i),v=avg(vals(lastN(k,7),"rhr"));if(v!==null)a.push({lab:fmt(k).num,v:r1(v)});}
   return a;
 }
@@ -681,7 +848,15 @@ function renderRefs(){
   const R=DB.settings.refs,B=DB.settings.bloodwork;
   const f=(o,k,lab,unit,txt)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+'</span>'+
     '<input type="'+(txt?"text":"number")+'" '+(txt?"":'step="0.5" inputmode="decimal"')+' placeholder="—" value="'+esc(o[k]||"")+'" data-s="'+(o===R?"refs":"bloodwork")+'|'+k+'"><span class="unit">'+esc(unit)+'</span></div>';
-  let h='<h2>Références</h2><p class="panel-sub">Mesures de départ, saisies une fois. Tant qu\'un champ reste vide, la ligne correspondante des cibles s\'affiche comme estimation.</p><div class="refs-grid">';
+  /* Rappel unique et non bloquant : il disparaît champ par champ. */
+  const need28=["bench","pullups","row","press"].filter(x=>!R[x]).length;
+  const need30=(lastVal("weight")===null?1:0)+(R.waistBase?0:1);
+  const todo=[];
+  if(need28)todo.push("<b>28/08</b> — charges des quatre mouvements ("+need28+" sur 4 manquantes), à la séance de référence");
+  if(need30)todo.push("<b>30/08</b> — première pesée et tour de taille");
+  let h='<h2>Références</h2><p class="panel-sub">Mesures de départ, saisies une fois. Tant qu\'un champ reste vide, la ligne correspondante des cibles s\'affiche comme estimation.</p>';
+  if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le test 5 km et le bilan sanguin restent ouverts, sans date.</p>';
+  h+='<div class="refs-grid">';
   h+=f(R,"waistBase","Tour de taille de référence","cm");
   h+=f(R,"test5k","Test 5 km","",1);
   h+='<div class="refs-h">Charges des quatre mouvements</div>';
