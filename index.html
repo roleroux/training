@@ -277,7 +277,7 @@ const PROTEIN=170, VO2_START=40.27, VO2_REF=48, DRINK_CAP=17, KEY="jdb-v1", END=
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    le fichier version.txt à la racine. Les deux doivent être identiques,
    sinon le raccourci iOS se rechargera en boucle à chaque ouverture. */
-const VERSION="2026-08-21.1", RKEY="jdb-reload", OKEY="jdb-open";
+const VERSION="2026-08-21.2", RKEY="jdb-reload", OKEY="jdb-open";
 
 /* ---------------- Stockage ---------------- */
 let log={}, memOnly=false;
@@ -305,11 +305,20 @@ const HIST={"2026-08-01":"40.27","2026-08-02":"41.17","2026-08-03":"41.40","2026
    est vide, mais la journée n'est PAS cochée — ses autres séances ne
    sont pas forcément faites. */
 const VO2_SEED={"2026-08-08":"42.23","2026-08-09":"42.91"};
+/* Nutrition renseignée après coup : p = 170 g atteints, a = verres.
+   Posée une seule fois, en écrasant ce qui s'y trouve — c'est un relevé
+   déclaré, plus fiable qu'un champ laissé vide. Une correction faite
+   ensuite dans l'app tient. Rien avant le 9 : période non renseignée. */
+const NUTRI={
+"2026-08-09":{p:1,a:0},"2026-08-10":{p:1,a:0},"2026-08-11":{p:0,a:0},"2026-08-12":{p:0,a:0},
+"2026-08-13":{p:1,a:0},"2026-08-14":{p:0,a:0},"2026-08-15":{p:1,a:0},"2026-08-16":{p:1,a:0},
+"2026-08-17":{p:0,a:0},"2026-08-18":{p:1,a:0},"2026-08-19":{p:0,a:0},"2026-08-20":{p:0,a:0},
+"2026-08-21":{p:0,a:0}};
 function seedHist(){
   let ch=false;
   PLAN.forEach(day=>{
-    const inH=day.d in HIST, inV=day.d in VO2_SEED;
-    if(!inH&&!inV)return;
+    const inH=day.d in HIST, inV=day.d in VO2_SEED, inN=day.d in NUTRI;
+    if(!inH&&!inV&&!inN)return;
     const e=entry(day.d);
     if(inH&&!e.hist){
       units(day).forEach(k=>{e.done[k]=true;});
@@ -319,6 +328,10 @@ function seedHist(){
     if(inV&&!e.vseed){
       if(!e.vo2)e.vo2=VO2_SEED[day.d];
       e.vseed=1; ch=true;
+    }
+    if(inN&&!e.nseed){
+      e.protein=!!NUTRI[day.d].p; e.alcohol=NUTRI[day.d].a;
+      e.nseed=1; ch=true;
     }
   });
   if(ch)save();
