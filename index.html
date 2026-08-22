@@ -193,7 +193,11 @@ input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color
 .pill.sm{height:32px;min-width:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .pg{opacity:.55;font-size:10px}
 .alx{width:74px}
-.log-row.pair input{width:74px}
+/* Deux valeurs et leur unité sur une seule ligne : en flex, l'unité
+   passait à la ligne et se retrouvait sous le libellé de la suivante. */
+.log-row.pair{display:grid;grid-template-columns:1fr 68px 68px 30px;gap:8px;align-items:center}
+.log-row.pair input{width:100%}
+.pair-h span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);text-align:center}
 .g-dot.hollow{fill:var(--surface);stroke:var(--depth);stroke-width:1.6}
 input.bad{border-color:var(--buoy)}
 .week-note{font-size:11.5px;line-height:1.5;color:var(--fog);margin:-6px 0 12px}
@@ -249,7 +253,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.4", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.5", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -604,6 +608,17 @@ function weekOf(k){
   for(const w of ap.weeks)if((w.days||[]).some(d=>d.d===k))return w;
   return null;
 }
+/* Semaine d'un lundi. On interroge d'abord w.start : une semaine dont les
+   jours ne commencent pas au lundi — un plan qui démarre en milieu de
+   semaine — n'était retrouvée par aucune sonde, si bien que son régime et
+   son plafond retombaient sur les valeurs par défaut alors que l'en-tête
+   de semaine, lui, affichait bien ceux du plan. La sonde sur les jours
+   reste en repli, pour les semaines sans start exploitable. */
+function weekAt(mon){
+  const ap=activePlan();
+  for(const w of ap.weeks)if(w.start===mon)return w;
+  return weekOf(mon)||weekOf(addDays(mon,1));
+}
 function dayOf(k){
   const ap=activePlan();
   for(const w of ap.weeks)for(const d of (w.days||[]))if(d.d===k)return d;
@@ -631,7 +646,7 @@ function runAbsMax(){
    plafond. La valeur sert l'alerte, pas la ligne de référence du graphe,
    qui inventerait un plafond rétroactif. */
 function capFor(mon){
-  const w=weekOf(mon)||weekOf(addDays(mon,1)),planned=w?num(w.runCapKm):null;
+  const w=weekAt(mon),planned=w?num(w.runCapKm):null;
   const max=runAbsMax();
   return{
     cap:planned===null?max:Math.min(planned,max),
@@ -702,7 +717,7 @@ function exportTxt(){
 function regimeOf(mon){
   const ov=(DB.settings.regime||{})[mon];
   if(ov)return ov;
-  const w=weekOf(mon)||weekOf(addDays(mon,1));
+  const w=weekAt(mon);
   return (w&&w.regime)||"normale";
 }
 function regimeSet(mon){return !!(DB.settings.regime||{})[mon];}
@@ -724,7 +739,7 @@ function dayDone(k,d){
   return n;
 }
 function p1Week(mon){
-  const w=weekOf(mon)||weekOf(addDays(mon,1));let done=0,planned=0;
+  const w=weekAt(mon);let done=0,planned=0;
   if(w)(w.days||[]).forEach(d=>(d.sessions||[]).forEach((s,i)=>{
     if(s.rank!=="P1")return;planned++;if(sessDone(d.d,i))done++;}));
   return{done:done,planned:planned};
@@ -762,8 +777,27 @@ function render(){
 
 /* Saisie d'un champ : seul l'en-tête est reconstruit. Reconstruire la
    liste détruirait l'input en cours et refermerait le clavier entre
-   chaque valeur. */
-function refreshLive(){renderHeader();}
+   chaque valeur.
+   Restent les quelques commandes dont l'état dépend d'un champ voisin :
+   la bascule « série », qui n'existe qu'une fois les deux chiffres de
+   tension saisis, et la pastille 4+, qui porte le nombre réel. Sans ce
+   rafraîchissement ciblé elles restaient figées jusqu'au prochain rendu
+   complet — c'est-à-dire jamais, pendant une saisie. */
+function refreshLive(){renderHeader();refreshBits();}
+function refreshBits(){
+  const els=document.querySelectorAll("[data-live]");
+  for(let i=0;i<els.length;i++){
+    const el=els[i],a=el.dataset.live.split("|"),e=rd(a[1]);
+    if(a[0]==="bs"){
+      el.style.display=(num(e.sys)!==null&&num(e.dia)!==null)?"":"none";
+      el.dataset.on=e.bpSeries?1:0;
+    }else if(a[0]==="al"){
+      const v=e.alcohol,big=(typeof v==="number"&&v>=4);
+      el.textContent=big?v:"4+";
+      el.dataset.on=big?1:0;
+    }
+  }
+}
 
 function renderHeader(){
   const mon=mondayOf(TODAY),mile=currentMile();
@@ -1026,7 +1060,7 @@ function dayDetail(d,extra){
   const al=e.alcohol,alBig=(typeof al==="number"&&al>=4);
   h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof al==="number"&&al>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
   [0,1,2,3].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(al===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+n+'</button>';});
-  h+='<button class="pill" data-a="'+k+'|4" data-on="'+(alBig?1:0)+'" data-over="1">'+(alBig?al:"4+")+'</button>';
+  h+='<button class="pill" data-a="'+k+'|4" data-live="al|'+k+'" data-on="'+(alBig?1:0)+'" data-over="1">'+(alBig?al:"4+")+'</button>';
   if(alBig)h+='<input class="alx" type="number" min="4" step="1" inputmode="numeric" value="'+al+'" data-n="'+k+'|alcohol">';
   h+='</div></div>';
   h+='<div class="log-row"><span class="log-lab">État du talon</span><div class="pills">';
@@ -1041,7 +1075,7 @@ function dayDetail(d,extra){
   h+='<div class="log-row"><span class="log-lab">Tension<span class="hint">Série trimestrielle, 3 matin + 3 soir sur 3 jours — saisis la moyenne de la série, pas une prise isolée. Cible < '+BP_SYS+'/'+BP_DIA+'.</span></span>'+
      '<div class="bp"><input type="number" step="1" inputmode="numeric" placeholder="sys" value="'+esc(e.sys||"")+'" data-f="'+k+'|sys">'+
      '<span class="bp-sep">/</span><input type="number" step="1" inputmode="numeric" placeholder="dia" value="'+esc(e.dia||"")+'" data-f="'+k+'|dia">'+
-     (bpFull?'<button class="pill sm" data-bs="'+k+'" data-on="'+(e.bpSeries?1:0)+'">série</button>':'')+
+     '<button class="pill sm" data-bs="'+k+'" data-live="bs|'+k+'" data-on="'+(e.bpSeries?1:0)+'"'+(bpFull?'':' style="display:none"')+'>série</button>'+
      '</div><span class="unit">mmHg</span></div>';
   h+='</div></div>';   /* .log puis .detail */
   return h;
@@ -1130,7 +1164,11 @@ function renderTargets(){
      c:[{t:"—",ok:null},{t:"46",ok:vo2===null?null:vo2>=46},{t:"48–50",ok:vo2===null?null:vo2>=48}]},
     /* Les deux termes de la cellule de novembre sont évalués ensemble :
        le chrono du test ET le volume de la dernière semaine pleine. */
-    {l:"Course",cur:runKm+" km/sem"+(t5!==null?" · 5 km "+R.test5k+(R.test5kDate?" le "+fmt(R.test5kDate).num+"/"+R.test5kDate.slice(5,7):""):""),
+    /* La cellule montre le volume qu'elle juge — la dernière semaine
+       pleine — et non celui de la semaine en cours : afficher 1 km/sem à
+       côté d'un ✓ obtenu sur 35 km se lisait comme une erreur. Le volume
+       du moment est sur l'onglet Aujourd'hui, où on le consulte. */
+    {l:"Course",cur:runFull+" km/sem écoulée"+(t5!==null?" · 5 km "+R.test5k+(isDate(R.test5kDate)?" le "+dm(R.test5kDate):""):""),
      c:[{t:"5 km 26:30 · 30 km/sem",ok:t5===null?null:(t5<=TEST5K_TARGET&&runFull>=30)},
         {t:"10 km 55:00 · 40 km/sem",ok:runFull>=40},
         {t:"Semi 1h50–52 · 10 km 51:00",ok:null}]},
@@ -1197,8 +1235,12 @@ function lastBP(serieOnly){
   return null;
 }
 function lastSeriesBP(){return lastBP(true);}
+/* Une date venue des réglages peut arriver de n'importe où — champ vide,
+   base importée, saisie d'un autre navigateur. La formater sans vérifier
+   donnait « NaN/ne ». */
+function isDate(k){return /^\d{4}-\d{2}-\d{2}$/.test(String(k||""));}
 /* jj/mm — les dates d'un tableau tiennent en six caractères. */
-function dm(k){return fmt(k).num+"/"+k.slice(5,7);}
+function dm(k){return isDate(k)?fmt(k).num+"/"+k.slice(5,7):"—";}
 /* Chrono mm:ss en secondes. null si le format n'est pas respecté : une
    valeur en texte libre n'était comparée à rien. */
 function parseMMSS(s){
@@ -1312,7 +1354,10 @@ function renderRefs(){
      ne doit pas attendre un déploiement pour s'appliquer. */
   h+='<div class="log-row"><span class="log-lab">Plafond dur course<span class="hint">Révisé en session coach, jamais à la volée. Par défaut '+RUN_ABS_MAX+' km.</span></span>'+
      '<input type="number" step="1" inputmode="numeric" placeholder="'+RUN_ABS_MAX+'" value="'+esc(R.runAbsMax||"")+'" data-s="refs|runAbsMax"><span class="unit">km/sem</span></div>';
-  h+='<div class="refs-h">Charges des quatre mouvements — référence puis actuel</div>';
+  h+='<div class="refs-h">Charges des quatre mouvements</div>';
+  /* Une fois les champs remplis, les placeholders disparaissent : sans
+     en-tête, « 80 82 » ne dit plus laquelle est la référence. */
+  h+='<div class="log-row pair pair-h"><span></span><span>Réf.</span><span>Actuel</span><span></span></div>';
   h+=p("bench","Développé couché","kg");
   h+=p("pullups","Tractions (max strictes)","reps");
   h+=p("row","Rowing barre","kg");
