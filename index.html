@@ -259,6 +259,17 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 .backup.warn{color:var(--buoy)}
 .refs-grid{display:grid;gap:12px}
 .refs-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:6px}
+.mtgt{display:grid;gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:3px 8px;background:var(--surface);padding:9px 11px;align-items:baseline}
+.mlab{font-size:12.5px}
+.mline{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--fog);line-height:1.5}
+.mline b{font-size:13.5px;color:var(--ink);font-weight:500}
+.mgap{font-family:var(--mono)}
+.mgap.ok{color:var(--depth)}.mgap.warn{color:var(--buoy)}
+.pace{font-size:11.5px;color:var(--fog);margin:0 0 4px;line-height:1.5}
+table.tgt th.now,table.tgt td.now{background:var(--tint)}
+table.tgt th.base,table.tgt td.base{color:var(--fog)}
+.g-goal{stroke:var(--depth);fill:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:400px){h1{font-size:28px}}
 </style>
@@ -280,13 +291,50 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.8", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.9", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
-const MILES=[
-  {d:"2026-11-30",lab:"Nov 2026",w:91,wTxt:"91"},
-  {d:"2027-02-28",lab:"Fév 2027",w:89,wTxt:"89"},
-  {d:"2027-08-31",lab:"Août 2027",w:87,wTxt:"86–87"}
+/* ================= Cibles mensuelles ================= */
+/* Treize mois, d'août 2026 à août 2027. Août est la LIGNE DE BASE : elle
+   s'affiche et ne s'évalue jamais.
+   ★ = valeur provisoire, à corriger le 30/08 après la première pesée.
+   Elles sont toutes ici, c'est le seul endroit à toucher.
+   waist = écart en cm sous la mesure de référence, pas une valeur absolue.
+   sleep = heures décimales, comme le champ de saisie.
+   prot  = nombre de jours sur 7 atteignant PROTEIN.
+   La baisse de volume en août 2027 (48 → 40) est l'affûtage avant le
+   semi du 28, pas une faute de frappe. */
+const MONTHS=[
+  {m:"2026-08",w:95.0,waist:0,   vol:22,sleep:5.83,prot:3,vo2:43,base:true},  /* ★ w, sleep */
+  {m:"2026-09",w:93.5,waist:-1,  vol:26,sleep:6.17,prot:4,vo2:43},
+  {m:"2026-10",w:92.2,waist:-2.5,vol:28,sleep:6.5, prot:4,vo2:44},
+  {m:"2026-11",w:91.0,waist:-4,  vol:30,sleep:6.75,prot:5,vo2:44},
+  {m:"2026-12",w:90.5,waist:-5,  vol:30,sleep:6.75,prot:5,vo2:45},
+  {m:"2027-01",w:89.5,waist:-6,  vol:35,sleep:6.83,prot:5,vo2:45},
+  {m:"2027-02",w:89.0,waist:-7,  vol:40,sleep:7.0, prot:5,vo2:46},
+  {m:"2027-03",w:88.5,waist:-7.5,vol:40,sleep:7.0, prot:5,vo2:46},
+  {m:"2027-04",w:88.0,waist:-8,  vol:42,sleep:7.0, prot:5,vo2:47},
+  {m:"2027-05",w:87.5,waist:-8.5,vol:45,sleep:7.0, prot:5,vo2:47},
+  {m:"2027-06",w:87.0,waist:-9,  vol:45,sleep:7.0, prot:5,vo2:48},
+  {m:"2027-07",w:86.5,waist:-9.5,vol:48,sleep:7.0, prot:5,vo2:49},
+  {m:"2027-08",w:86.0,waist:-10, vol:40,sleep:7.0, prot:5,vo2:49}   /* affûtage */
+];
+/* Les chronos ne sont pas mensuels : ce sont des tests datés. */
+const TESTS=[
+  {d:"2026-09-12",dist:"5 km",cible:null},   /* référence, sans cible */
+  {d:"2026-11-28",dist:"5 km",cible:"26:30"},
+  {d:"2027-01-30",dist:"10 km",cible:"57:00"},
+  {d:"2027-02-27",dist:"10 km",cible:"55:00"},
+  {d:"2027-04-24",dist:"10 km",cible:"53:00"},
+  {d:"2027-06-26",dist:"10 km",cible:"51:00"},
+  {d:"2027-07-24",dist:"semi",cible:"1:55:00"},
+  {d:"2027-08-28",dist:"semi",cible:"1:52:00"}
+];
+/* Allure d'endurance de référence. Indication seulement, jamais évaluée. */
+const PACES=[
+  {until:"2026-11-30",txt:"6:10–6:30/km"},
+  {until:"2027-02-28",txt:"5:55–6:20/km"},
+  {until:"2027-08-31",txt:"5:40–6:00/km"}
 ];
 /* Première pesée : la balance à impédance est en France. Avant cette date
    il n'existe aucune mesure de poids ni de tour de taille — les champs
@@ -297,7 +345,6 @@ const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
 /* Bas de la jauge sommeil : en dessous, l'anneau reste vide. */
 const SLEEP_LOW=5;
-const WAIST_TARGET=94, VO2_TARGET=48;   /* cibles des jauges tour de taille et VO2max */
 /* Protéines : quatre prises, chacune sa valeur. La whey fait 30 g, un
    déjeuner en brasserie 55. Total 165 g, soit la cible atteinte à 4/4
    seulement — trois prises plafonnent à 135 g, sous la fourchette. Les
@@ -440,6 +487,14 @@ function normalize(){
   if(!DB.settings.refs)DB.settings.refs={};
   if(!DB.settings.bloodwork)DB.settings.bloodwork={};
   if(!DB.settings.regime)DB.settings.regime={};
+  if(!DB.settings.tests)DB.settings.tests={};
+  /* Reprise du champ unique test5k des versions antérieures : il visait
+     le test de référence du 12/09. */
+  const R0=DB.settings.refs;
+  if(R0.test5k&&!Object.keys(DB.settings.tests).length){
+    DB.settings.tests[isDate(R0.test5kDate)?R0.test5kDate:TESTS[0].d]=R0.test5k;
+    delete R0.test5k;delete R0.test5kDate;
+  }
   if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
   return seedHistory();
 }
@@ -749,9 +804,103 @@ function weightDrop(mon){
   const d=r1(b-a);
   return d>0.7?d:null;
 }
-function currentMile(){
-  for(const m of MILES)if(TODAY<=m.d)return m;
-  return MILES[MILES.length-1];
+/* ================= Mois ================= */
+const MOISKEY=k=>String(k).slice(0,7);
+function monthEnd(m){const a=m.split("-").map(Number);return iso(new Date(a[0],a[1],0));}
+function monthStart(m){return m+"-01";}
+function monthAt(m){for(const x of MONTHS)if(x.m===m)return x;return null;}
+/* Cible en vigueur : le mois courant, ou le dernier connu une fois la
+   période terminée. */
+function currentMonth(){
+  const m=MOISKEY(TODAY),f=monthAt(m);
+  if(f)return f;
+  return TODAY<MONTHS[0].m?MONTHS[0]:MONTHS[MONTHS.length-1];
+}
+function paceAt(k){for(const p of PACES)if(k<=p.until)return p.txt;return PACES[PACES.length-1].txt;}
+
+/* --- Médiane de volume sur 4 semaines pleines ---
+   Une cible de volume ne se juge pas sur un total hebdomadaire : une
+   semaine à 40 km suivie de trois à 15 ne vaut pas 40. La médiane des
+   quatre semaines pleines qui précèdent résiste à ce pic. Une semaine
+   sans donnée compte zéro — c'est une semaine sans course, pas une
+   semaine inconnue. */
+function runMedian4(mon){
+  const v=[];
+  for(let i=1;i<=4;i++)v.push(r1(total(vals(weekDays(addDays(mon,-7*i)),"runKm"))));
+  v.sort((a,b)=>a-b);
+  return r1((v[1]+v[2])/2);
+}
+
+/* --- Valeurs telles qu'elles se lisaient à une date donnée ---
+   Un mois écoulé se juge sur ce qu'il affichait à sa fin, pas sur ce
+   qu'on sait aujourd'hui. */
+/* Agrégats hebdomadaires BORNÉS à une date. La semaine d'un 30 septembre
+   déborde sur octobre : sans cette borne, septembre se jugeait sur des
+   pesées d'octobre — exactement ce que « un mois écoulé se juge sur la
+   valeur atteinte à sa fin » interdit. */
+function weekWeightAt(mon,k){
+  const v=vals(weekDays(mon).filter(d=>d<=k),"weight");
+  return v.length>=WEIGHT_MIN?avg(v):null;
+}
+function weekVo2MaxAt(mon,k){
+  const v=vals(weekDays(mon).filter(d=>d<=k),"vo2");
+  return v.length?Math.max.apply(null,v):null;
+}
+function lastWeeklyAt(fn,k){
+  let m=mondayOf(k);
+  for(let i=0;i<60;i++){const v=fn(m,k);if(v!==null)return v;m=addDays(m,-7);}
+  return null;
+}
+function lastValAt(f,k){
+  const ks=Object.keys(DB.days).filter(x=>x<=k).sort();
+  for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
+  return null;
+}
+function protDaysAt(k){
+  /* La journée en cours est incomplète : la fenêtre s'arrête la veille. */
+  const end=(k>=TODAY)?addDays(TODAY,-1):k;
+  let c=0;lastN(end,7).forEach(x=>{if(protG(rd(x))>=PROTEIN)c++;});
+  return c;
+}
+function snapAt(k){
+  const mon=mondayOf(k);
+  return{
+    w:lastWeeklyAt(weekWeightAt,k),
+    waist:lastValAt("waist",k),
+    vol:runMedian4(mon),
+    sleep:avg(vals(lastN(k,7),"sleep")),
+    prot:protDaysAt(k),
+    vo2:lastWeeklyAt(weekVo2MaxAt,k)
+  };
+}
+/* Tour de taille : la cible mensuelle est un écart, la mesure est
+   absolue. Sans mesure de référence, la ligne reste une estimation. */
+function waistTarget(f){
+  const b=num((DB.settings.refs||{}).waistBase);
+  return b===null?null:r1(b+f.waist);
+}
+/* Les sept cibles d'un mois, confrontées aux valeurs d'une date.
+   dir : -1 si l'on vise en dessous, +1 si l'on vise au-dessus. */
+const TGT=[
+  {k:"w",   l:"Poids",          u:"kg",dir:-1,dec:1},
+  {k:"waist",l:"Tour de taille",u:"cm",dir:-1,dec:1},
+  {k:"vol", l:"Volume course",  u:"km",dir:1, dec:1},
+  {k:"sleep",l:"Sommeil",       u:"",  dir:1, dec:2},
+  {k:"prot",l:"Protéines",      u:"j/7",dir:1,dec:0},
+  {k:"vo2", l:"VO2max",         u:"",  dir:1, dec:1}
+];
+function tgtValue(f,t){return t.k==="waist"?waistTarget(f):f[t.k];}
+function fmtTgt(v,t){
+  if(v===null)return"—";
+  return t.k==="sleep"?fmtDur(v):(t.dec?v.toFixed(t.dec===2?1:t.dec):String(v))+(t.u?" "+t.u:"");
+}
+function fmtCur(v,t){
+  if(v===null)return null;
+  return t.k==="sleep"?fmtDur(v):(t.dec?r1(v).toFixed(t.dec===2?1:t.dec):String(v))+(t.u?" "+t.u:"");
+}
+function tgtOk(cur,tv,t){
+  if(cur===null||tv===null)return null;
+  return t.dir<0?cur<=tv:cur>=tv;
 }
 /* Ancienneté du dernier export. null = jamais exporté. Le journal ne
    vit que dans le stockage de ce navigateur : un effacement de données
@@ -852,39 +1001,43 @@ function refreshBits(){
 }
 
 function renderHeader(){
-  const mon=mondayOf(TODAY),mile=currentMile();
+  const mon=mondayOf(TODAY),f=currentMonth();
   const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
   const wa=weekWaist(mon)!==null?weekWaist(mon):lastWeekly(weekWaist);
   const vo=weekVo2Max(mon)!==null?weekVo2Max(mon):lastWeekly(weekVo2Max);
   const sl7=avg(vals(lastN(TODAY,7),"sleep"));
   const w0=firstWeekWeight(),wb=num((DB.settings.refs||{}).waistBase),v0=firstVo2();
+  const wT=f.w,waT=waistTarget(f),slT=f.sleep,voT=f.vo2;
 
   document.getElementById("eyebrow").textContent="";
 
-  /* 1 · poids moyen hebdo vs jalon — origine : première moyenne connue. */
-  const wFrac=(wk===null||w0===null||w0<=mile.w)?0:(w0-wk)/(w0-mile.w);
-  /* 2 · tour de taille moyen vs 94 cm — origine : mesure de référence. */
-  const wtFrac=(wa===null||wb===null||wb<=WAIST_TARGET)?0:(wb-wa)/(wb-WAIST_TARGET);
-  /* 3 · sommeil moyen 7 j — vide à 5 h, plein à la cible de 7 h. */
-  const bFrac=sl7===null?0:(sl7-SLEEP_LOW)/(SLEEP_H-SLEEP_LOW);
-  /* 4 · VO2max maxi hebdo vs 48 — origine : premier relevé enregistré. */
-  const vFrac=(vo===null||v0===null||v0>=VO2_TARGET)?0:(vo-v0)/(VO2_TARGET-v0);
+  /* Les quatre jauges visent la cible DU MOIS, pas une échéance
+     trimestrielle : c'est l'écart du moment qui se pilote. */
+  /* 1 · poids moyen hebdo — origine : première moyenne connue. */
+  const wFrac=(wk===null||w0===null||w0<=wT)?0:(w0-wk)/(w0-wT);
+  /* 2 · tour de taille — origine : mesure de référence. */
+  const wtFrac=(wa===null||wb===null||waT===null||wb<=waT)?0:(wb-wa)/(wb-waT);
+  /* 3 · sommeil moyen 7 j — vide à 5 h, plein à la cible du mois. */
+  const bFrac=(sl7===null||slT<=SLEEP_LOW)?0:(sl7-SLEEP_LOW)/(slT-SLEEP_LOW);
+  /* 4 · VO2max maxi hebdo — origine : premier relevé enregistré. */
+  const vFrac=(vo===null||v0===null||v0>=voT)?0:(vo-v0)/(voT-v0);
 
-  /* Moyenne assise sur deux pesées seulement : elle compte, mais elle le
-     dit. Le repli sur une semaine antérieure garde son propre décompte. */
   const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
+  const MOISC=MOIS[+f.m.slice(5,7)-1];
 
   document.getElementById("prog").innerHTML=
-    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+mile.w,
+    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+wT.toFixed(1),
       wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":(wkN===2?"poids moy. partiel":"poids moy."),"var(--depth)",
-      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées, jalon "+mile.wTxt)+
-    gauge(wtFrac,wa===null?dash:wa.toFixed(1),wa===null?"":"/"+WAIST_TARGET,
+      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées, cible "+MOISC+" "+wT.toFixed(1))+
+    gauge(wtFrac,wa===null?dash:wa.toFixed(1),(wa===null||waT===null)?"":"/"+waT.toFixed(1),
       wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
-      wa===null?"Premier tour de taille prévu le "+MEASURE_START:"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+WAIST_TARGET)+
-    gauge(bFrac,sl7===null?dash:fmtDur(sl7),sl7===null?"":"/"+fmtDur(SLEEP_H),"sommeil moy.","var(--brass)",
-      sl7===null?"Aucune durée de sommeil saisie":"Moyenne sur 7 jours "+fmtDur(sl7)+", cible "+fmtDur(SLEEP_H))+
-    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+VO2_TARGET,"vo2max hebdo","var(--k-run)",
-      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+VO2_TARGET);
+      wa===null?"Premier tour de taille prévu le "+MEASURE_START
+        :(waT===null?"Mesure de référence manquante dans Références"
+          :"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+MOISC+" "+waT.toFixed(1)))+
+    gauge(bFrac,sl7===null?dash:fmtDur(sl7),sl7===null?"":"/"+fmtDur(slT),"sommeil moy.","var(--brass)",
+      sl7===null?"Aucune durée de sommeil saisie":"Moyenne sur 7 jours "+fmtDur(sl7)+", cible "+MOISC+" "+fmtDur(slT))+
+    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+voT,"vo2max hebdo","var(--k-run)",
+      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+MOISC+" "+voT);
 
   const B=[];
   if(stale)B.push(["warn",stale]);
@@ -1166,83 +1319,97 @@ function st(ok,mileD){
 }
 /* Les valeurs sont recalculées ici : le panneau est rendu à la demande,
    quand on ouvre son onglet, et non plus dans la foulée de l'en-tête. */
-function renderTargets(){
-  const R=DB.settings.refs||{};
-  const mon=mondayOf(TODAY);
-  const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
-  const runKm=weekRun(mon);
-  const waist=lastVal("waist"),waistBase=num(R.waistBase),vo2=lastVal("vo2");
-  const rhr30=avg(vals(lastN(TODAY,30),"rhr")),hrv30=avg(vals(lastN(TODAY,30),"hrv"));
-  const sl=sleepCounts(lastN(TODAY,7)),slAvg=avg(vals(lastN(TODAY,7),"sleep"));
-  const drinks=drinksIn(weekDays(mon));
-  const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
-  /* Protéines : décompte sur les 7 journées terminées, et l'état du jour
-     montré à part pour qu'il soit visible sans peser sur le verdict. */
-  const pd=protDays(7),pgToday=protG(rd(TODAY));
-  /* Force : le maintien ne se constate qu'en re-mesurant. */
-  const FORCE=[["bench","benchNow"],["pullups","pullupsNow"],["row","rowNow"],["press","pressNow"]];
-  const fPairs=FORCE.map(x=>[num(R[x[0]]),num(R[x[1]])]);
-  const fComplete=fPairs.every(p=>p[0]!==null&&p[1]!==null);
-  const fHeld=fComplete?fPairs.every(p=>p[1]>=p[0]):null;
-  const pullNow=num(R.pullupsNow);
-  /* Test 5 km : comparé sur la dernière semaine PLEINE, pas sur la
-     semaine en cours, dont le total est partiel par construction. */
-  const t5=parseMMSS(R.test5k),runFull=weekRun(addDays(mon,-7));
+/* Fenêtre du tableau mensuel : mois en cours −1 à +3. Treize colonnes ne
+   tiennent pas sur un téléphone, et les mois lointains ne se pilotent
+   pas. Le bouton « Tous les mois » lève la fenêtre. */
+let allMonths=false;
+function monthWindow(){
+  if(allMonths)return MONTHS;
+  const c=MOISKEY(TODAY);
+  let i=MONTHS.findIndex(x=>x.m===c);
+  if(i<0)i=TODAY<MONTHS[0].m?0:MONTHS.length-1;
+  return MONTHS.slice(Math.max(0,i-1),i+4);
+}
+function moisLab(m){return MOIS[+m.slice(5,7)-1].slice(0,4)+" "+m.slice(2,4);}
+/* Prochain test à venir, et dernier test passé avec son résultat. */
+function testAt(){
+  const done=DB.settings.tests||{};
+  let next=null,last=null,late=null;
+  TESTS.forEach(t=>{
+    const r=done[t.d];
+    if(t.d>=TODAY){if(!next)next=t;return;}
+    if(parseMMSS(r)!==null)last={t:t,r:r};
+    else if(!late)late=t;
+  });
+  return{next:next,last:last,late:late};
+}
 
-  const rows=[
-    {l:"Poids (moy. hebdo)",cur:wk===null?null:wk.toFixed(1)+" kg"+(wkN===2?" · partiel":""),
-     c:[{t:"91",ok:wk===null?null:wk<=91},{t:"89",ok:wk===null?null:wk<=89},{t:"86–87",ok:wk===null?null:wk<=87}]},
-    {l:"Tour de taille",cur:waist===null?null:waist+" cm",
-     c:[{t:"−4 cm vs réf.",ok:(waist===null||waistBase===null)?null:waistBase-waist>=4},
-        {t:"< 94 cm",ok:waist===null?null:waist<94},{t:"< 94 cm",ok:waist===null?null:waist<94}]},
-    {l:"FC repos (moy. mens.)",cur:rhr30===null?null:rhr30.toFixed(1)+" bpm",
-     c:[{t:"≤ 61",ok:rhr30===null?null:rhr30<=61},{t:"—",ok:null},{t:"—",ok:null}]},
-    {l:"VFC (moy. mens.)",cur:hrv30===null?null:hrv30.toFixed(1)+" ms",
-     c:[{t:"—",ok:null},{t:"—",ok:null},{t:"≥ 50 ms",ok:hrv30===null?null:hrv30>=50}]},
-    {l:"VO2max",cur:vo2===null?null:String(vo2),
-     c:[{t:"—",ok:null},{t:"46",ok:vo2===null?null:vo2>=46},{t:"48–50",ok:vo2===null?null:vo2>=48}]},
-    /* Les deux termes de la cellule de novembre sont évalués ensemble :
-       le chrono du test ET le volume de la dernière semaine pleine. */
-    /* La cellule montre le volume qu'elle juge — la dernière semaine
-       pleine — et non celui de la semaine en cours : afficher 1 km/sem à
-       côté d'un ✓ obtenu sur 35 km se lisait comme une erreur. Le volume
-       du moment est sur l'onglet Aujourd'hui, où on le consulte. */
-    {l:"Course",cur:runFull+" km/sem écoulée"+(t5!==null?" · 5 km "+R.test5k+(isDate(R.test5kDate)?" le "+dm(R.test5kDate):""):""),
-     c:[{t:"5 km 26:30 · 30 km/sem",ok:t5===null?null:(t5<=TEST5K_TARGET&&runFull>=30)},
-        {t:"10 km 55:00 · 40 km/sem",ok:runFull>=40},
-        {t:"Semi 1h50–52 · 10 km 51:00",ok:null}]},
-    {l:"Force",cur:fComplete?"4 mouvements re-mesurés":(pullNow!==null?pullNow+" tractions":null),
-     c:[{t:"0 charge perdue",ok:fHeld},{t:"—",ok:null},
-        {t:"10 tractions strictes",ok:pullNow===null?null:pullNow>=10}]},
-    {l:"Sommeil",cur:slAvg===null?null:slAvg.toFixed(1)+" h · "+sl.n7+"/7 nuits ≥ 7 h",
-     c:[{t:"moy. ≥ 6h45",ok:slAvg===null?null:slAvg>=6.75},
-        {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)},
-        {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)}]},
-    {l:"Alcool",cur:drinks+" verres/sem",
-     c:[{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK}]},
-    /* Cible : 160 g atteints 5 jours sur 7. Un décompte, pas une
-       moyenne — une journée à 300 g ne rachète pas deux journées à 60. */
-    {l:"Protéines",cur:pd+"/7 jours ≥ "+PROTEIN+" g"+(pgToday?" · ≈ "+pgToday+" g aujourd'hui":""),
-     c:[{t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS},
-        {t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS},
-        {t:PROT_DAYS+"/7 j ≥ "+PROTEIN+" g",ok:pd>=PROT_DAYS}]}
-  ];
-  let h='<h2>Cibles</h2><p class="panel-sub">Trois échéances datées. Une ligne sans donnée de référence reste une estimation tant que le panneau Références n\'est pas rempli.</p>';
-  h+='<div class="scroll"><table class="tgt"><tr><th></th>'+MILES.map(m=>"<th>"+m.lab+"</th>").join("")+"</tr>";
-  rows.forEach(r=>{
-    h+='<tr><td><div class="t-lab">'+esc(r.l)+'</div><span class="t-cur">'+(r.cur===null?"estimation":esc(r.cur))+'</span></td>';
-    /* Une échéance sans cible pour cette ligne n'affiche qu'un tiret :
-       le glyphe d'état suivi d'un tiret se lirait comme deux tirets. */
-    r.c.forEach((c,i)=>{h+='<td class="t-cell">'+(c.t==="—"?'<span class="dim">—</span>':st(c.ok,MILES[i].d)+esc(c.t))+'</td>';});
+function renderTargets(){
+  const f=currentMonth(),cur=snapAt(TODAY);
+
+  /* --- A · la cible du mois, ce qui se lit tous les jours --- */
+  let h='<h2>Cibles</h2><p class="panel-sub">Une cible par mois, d\'août 2026 à août 2027. Août est la ligne de base : elle s\'affiche et ne s\'évalue pas. Une ligne sans donnée de référence reste une estimation.</p>';
+  h+='<div class="meta">Cible du mois — '+esc(MOIS[+f.m.slice(5,7)-1])+' '+f.m.slice(0,4)+'</div>';
+  h+='<div class="mtgt">';
+  TGT.forEach(t=>{
+    const tv=tgtValue(f,t),cv=cur[t.k];
+    const ok=f.base?null:tgtOk(cv,tv,t);
+    let gap="";
+    if(cv!==null&&tv!==null){
+      const d=r1(cv-tv);
+      gap=(d>0?"+":"")+(t.k==="sleep"?(d>=0?"+":"−")+fmtDur(Math.abs(d)):String(d));
+      if(t.k==="sleep")gap=(d>=0?"+":"−")+fmtDur(Math.abs(d));
+    }
+    h+='<div class="mrow"><span class="mlab">'+esc(t.l)+'</span>'+
+       (f.base?'<span class="t-st dim">—</span>':st(ok,monthEnd(f.m)))+
+       '<span class="mline">'+
+         (fmtCur(cv,t)===null?'<span class="dim">estimation</span>':'<b>'+esc(fmtCur(cv,t))+'</b>')+
+         ' · cible '+esc(fmtTgt(tv,t))+
+         (gap?' · <span class="mgap '+(ok===false?"warn":ok?"ok":"dim")+'">'+esc(gap)+'</span>':'')+
+       '</span></div>';
+  });
+  /* Chrono : pas de valeur mensuelle, des tests datés. */
+  const T=testAt();
+  h+='<div class="mrow"><span class="mlab">Chrono</span>'+
+     (T.late?'<span class="t-st warn">✗</span>':'<span class="t-st dim">→</span>')+
+     '<span class="mline">'+
+       (T.last?'<b>'+esc(T.last.t.dist+" "+T.last.r)+'</b> le '+esc(dm(T.last.t.d)):'<span class="dim">aucun test enregistré</span>')+
+       (T.next?' · prochain '+esc(T.next.dist+" le "+dm(T.next.d)+(T.next.cible?", cible "+T.next.cible:"")):'')+
+     '</span></div>';
+  h+='</div>';
+  if(T.late)h+='<p class="todo">Test du <b>'+esc(dm(T.late.d))+'</b> ('+esc(T.late.dist)+') passé sans résultat saisi. Panneau Références.</p>';
+  h+='<p class="pace">Allure d\'endurance de référence : <b>'+esc(paceAt(TODAY))+'</b>. Indication, jamais évaluée.</p>';
+
+  /* --- B · le tableau mensuel --- */
+  const win=monthWindow(),cm=MOISKEY(TODAY);
+  h+='<div class="meta" style="margin-top:26px">Trajectoire mensuelle</div>';
+  h+='<div class="scroll"><table class="tgt"><tr><th></th>'+
+     win.map(x=>'<th class="'+(x.m===cm?"now ":"")+(x.base?"base":"")+'">'+esc(moisLab(x.m))+'</th>').join("")+'</tr>';
+  TGT.forEach(t=>{
+    h+='<tr><td><div class="t-lab">'+esc(t.l)+'</div><span class="t-cur">'+
+       (fmtCur(cur[t.k],t)===null?"estimation":esc(fmtCur(cur[t.k],t)))+'</span></td>';
+    win.forEach(x=>{
+      const tv=tgtValue(x,t),end=monthEnd(x.m);
+      /* Un mois écoulé se juge sur ce qu'il affichait à sa fin ; le mois
+         en cours sur aujourd'hui ; un mois à venir ne se juge pas. */
+      let ok=null;
+      if(!x.base&&monthStart(x.m)<=TODAY){
+        const at=end<TODAY?end:TODAY;
+        ok=tgtOk(snapAt(at)[t.k],tv,t);
+      }
+      h+='<td class="t-cell'+(x.m===cm?" now":"")+(x.base?" base":"")+'">'+
+         (x.base?'<span class="dim">'+esc(fmtTgt(tv,t))+'</span>':st(ok,end)+esc(fmtTgt(tv,t)))+'</td>';
+    });
     h+='</tr>';
   });
   h+='</table></div>';
+  h+='<button class="tool" id="allm">'+(allMonths?"Fenêtre courante":"Tous les mois")+'</button>';
 
   /* --- graphes --- */
   h+='<div class="graph">'+weightChart()+'</div>';
   h+='<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
   h+='<div class="graph">'+volumeChart()+'</div>';
-  h+='<div class="graph">'+seriesChart("VO2max relevée (ml/kg/min) — indicateur secondaire",vo2Series(),[],1)+'</div>';
+  h+='<div class="graph">'+seriesChart("VO2max relevée (ml/kg/min)",vo2Series(),[{v:f.vo2,txt:f.vo2+" · cible du mois"}],1)+'</div>';
   h+='<p class="foot">Une semaine allégée n\'est pas une semaine perdue. Une séance manquée ne se rattrape pas.</p>';
   document.getElementById("targets").innerHTML=h;
 }
@@ -1260,7 +1427,12 @@ function dm(k){return isDate(k)?fmt(k).num+"/"+k.slice(5,7):"—";}
 /* Chrono mm:ss en secondes. null si le format n'est pas respecté : une
    valeur en texte libre n'était comparée à rien. */
 function parseMMSS(s){
-  const m=/^\s*(\d{1,3}):([0-5]\d)\s*$/.exec(String(s||""));
+  const t=String(s||"").trim();
+  /* Une seule heure : un chrono de course ne dépasse pas 9 h, et
+     « 26:30:00 » est une faute de frappe sur un 5 km, pas 26 h 30. */
+  let m=/^([0-9]):([0-5]\d):([0-5]\d)$/.exec(t);
+  if(m)return (+m[1])*3600+(+m[2])*60+(+m[3]);
+  m=/^(\d{1,3}):([0-5]\d)$/.exec(t);
   return m?(+m[1])*60+(+m[2]):null;
 }
 function weekList(n){
@@ -1279,11 +1451,16 @@ function firstWeekWeight(){
    aucune valeur de poids n'a été mesurée, il n'y a rien à tracer. */
 function weightChart(){
   /* partiel : moyenne assise sur deux pesées, tracée en point creux. */
-  const pts=weekList(12).map(m=>({lab:fmt(m).num,v:weekWeight(m),hollow:weekWeightN(m)===2})).filter(p=>p.v!==null);
-  const refs=MILES.map(m=>({v:m.w,txt:m.wTxt+" · "+m.lab}));
-  if(!pts.length)return'<div class="meta">Poids — moyenne hebdomadaire (kg)</div>'+refsOnly(refs)+
-    '<p class="empty">Première pesée le '+MEASURE_START+'. Les trois jalons sont tracés, rien d\'autre n\'est mesuré.</p>';
-  return seriesChart("Poids — moyenne hebdomadaire (kg)",pts,refs,1);
+  const keep=weekList(12).filter(m=>weekWeight(m)!==null);
+  const pts=keep.map(m=>({lab:fmt(m).num,v:weekWeight(m),hollow:weekWeightN(m)===2}));
+  /* La cible du mois de chaque semaine, pour lire l'écart à la trajectoire. */
+  const goal=keep.map(m=>{const x=monthAt(MOISKEY(m));return x?x.w:currentMonth().w;});
+  if(!pts.length){
+    const refs=MONTHS.filter((x,i)=>i%3===0).map(x=>({v:x.w,txt:x.w.toFixed(1)+" · "+moisLab(x.m)}));
+    return'<div class="meta">Poids — moyenne hebdomadaire (kg)</div>'+refsOnly(refs)+
+      '<p class="empty">Première pesée le '+MEASURE_START+'. La trajectoire mensuelle est tracée, rien d\'autre n\'est mesuré.</p>';
+  }
+  return seriesChart("Poids — réel (plein) et cible mensuelle (pointillé)",pts,[],1,goal);
 }
 function refsOnly(refs){
   const W=600,H=110;
@@ -1309,19 +1486,21 @@ function vo2Series(){
   return Object.keys(DB.days).sort().map(k=>({lab:fmt(k).num,v:num(DB.days[k].vo2)})).filter(p=>p.v!==null).slice(-16);
 }
 function volumeChart(){
-  const ms=weekList(10),pts=[],refs=[];
-  /* Seuls les plafonds réellement portés par un plan comptent : une
-     semaine de juin ne s'est jamais vu opposer de plafond, le graphe ne
-     doit pas lui en inventer un rétroactivement. */
-  ms.forEach(m=>{const c=capFor(m);if(!c.implicit)refs.push(c.cap);pts.push({lab:fmt(m).num,v:weekRun(m)});});
-  const capAvg=refs.length?r1(avg(refs)):null;
-  return seriesChart("Volume course hebdomadaire (km)",pts.filter(p=>p.v>0),capAvg!==null?[{v:capAvg,txt:capAvg+" · plafond moyen"}]:[],1);
+  const pts=weekList(10).map(m=>({lab:fmt(m).num,v:weekRun(m)}));
+  const f=currentMonth();
+  /* La référence est la cible de volume du mois, pas une moyenne de
+     plafonds : c'est elle qu'on vise. La médiane et le plafond dur en
+     vigueur restent dans le titre, où ils ne disputent pas la lecture. */
+  return seriesChart("Volume hebdo (km) — médiane 4 sem. "+runMedian4(mondayOf(TODAY))+" · plafond dur "+runAbsMax(),
+    pts.filter(p=>p.v>0),[{v:f.vol,txt:f.vol+" · cible "+moisLab(f.m)}],1);
 }
-function seriesChart(title,pts,refs,dec){
+function seriesChart(title,pts,refs,dec,goal){
   if(!pts.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune donnée saisie.</p>';
   const W=600,H=150;
   let lo=Math.min.apply(null,pts.map(p=>p.v)),hi=Math.max.apply(null,pts.map(p=>p.v));
   refs.forEach(r=>{lo=Math.min(lo,r.v);hi=Math.max(hi,r.v);});
+  /* Les deux courbes partagent l'échelle, sinon l'écart ne se voit pas. */
+  if(goal)goal.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
   if(hi-lo<1){hi+=1;lo-=1;}
   const padV=(hi-lo)*0.15;lo-=padV;hi+=padV;
   const y=v=>18+((hi-v)/(hi-lo))*(H-48);
@@ -1331,6 +1510,10 @@ function seriesChart(title,pts,refs,dec){
     s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>';
     s+='<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
   });
+  /* Courbe de cible en pointillé, sous la courbe réelle : c'est l'écart
+     à la trajectoire qui se lit, pas la trajectoire seule. */
+  if(goal&&goal.length===pts.length)
+    s+='<polyline points="'+goal.map((v,i)=>X(i)+","+y(v)).join(" ")+'" fill="none" class="g-goal" stroke-width="1.4" stroke-dasharray="5 4"/>';
   s+='<polyline points="'+pts.map((p,i)=>X(i)+","+y(p.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
   /* Point creux : moyenne partielle, tracée mais distinguée. */
   pts.forEach((p,i)=>{s+='<circle cx="'+X(i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot'+(p.hollow?" hollow":"")+'"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
@@ -1356,19 +1539,24 @@ function renderRefs(){
   const todo=[];
   if(need28)todo.push("<b>28/08</b> — charges des quatre mouvements ("+need28+" sur 4 manquantes), à la séance de référence");
   if(need30)todo.push("<b>30/08</b> — première pesée et tour de taille");
-  if(parseMMSS(R.test5k)===null)todo.push("<b>12/09</b> — test 5 km, effort maîtrisé, terrain plat");
-  const t5bad=R.test5k&&parseMMSS(R.test5k)===null;
+  const T=testAt();
+  if(T.next)todo.push("<b>"+dm(T.next.d)+"</b> — test "+esc(T.next.dist)+(T.next.cible?", cible "+T.next.cible:", référence")+"");
+  if(T.late)todo.push("<b>"+dm(T.late.d)+"</b> — test "+esc(T.late.dist)+" passé, résultat non saisi");
   let h='<h2>Références</h2><p class="panel-sub">Mesures de départ, saisies une fois. Tant qu\'un champ reste vide, la ligne correspondante des cibles s\'affiche comme estimation.</p>';
   if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le bilan sanguin reste ouvert, sans date.</p>';
   h+='<div class="refs-grid">';
   h+=f(R,"waistBase","Tour de taille de référence","cm");
-  h+='<div class="log-row"><span class="log-lab">Test 5 km<span class="hint">Format mm:ss. Cible novembre 26:30.</span></span>'+
-     '<input type="text" inputmode="numeric" placeholder="mm:ss" class="'+(t5bad?"bad":"")+'" value="'+esc(R.test5k||"")+'" data-s="refs|test5k"><span class="unit"></span></div>';
-  h+='<div class="log-row"><span class="log-lab">Date du test</span>'+
-     '<input type="date" value="'+esc(R.test5kDate||"")+'" data-s="refs|test5kDate"><span class="unit"></span></div>';
+  h+='<div class="refs-h">Tests chronométrés</div>';
+  const done=DB.settings.tests||{};
+  TESTS.forEach(t=>{
+    const v=done[t.d]||"",bad=v&&parseMMSS(v)===null;
+    h+='<div class="log-row"><span class="log-lab">'+esc(t.dist)+' — '+esc(dm(t.d))+
+       '<span class="hint">'+(t.cible?"Cible "+esc(t.cible)+".":"Test de référence, sans cible.")+' Format mm:ss'+(t.dist==="semi"?" ou h:mm:ss":"")+'.</span></span>'+
+       '<input type="text" inputmode="numeric" placeholder="'+(t.cible||"mm:ss")+'" class="'+(bad?"bad":"")+'" value="'+esc(v)+'" data-tst="'+t.d+'"><span class="unit"></span></div>';
+  });
   /* Le plafond dur vit ici, pas dans le code : une décision de coaching
      ne doit pas attendre un déploiement pour s'appliquer. */
-  h+='<div class="log-row"><span class="log-lab">Plafond dur course<span class="hint">Révisé en session coach, jamais à la volée. Par défaut '+RUN_ABS_MAX+' km.</span></span>'+
+  h+='<div class="log-row"><span class="log-lab">Plafond dur course<span class="hint">Révisé en session coach, jamais à la volée. Par défaut '+RUN_ABS_MAX+' km. Relèvements prévus : 45 km en janvier 2027, 50 km en mai 2027, à valider en session.</span></span>'+
      '<input type="number" step="1" inputmode="numeric" placeholder="'+RUN_ABS_MAX+'" value="'+esc(R.runAbsMax||"")+'" data-s="refs|runAbsMax"><span class="unit">km/sem</span></div>';
   h+='<div class="refs-h">Charges des quatre mouvements</div>';
   /* Une fois les champs remplis, les placeholders disparaissent : sans
@@ -1413,7 +1601,23 @@ function contextBlock(){
     impactWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm"))+total(vals(weekDays(m),"hikeKm")))})),
     regimeWeek:regimeOf(mon),regimeManual:regimeSet(mon),
     proteinDays7:protDays(7),proteinAvgG7:protAvgG(7),
-    lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge()
+    lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge(),
+    /* Ce qui se lit en premier à la revue : où l'on en est du mois. */
+    monthTarget:(()=>{
+      const f=currentMonth(),cur=snapAt(TODAY),o={month:f.m,baseline:!!f.base,lines:{}};
+      TGT.forEach(t=>{
+        const tv=tgtValue(f,t),cv=cur[t.k];
+        o.lines[t.k]={target:tv,current:cv===null?null:r1(cv),
+          gap:(cv===null||tv===null)?null:r1(cv-tv),
+          ok:f.base?null:tgtOk(cv,tv,t)};
+      });
+      const T=testAt();
+      o.nextTest=T.next?{date:T.next.d,dist:T.next.dist,target:T.next.cible}:null;
+      o.lastTest=T.last?{date:T.last.t.d,dist:T.last.t.dist,result:T.last.r}:null;
+      o.testOverdue=T.late?T.late.d:null;
+      o.pace=paceAt(TODAY);
+      return o;
+    })()
   };
 }
 /* Les n dernières semaines terminées, ordre chronologique. */
@@ -1509,8 +1713,9 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev,#allm");
   if(!t)return;
+  if(t.id==="allm"){allMonths=!allMonths;renderTargets();return;}
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
   if(t.id==="exp"){
     /* L'export est la seule sauvegarde : on date celui-ci pour pouvoir
@@ -1573,7 +1778,12 @@ document.addEventListener("change",ev=>{
     entry(a[0])[a[1]]=(v===null||v<0)?"":v;save();refreshLive();return;}
   /* Durée saisie en h:mm, rangée en heures décimales. */
   if(hm){const a=hm.split("|");entry(a[0])[a[1]]=hmTo(ev.target.value);save();refreshLive();return;}
-  if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();}
+  if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();return;}
+  /* Résultat d'un test chronométré, rangé par date de test. */
+  if(ev.target.dataset.tst){
+    if(!DB.settings.tests)DB.settings.tests={};
+    DB.settings.tests[ev.target.dataset.tst]=ev.target.value;
+    save();renderTargets();renderRefs();}
 });
 
 /* ================= Démarrage ================= */
