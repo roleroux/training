@@ -291,7 +291,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.9", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.10", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -393,7 +393,7 @@ const H=(runKm,hikeKm,swimKm,kayakKm,vo2,alcohol,protein,note)=>
 const HISTORY={
 "2026-08-01":H("6.0","","1.0","10.1","40.27",1),
 "2026-08-02":H("12.0","","2.0","4.1","41.17",1,0,"Musculation 30 min"),
-"2026-08-03":H("12.0","","2.2","","41.40",1),
+"2026-08-03":H("","12.0","2.2","","41.40",1),   /* randonnée, pas course */
 "2026-08-04":H("","","1.5","12.5","",1),
 "2026-08-05":H("9.0","","","6.2","41.95",1),
 "2026-08-06":H("9.5","","2.4","","41.77",1),
@@ -406,22 +406,40 @@ const HISTORY={
 "2026-08-13":H("","","","","",0,1),
 "2026-08-14":H("","14.0","","","42.17",0),
 "2026-08-15":H("","10.2","","","42.64",0,1),
-"2026-08-16":H("","22.2","","","42.68",0,1),
+"2026-08-16":H("","22.2","","","42.71",0,1),
 "2026-08-17":H("","","","","",0),
-"2026-08-18":H("5.3","4.2","","","42.88",0,1),
+"2026-08-18":H("5.3","4.2","","","42.96",0,1),
 "2026-08-19":H("","","","","",0),
 "2026-08-20":H("","","","","",0),
-"2026-08-21":H("6.0","","","","43.52",0,0,"Musculation 60 min")
+"2026-08-21":H("6.0","","","","43.52",0,0,"Musculation 60 min"),
+"2026-08-22":H("10.0","","","","44.07",1,0,"Musculation 43 min")
 };
 /* Récupération figée : la montre ne fournit que des moyennes
    hebdomadaires sur cette période, pas de valeurs quotidiennes. Elles
    alimentent le graphe FC repos et servent de repli à la jauge et au
    bloc context tant qu'aucune saisie quotidienne n'existe. */
+/* Récupération quotidienne relevée par la montre. Le commentaire
+   précédent affirmait que seules des moyennes hebdomadaires existaient
+   sur cette période : c'était faux, le connecteur donne bien une valeur
+   par jour. Sans elles, recovery() ne pouvait rien déclencher avant sept
+   saisies manuelles consécutives — soit après la reprise du 31/08,
+   précisément quand la règle sert. */
+const HISTORY_HR={
+"2026-08-01":{rhr:68,hrv:44.9},"2026-08-02":{rhr:72,hrv:33.6},"2026-08-03":{rhr:66,hrv:42.7},
+"2026-08-04":{rhr:67,hrv:43.8},"2026-08-05":{rhr:66,hrv:34.4},"2026-08-06":{rhr:64,hrv:44.0},
+"2026-08-07":{rhr:68,hrv:40.2},"2026-08-08":{rhr:64,hrv:42.4},"2026-08-09":{rhr:61,hrv:44.0},
+"2026-08-10":{rhr:55,hrv:45.4},"2026-08-11":{rhr:58,hrv:49.7},"2026-08-12":{rhr:53,hrv:60.8},
+"2026-08-13":{rhr:48,hrv:62.6},"2026-08-14":{rhr:56,hrv:49.8},"2026-08-15":{rhr:55,hrv:54.6},
+"2026-08-16":{rhr:58,hrv:44.6},"2026-08-17":{rhr:54,hrv:48.0},"2026-08-18":{rhr:63,hrv:37.8},
+"2026-08-19":{rhr:56,hrv:53.6},"2026-08-20":{rhr:56,hrv:52.9},"2026-08-21":{rhr:59,hrv:47.9},
+"2026-08-22":{rhr:55,hrv:45.6}
+};
+/* Conservé : la semaine du 27/07 n'a pas de jours dans HISTORY. */
 const HISTORY_WEEKS={
 "2026-07-27":{rhr:64.8,hrv:45.2},
 "2026-08-03":{rhr:65.2,hrv:41.8},
 "2026-08-10":{rhr:54.7,hrv:52.4},
-"2026-08-17":{rhr:57.7,hrv:47.4}
+"2026-08-17":{rhr:57.2,hrv:47.6}
 };
 
 /* ================= Plan embarqué (§5.5) ================= */
@@ -546,6 +564,15 @@ function seedHistory(){
   Object.keys(HISTORY).forEach(k=>{
     if(DB.days[k])return;                       /* jamais d'écrasement */
     DB.days[k]=JSON.parse(JSON.stringify(HISTORY[k])); ch=true;
+  });
+  /* FC repos et VFC : même principe, mais champ par champ. On ne crée
+     aucune journée absente et on ne recouvre aucune saisie. */
+  const vide=v=>v===""||v===null||v===undefined;
+  Object.keys(HISTORY_HR).forEach(k=>{
+    const e=DB.days[k]; if(!e)return;
+    const r=HISTORY_HR[k];
+    if(vide(e.rhr)){e.rhr=String(r.rhr);ch=true;}
+    if(vide(e.hrv)){e.hrv=String(r.hrv);ch=true;}
   });
   return ch;
 }
@@ -749,7 +776,7 @@ function runAbsMax(){
    Toute référence assise sur les seuls km courus se trompait : calée sur
    la semaine précédente elle effondrait le plafond après un déplacement
    (8 km courus → 8,8 autorisés) ; calée sur la meilleure des quatre, elle
-   ne clippait plus rien pendant un mois (43,7 km début août → 48,1 de
+   ne clippait plus rien pendant un mois (31,7 km début août → 34,9 de
    plafond, quand les deux semaines suivantes faisaient 11,3 et 6 km). Le
    volume de course est intermittent par construction : la randonnée s'y
    substitue — 62 km randonnés la semaine du 10/08, comptés zéro.
@@ -1476,10 +1503,25 @@ function refsOnly(refs){
 }
 /* Série FC repos : moyennes hebdomadaires figées, puis moyennes mobiles
    7 jours dès qu'il y a des saisies quotidiennes. */
+/* Un point par semaine. Sans cela, les moyennes figées et les moyennes
+   glissantes calculées sur les quotidiennes traçaient deux fois la même
+   période — une courbe qui se doublait elle-même sur trois semaines.
+   La moyenne des jours prime, mais seulement si la semaine est assez
+   couverte : celle du 27/07 n'a que ses deux derniers jours dans le
+   relevé quotidien, et leur moyenne (70) vaut moins que la moyenne
+   hebdomadaire figée, calculée sur les sept (64,8). */
+const WEEK_MIN=4;
 function rhrSeries(){
+  const ws={};
+  Object.keys(HISTORY_WEEKS).forEach(m=>{ws[m]=1;});
+  weekList(12).forEach(m=>{ws[m]=1;});
   const a=[];
-  Object.keys(HISTORY_WEEKS).sort().forEach(m=>a.push({lab:fmt(m).num,v:HISTORY_WEEKS[m].rhr}));
-  for(let i=27;i>=0;i-=2){const k=addDays(TODAY,-i),v=avg(vals(lastN(k,7),"rhr"));if(v!==null)a.push({lab:fmt(k).num,v:r1(v)});}
+  Object.keys(ws).sort().forEach(m=>{
+    const d=vals(weekDays(m),"rhr");
+    if(d.length>=WEEK_MIN)a.push({lab:fmt(m).num,v:r1(avg(d))});
+    else if(HISTORY_WEEKS[m])a.push({lab:fmt(m).num,v:HISTORY_WEEKS[m].rhr});
+    else if(d.length)a.push({lab:fmt(m).num,v:r1(avg(d))});
+  });
   return a;
 }
 function vo2Series(){
