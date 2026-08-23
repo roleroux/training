@@ -291,7 +291,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.10", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.11", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -833,6 +833,10 @@ function weightDrop(mon){
 }
 /* ================= Mois ================= */
 const MOISKEY=k=>String(k).slice(0,7);
+/* Horizon du dispositif. Août 2027 existe — c'est l'affûtage et le semi
+   du 28 — mais il s'affiche à la demande : la trajectoire se pilote
+   jusqu'en juillet. */
+const HORIZON="2027-07";
 function monthEnd(m){const a=m.split("-").map(Number);return iso(new Date(a[0],a[1],0));}
 function monthStart(m){return m+"-01";}
 function monthAt(m){for(const x of MONTHS)if(x.m===m)return x;return null;}
@@ -1155,6 +1159,10 @@ function viewPlan(){
    ni séance ni saisie possible, des cartes vides jusqu'en 2027
    n'apporteraient rien. --- */
 const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+/* Abréviations sans ambiguïté : tronquer à trois lettres donnait « jui »
+   pour juin comme pour juillet, sur le même axe. */
+const MOIS3=["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"];
+const mois3=m=>MOIS3[+String(m).slice(5,7)-1];
 function logRange(){
   const ks=Object.keys(DB.days).sort(),ap=activePlan(),pd=[];
   ap.weeks.forEach(w=>(w.days||[]).forEach(x=>pd.push(x.d)));
@@ -1350,12 +1358,48 @@ function st(ok,mileD){
    tiennent pas sur un téléphone, et les mois lointains ne se pilotent
    pas. Le bouton « Tous les mois » lève la fenêtre. */
 let allMonths=false;
+function monthIdx(){
+  const c=MOISKEY(TODAY);
+  const i=MONTHS.findIndex(x=>x.m===c);
+  return i>=0?i:(TODAY<MONTHS[0].m?0:MONTHS.length-1);
+}
 function monthWindow(){
   if(allMonths)return MONTHS;
-  const c=MOISKEY(TODAY);
-  let i=MONTHS.findIndex(x=>x.m===c);
-  if(i<0)i=TODAY<MONTHS[0].m?0:MONTHS.length-1;
-  return MONTHS.slice(Math.max(0,i-1),i+4);
+  const i=monthIdx();
+  /* Du mois précédent jusqu'à l'horizon. Le tableau défile
+     horizontalement : mieux vaut voir toute la pente que quatre mois. */
+  const end=Math.max(i+1,MONTHS.findIndex(x=>x.m===HORIZON)+1);
+  return MONTHS.slice(Math.max(0,i-1),end);
+}
+/* Réel HEBDOMADAIRE, cible MENSUELLE, sur le même axe de dates.
+   Le réel garde sa finesse — une courbe mensuelle n'aurait qu'un point
+   avant octobre et ne tracerait rien — et la cible court jusqu'à
+   l'horizon. C'est l'écart entre les deux qui se lit.
+   Les grandeurs sont celles que le tableau juge : moyenne hebdomadaire
+   pour le poids, médiane 4 semaines pour le volume, maximum de la
+   semaine pour la VO2max. */
+function progWeeks(){
+  const a=[],end=mondayOf(TODAY);
+  let m=mondayOf(monthStart(MONTHS[0].m));
+  for(let i=0;i<80&&m<=end;i++){a.push(m);m=addDays(m,7);}
+  return a;
+}
+function monthSeries(t){
+  const pts=[],goal=[];
+  MONTHS.forEach(x=>{
+    if(!allMonths&&x.m>HORIZON)return;
+    const tv=tgtValue(x,t);
+    if(tv!==null)goal.push({k:monthStart(x.m),lab:mois3(x.m),v:tv});
+  });
+  progWeeks().forEach(m=>{
+    let v=null,hollow=false;
+    if(t.k==="w"){v=weekWeight(m);hollow=(weekWeightN(m)===2);}
+    else if(t.k==="vol")v=runMedian4(m);
+    else if(t.k==="vo2")v=weekVo2Max(m);
+    else v=snapAt(addDays(m,6)<TODAY?addDays(m,6):TODAY)[t.k];
+    if(v!==null)pts.push({k:m,lab:fmt(m).num,v:r1(v),hollow:hollow});
+  });
+  return{pts:pts,goal:goal};
 }
 function moisLab(m){return MOIS[+m.slice(5,7)-1].slice(0,4)+" "+m.slice(2,4);}
 /* Prochain test à venir, et dernier test passé avec son résultat. */
@@ -1430,13 +1474,13 @@ function renderTargets(){
     h+='</tr>';
   });
   h+='</table></div>';
-  h+='<button class="tool" id="allm">'+(allMonths?"Fenêtre courante":"Tous les mois")+'</button>';
+  h+='<button class="tool" id="allm">'+(allMonths?"Masquer août 27":"Ajouter août 27")+'</button>';
 
   /* --- graphes --- */
   h+='<div class="graph">'+weightChart()+'</div>';
   h+='<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
   h+='<div class="graph">'+volumeChart()+'</div>';
-  h+='<div class="graph">'+seriesChart("VO2max relevée (ml/kg/min)",vo2Series(),[{v:f.vo2,txt:f.vo2+" · cible du mois"}],1)+'</div>';
+  h+='<div class="graph">'+tgtChart("vo2","VO2max (ml/kg/min) — réel plein, cible pointillé",1)+'</div>';
   h+='<p class="foot">Une semaine allégée n\'est pas une semaine perdue. Une séance manquée ne se rattrape pas.</p>';
   document.getElementById("targets").innerHTML=h;
 }
@@ -1476,31 +1520,23 @@ function firstWeekWeight(){
 }
 /* Tant qu'aucune moyenne n'existe, le graphe n'affiche que les jalons :
    aucune valeur de poids n'a été mesurée, il n'y a rien à tracer. */
+/* Les trois graphes portant une cible sont mensuels et prolongés jusqu'à
+   l'horizon : la valeur réelle est exactement celle que le tableau juge,
+   même chiffre et même règle, et la cible court jusqu'au bout. Le détail
+   hebdomadaire du poids se lit dans le journal, la pente se lit ici. */
+function tgtChart(key,title,dec){
+  const t=TGT.filter(x=>x.k===key)[0],S=monthSeries(t);
+  return seriesChart(title,S.pts,[],dec,S.goal);
+}
 function weightChart(){
-  /* partiel : moyenne assise sur deux pesées, tracée en point creux. */
-  const keep=weekList(12).filter(m=>weekWeight(m)!==null);
-  const pts=keep.map(m=>({lab:fmt(m).num,v:weekWeight(m),hollow:weekWeightN(m)===2}));
-  /* La cible du mois de chaque semaine, pour lire l'écart à la trajectoire. */
-  const goal=keep.map(m=>{const x=monthAt(MOISKEY(m));return x?x.w:currentMonth().w;});
-  if(!pts.length){
-    const refs=MONTHS.filter((x,i)=>i%3===0).map(x=>({v:x.w,txt:x.w.toFixed(1)+" · "+moisLab(x.m)}));
-    return'<div class="meta">Poids — moyenne hebdomadaire (kg)</div>'+refsOnly(refs)+
-      '<p class="empty">Première pesée le '+MEASURE_START+'. La trajectoire mensuelle est tracée, rien d\'autre n\'est mesuré.</p>';
-  }
-  return seriesChart("Poids — réel (plein) et cible mensuelle (pointillé)",pts,[],1,goal);
+  /* La trajectoire se trace même sans mesure : avant la première pesée,
+     la pente attendue est la seule chose à montrer, et une ligne la dit
+     mieux que trois repères horizontaux qui se chevauchent. */
+  const h=tgtChart("w","Poids (kg) — réel plein, cible pointillé",1);
+  return monthSeries(TGT[0]).pts.length?h
+    :h+'<p class="empty">Première pesée le '+MEASURE_START+'. La trajectoire est tracée, rien d\'autre n\'est mesuré.</p>';
 }
-function refsOnly(refs){
-  const W=600,H=110;
-  let lo=Math.min.apply(null,refs.map(r=>r.v)),hi=Math.max.apply(null,refs.map(r=>r.v));
-  const pad=(hi-lo)*0.35||2; lo-=pad; hi+=pad;
-  const y=v=>18+((hi-v)/(hi-lo))*(H-40);
-  let s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
-  refs.forEach(r=>{
-    s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>'+
-       '<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
-  });
-  return s+'</svg>';
-}
+
 /* Série FC repos : moyennes hebdomadaires figées, puis moyennes mobiles
    7 jours dès qu'il y a des saisies quotidiennes. */
 /* Un point par semaine. Sans cela, les moyennes figées et les moyennes
@@ -1518,48 +1554,61 @@ function rhrSeries(){
   const a=[];
   Object.keys(ws).sort().forEach(m=>{
     const d=vals(weekDays(m),"rhr");
-    if(d.length>=WEEK_MIN)a.push({lab:fmt(m).num,v:r1(avg(d))});
-    else if(HISTORY_WEEKS[m])a.push({lab:fmt(m).num,v:HISTORY_WEEKS[m].rhr});
-    else if(d.length)a.push({lab:fmt(m).num,v:r1(avg(d))});
+    if(d.length>=WEEK_MIN)a.push({k:m,lab:fmt(m).num,v:r1(avg(d))});
+    else if(HISTORY_WEEKS[m])a.push({k:m,lab:fmt(m).num,v:HISTORY_WEEKS[m].rhr});
+    else if(d.length)a.push({k:m,lab:fmt(m).num,v:r1(avg(d))});
   });
   return a;
 }
-function vo2Series(){
-  return Object.keys(DB.days).sort().map(k=>({lab:fmt(k).num,v:num(DB.days[k].vo2)})).filter(p=>p.v!==null).slice(-16);
-}
+
 function volumeChart(){
-  const pts=weekList(10).map(m=>({lab:fmt(m).num,v:weekRun(m)}));
-  const f=currentMonth();
-  /* La référence est la cible de volume du mois, pas une moyenne de
-     plafonds : c'est elle qu'on vise. La médiane et le plafond dur en
-     vigueur restent dans le titre, où ils ne disputent pas la lecture. */
-  return seriesChart("Volume hebdo (km) — médiane 4 sem. "+runMedian4(mondayOf(TODAY))+" · plafond dur "+runAbsMax(),
-    pts.filter(p=>p.v>0),[{v:f.vol,txt:f.vol+" · cible "+moisLab(f.m)}],1);
+  /* Le réel est la médiane 4 semaines, celle que la cible juge — pas le
+     total d'une semaine, qu'un pic isolé gonflerait. Le plafond dur en
+     vigueur reste dans le titre. */
+  return tgtChart("vol","Volume course (km) — médiane 4 sem., cible pointillé · plafond dur "+runAbsMax(),1);
 }
 function seriesChart(title,pts,refs,dec,goal){
-  if(!pts.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune donnée saisie.</p>';
+  const G=goal||[];
+  if(!pts.length&&!G.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune donnée saisie.</p>';
   const W=600,H=150;
-  let lo=Math.min.apply(null,pts.map(p=>p.v)),hi=Math.max.apply(null,pts.map(p=>p.v));
+  const all=pts.concat(G);
+  let lo=Math.min.apply(null,all.map(p=>p.v)),hi=Math.max.apply(null,all.map(p=>p.v));
   refs.forEach(r=>{lo=Math.min(lo,r.v);hi=Math.max(hi,r.v);});
-  /* Les deux courbes partagent l'échelle, sinon l'écart ne se voit pas. */
-  if(goal)goal.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);});
   if(hi-lo<1){hi+=1;lo-=1;}
   const padV=(hi-lo)*0.15;lo-=padV;hi+=padV;
   const y=v=>18+((hi-v)/(hi-lo))*(H-48);
-  const X=i=>34+(i*(W-70))/Math.max(pts.length-1,1);
+  /* Axe par date dès que les points en portent une. Le réel s'arrête au
+     jour dit, la cible continue jusqu'à l'horizon : sur un axe indexé,
+     une courbe de trois points et une de douze seraient étirées l'une
+     sur l'autre et l'écart deviendrait illisible. */
+  const dated=all.length&&all[0].k;
+  let t0=0,t1=1;
+  if(dated){
+    const ts=all.map(p=>parseD(p.k).getTime());
+    t0=Math.min.apply(null,ts);t1=Math.max.apply(null,ts);
+    if(t1===t0)t1=t0+1;
+  }
+  const X=(p,i)=>dated?34+((parseD(p.k).getTime()-t0)/(t1-t0))*(W-70)
+                      :34+(i*(W-70))/Math.max(pts.length-1,1);
   let s='<div class="meta">'+esc(title)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
   refs.forEach(r=>{
     s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>';
     s+='<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
   });
-  /* Courbe de cible en pointillé, sous la courbe réelle : c'est l'écart
-     à la trajectoire qui se lit, pas la trajectoire seule. */
-  if(goal&&goal.length===pts.length)
-    s+='<polyline points="'+goal.map((v,i)=>X(i)+","+y(v)).join(" ")+'" fill="none" class="g-goal" stroke-width="1.4" stroke-dasharray="5 4"/>';
-  s+='<polyline points="'+pts.map((p,i)=>X(i)+","+y(p.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
+  /* La cible d'abord, en pointillé, sous la courbe réelle. */
+  if(G.length>1)
+    s+='<polyline points="'+G.map((p,i)=>X(p,i)+","+y(p.v)).join(" ")+'" fill="none" class="g-goal" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  if(pts.length>1)
+    s+='<polyline points="'+pts.map((p,i)=>X(p,i)+","+y(p.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
   /* Point creux : moyenne partielle, tracée mais distinguée. */
-  pts.forEach((p,i)=>{s+='<circle cx="'+X(i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot'+(p.hollow?" hollow":"")+'"/><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
-  s+='</svg><div class="meta" style="margin-top:2px">Dernier point '+pts[pts.length-1].v.toFixed(dec)+'</div>';
+  pts.forEach((p,i)=>{s+='<circle cx="'+X(p,i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot'+(p.hollow?" hollow":"")+'"/>';});
+  /* Les libellés viennent de la plus longue des deux séries, sinon ils se
+     tasseraient tous à gauche quand le réel ne couvre qu'un mois. */
+  const axe=G.length>=pts.length?G:pts;
+  const pas=Math.ceil(axe.length/12);
+  axe.forEach((p,i)=>{if(i%pas===0)s+='<text x="'+X(p,i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
+  s+='</svg><div class="meta" style="margin-top:2px">'+
+     (pts.length?'Dernier point '+pts[pts.length-1].v.toFixed(dec):'Aucune mesure encore')+'</div>';
   return s;
 }
 
