@@ -202,9 +202,6 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .log-row.col{align-items:flex-start;flex-direction:column;gap:8px}
 .log-row.col .pills{width:100%}
-.bp{display:flex;align-items:center;gap:6px}
-.bp input{width:64px}
-.bp-sep{color:var(--fog);font-family:var(--mono)}
 .log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);flex:1;min-width:120px}
 .log-lab .hint{text-transform:none;letter-spacing:0;display:block;font-family:var(--sans);font-size:11px;margin-top:3px;line-height:1.4}
 .log-lab .hint.warn{color:var(--buoy)}
@@ -221,7 +218,6 @@ input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color
 /* Les deux créneaux qui font la journée sont marqués même décochés. */
 .pill.key{border-style:solid;border-color:var(--fog)}
 .pill.key[data-on="1"]{border-color:var(--depth);color:var(--depth);background:var(--tint)}
-.pill.sm{height:32px;min-width:0;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 .pg{opacity:.55;font-size:10px}
 .alx{width:74px}
 /* Deux valeurs et leur unité sur une seule ligne : en flex, l'unité
@@ -284,7 +280,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-08-23.7", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-08-23.8", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 const MILES=[
@@ -299,13 +295,9 @@ const MILES=[
 const MEASURE_START="2026-08-30";
 const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
 const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
+/* Bas de la jauge sommeil : en dessous, l'anneau reste vide. */
+const SLEEP_LOW=5;
 const WAIST_TARGET=94, VO2_TARGET=48;   /* cibles des jauges tour de taille et VO2max */
-/* Tension : objectif de santé daté à 12 mois. Le verdict se rend sur une
-   série d'automesure trimestrielle — 3 mesures le matin et 3 le soir sur
-   3 jours, dont la moyenne est saisie le dernier jour. Une prise
-   opportuniste s'enregistre aussi mais ne conclut rien : ±10 mmHg de
-   variabilité debout après un café dépassent le signal cherché. */
-const BP_SYS=130, BP_DIA=80;
 /* Protéines : quatre prises, chacune sa valeur. La whey fait 30 g, un
    déjeuner en brasserie 55. Total 165 g, soit la cible atteinte à 4/4
    seulement — trois prises plafonnent à 135 g, sous la fourchette. Les
@@ -350,7 +342,7 @@ const FASCIA="Élévations talon lentes 3×12 (3 s de descente) + serviette sous
 const H=(runKm,hikeKm,swimKm,kayakKm,vo2,alcohol,protein,note)=>
   ({runKm:runKm||"",hikeKm:hikeKm||"",swimKm:swimKm||"",bikeKm:"",kayakKm:kayakKm||"",
     vo2:vo2||"",alcohol:alcohol,protein:!!protein,note:note||"",bedTime:"",
-    weight:"",waist:"",rhr:"",hrv:"",sleep:"",bed:false,heel:0,done:{},frozen:true});
+    weight:"",waist:"",rhr:"",hrv:"",sleep:"",bed:false,done:{},frozen:true});
 const HISTORY={
 "2026-08-01":H("6.0","","1.0","10.1","40.27",1),
 "2026-08-02":H("12.0","","2.0","4.1","41.17",1,0,"Musculation 30 min"),
@@ -459,8 +451,8 @@ function save(){
 function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
 function entry(k){
   if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
-    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",heel:0,
-    sys:"",dia:"",bpSeries:false};
+    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",
+    };
   const e=DB.days[k]; if(!e.done)e.done={}; return e;
 }
 /* Prises de protéines. L'ancienne case unique « 160 g atteints » vaut les
@@ -489,7 +481,7 @@ function protAvgG(n){
    pour chaque jour affiché, si bien que parcourir le plan ou le journal
    gonflait la base — et l'export — de journées jamais saisies. L'objet
    renvoyé est partagé : ne jamais y écrire. */
-const NODAY=Object.freeze({done:Object.freeze({}),heel:0});
+const NODAY=Object.freeze({done:Object.freeze({})});
 function rd(k){return DB.days[k]||NODAY;}
 /* Seul runKm entre dans le plafond talon ; randonnée, natation, vélo et
    kayak sont suivis mais ne consomment pas le volume course. */
@@ -587,7 +579,6 @@ const WEIGHT_MIN=2;
 function weekWeightN(mon){return vals(weekDays(mon),"weight").length;}
 function weekWeight(mon){const v=vals(weekDays(mon),"weight");return v.length>=WEIGHT_MIN?avg(v):null;}
 function weekRun(mon){return r1(total(vals(weekDays(mon),"runKm")));}
-function heelMax(keys){let m=0;keys.forEach(k=>{const e=DB.days[k];if(e&&+e.heel>m)m=+e.heel;});return m;}
 function drinksIn(keys){let n=0;keys.forEach(k=>{const e=DB.days[k];if(e&&typeof e.alcohol==="number")n+=e.alcohol;});return n;}
 /* Heure de coucher : stockée en HH:MM. Un coucher après minuit appartient
    à la nuit précédente, on le compte donc au-delà de 24 h pour que les
@@ -603,8 +594,23 @@ function bedMin(e){
    l'heure exacte n'existe. */
 function bedOk(e){const v=bedMin(e);return v!==null?v<BED_LIMIT:!!(e&&e.bed);}
 function fmtMin(v){const t=Math.round(v)%(24*60);return pad(Math.floor(t/60))+":"+pad(t%60);}
+/* Durée, pas heure d'horloge : 7h20 et non 07:20, sans repli à 24 h. */
+function fmtDur(h){const t=Math.round(h*60);return Math.floor(t/60)+"h"+pad(t%60);}
+/* Le sommeil s'AFFICHE en heures et minutes mais se STOCKE en heures
+   décimales. num(e.sleep) est lu par sleepCounts, par la moyenne du
+   tableau des cibles et par le rattrapage que la session coach remplit
+   depuis Santé — qui envoie un nombre. Stocker « 7:20 » ferait renvoyer
+   7 à parseFloat : les minutes disparaîtraient en silence.
+   Trois décimales suffisent à retrouver la minute exacte. */
+function hmOf(v){const n=num(v);if(n===null||n<0)return"";const t=Math.round(n*60);return pad(Math.floor(t/60))+":"+pad(t%60);}
+function hmTo(x){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(String(x||""));
+  if(!m)return"";
+  const h=+m[1],mi=+m[2];
+  if(h>23||mi>59)return"";
+  return String(Math.round((h+mi/60)*1000)/1000);
+}
 function sleepCounts(keys){let n7=0,bed=0;keys.forEach(k=>{const e=DB.days[k];if(!e)return;const s=num(e.sleep);if(s!==null&&s>=SLEEP_H)n7++;if(bedOk(e))bed++;});return{n7:n7,bed:bed};}
-function bedAvg(keys){const a=[];keys.forEach(k=>{const v=bedMin(DB.days[k]);if(v!==null)a.push(v);});return avg(a);}
 function weekWaist(mon){const v=vals(weekDays(mon),"waist");return v.length?avg(v):null;}
 function weekVo2Max(mon){const v=vals(weekDays(mon),"vo2");return v.length?Math.max.apply(null,v):null;}
 /* Nombre de pesées de la dernière semaine ayant produit une moyenne. */
@@ -829,20 +835,15 @@ function render(){
 /* Saisie d'un champ : seul l'en-tête est reconstruit. Reconstruire la
    liste détruirait l'input en cours et refermerait le clavier entre
    chaque valeur.
-   Restent les quelques commandes dont l'état dépend d'un champ voisin :
-   la bascule « série », qui n'existe qu'une fois les deux chiffres de
-   tension saisis, et la pastille 4+, qui porte le nombre réel. Sans ce
-   rafraîchissement ciblé elles restaient figées jusqu'au prochain rendu
-   complet — c'est-à-dire jamais, pendant une saisie. */
+   Reste la pastille 4+, qui porte le nombre réel saisi à côté d'elle.
+   Sans ce rafraîchissement ciblé elle restait figée jusqu'au prochain
+   rendu complet — c'est-à-dire jamais, pendant une saisie. */
 function refreshLive(){renderHeader();refreshBits();}
 function refreshBits(){
   const els=document.querySelectorAll("[data-live]");
   for(let i=0;i<els.length;i++){
     const el=els[i],a=el.dataset.live.split("|"),e=rd(a[1]);
-    if(a[0]==="bs"){
-      el.style.display=(num(e.sys)!==null&&num(e.dia)!==null)?"":"none";
-      el.dataset.on=e.bpSeries?1:0;
-    }else if(a[0]==="al"){
+    if(a[0]==="al"){
       const v=e.alcohol,big=(typeof v==="number"&&v>=4);
       el.textContent=big?v:"4+";
       el.dataset.on=big?1:0;
@@ -855,7 +856,7 @@ function renderHeader(){
   const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
   const wa=weekWaist(mon)!==null?weekWaist(mon):lastWeekly(weekWaist);
   const vo=weekVo2Max(mon)!==null?weekVo2Max(mon):lastWeekly(weekVo2Max);
-  const bd=bedAvg(lastN(TODAY,7));
+  const sl7=avg(vals(lastN(TODAY,7),"sleep"));
   const w0=firstWeekWeight(),wb=num((DB.settings.refs||{}).waistBase),v0=firstVo2();
 
   document.getElementById("eyebrow").textContent="";
@@ -864,8 +865,8 @@ function renderHeader(){
   const wFrac=(wk===null||w0===null||w0<=mile.w)?0:(w0-wk)/(w0-mile.w);
   /* 2 · tour de taille moyen vs 94 cm — origine : mesure de référence. */
   const wtFrac=(wa===null||wb===null||wb<=WAIST_TARGET)?0:(wb-wa)/(wb-WAIST_TARGET);
-  /* 3 · coucher moyen 7 j — plein à 22:30, vide à 00:30. */
-  const bFrac=bd===null?0:(BED_LIMIT+60-bd)/120;
+  /* 3 · sommeil moyen 7 j — vide à 5 h, plein à la cible de 7 h. */
+  const bFrac=sl7===null?0:(sl7-SLEEP_LOW)/(SLEEP_H-SLEEP_LOW);
   /* 4 · VO2max maxi hebdo vs 48 — origine : premier relevé enregistré. */
   const vFrac=(vo===null||v0===null||v0>=VO2_TARGET)?0:(vo-v0)/(VO2_TARGET-v0);
 
@@ -880,8 +881,8 @@ function renderHeader(){
     gauge(wtFrac,wa===null?dash:wa.toFixed(1),wa===null?"":"/"+WAIST_TARGET,
       wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
       wa===null?"Premier tour de taille prévu le "+MEASURE_START:"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+WAIST_TARGET)+
-    gauge(bFrac,bd===null?dash:fmtMin(bd),bd===null?"":"/"+fmtMin(BED_LIMIT),"coucher moy.","var(--brass)",
-      bd===null?"Aucune heure de coucher saisie":"Moyenne sur 7 jours "+fmtMin(bd)+", cible avant "+fmtMin(BED_LIMIT))+
+    gauge(bFrac,sl7===null?dash:fmtDur(sl7),sl7===null?"":"/"+fmtDur(SLEEP_H),"sommeil moy.","var(--brass)",
+      sl7===null?"Aucune durée de sommeil saisie":"Moyenne sur 7 jours "+fmtDur(sl7)+", cible "+fmtDur(SLEEP_H))+
     gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+VO2_TARGET,"vo2max hebdo","var(--k-run)",
       vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+VO2_TARGET);
 
@@ -894,9 +895,6 @@ function renderHeader(){
      bandeau nomme la valeur en vigueur, pas une constante supposée. */
   if(cap.clamped)B.push(["warn","Plan à "+cap.planned+" km — ramené au plafond dur de "+cap.max+" km."]);
   if(over)B.push(["warn","Cumul course "+runKm+" km — plafond de "+cap.cap+" km dépassé."]);
-  const hm=heelMax(lastN(TODAY,7));
-  if(hm===1)B.push(["warn","Talon gênant sur les 7 derniers jours — volume −30 % cette semaine, pas d'intensité."]);
-  if(hm===2)B.push(["warn","Talon douloureux sur les 7 derniers jours — course suspendue, salle et vélo/natation maintenus."]);
   const rec=recovery(); if(rec)B.push(["warn",rec.text]);
   const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
   const dw=drinksIn(weekDays(mon));
@@ -1086,13 +1084,14 @@ function dayDetail(d,extra){
   const wkAvg=weekWeight(mondayOf(k)),dayW=num(e.weight);
   const gap=(wkAvg!==null&&dayW!==null&&Math.abs(dayW-wkAvg)>1);
   h+='<div class="log">';
+  /* Sommeil en tête : c'est la première chose regardée le matin, et la
+     seule qui se saisisse avant tout le reste. */
+  h+='<div class="log-row"><span class="log-lab">Sommeil<span class="hint">Cible '+fmtDur(SLEEP_H)+', 5 nuits sur 7.</span></span>'+
+     '<input type="time" value="'+esc(hmOf(e.sleep))+'" data-hm="'+k+'|sleep"><span class="unit"></span></div>';
   /* Poids et tour de taille n'apparaissent qu'à partir de la première
      pesée : un champ masqué n'est pas un champ vide à reprocher. */
   if(k>=MEASURE_START)h+=numRow(k,"weight","Poids",gap?"Variation quotidienne — la moyenne fait foi.":"","kg","0.1");
-  h+=numRow(k,"rhr","FC repos","","bpm","1");
-  h+=numRow(k,"hrv","VFC (SDNN)","","ms","1");
-  h+=numRow(k,"sleep","Sommeil","","h","0.1");
-  h+=numRow(k,"runKm","Km courus","Seul volume soumis au plafond talon.","km","0.1");
+  h+=numRow(k,"runKm","Km courus","Seul volume soumis au plafond hebdomadaire.","km","0.1");
   OTHER_KM.forEach(o=>{if(o[0]!=="kayakKm")h+=numRow(k,o[0],o[1],"",o[2],"0.1");});
   h+=numRow(k,"vo2","VO2max relevée","","ml","0.1");
   h+='<div class="log-row"><span class="log-lab">Heure de coucher<span class="hint">Cible avant '+fmtMin(BED_LIMIT)+'.</span></span>'+
@@ -1114,20 +1113,12 @@ function dayDetail(d,extra){
   h+='<button class="pill" data-a="'+k+'|4" data-live="al|'+k+'" data-on="'+(alBig?1:0)+'" data-over="1">'+(alBig?al:"4+")+'</button>';
   if(alBig)h+='<input class="alx" type="number" min="4" step="1" inputmode="numeric" value="'+al+'" data-n="'+k+'|alcohol">';
   h+='</div></div>';
-  h+='<div class="log-row"><span class="log-lab">État du talon</span><div class="pills">';
-  ["muet","gêne légère","douloureux"].forEach((t,n)=>{h+='<button class="pill" data-h="'+k+'|'+n+'" data-on="'+((+e.heel||0)===n?1:0)+'" data-over="'+(n===2?1:0)+'">'+t+'</button>';});
-  h+='</div></div>';
+  /* FC repos et VFC après l'alcool : ce sont des relevés de montre, pas
+     des décisions de la journée. */
+  h+=numRow(k,"rhr","FC repos","","bpm","1");
+  h+=numRow(k,"hrv","VFC (SDNN)","","ms","1");
   if(k>=MEASURE_START)h+='<div class="log-row"><span class="log-lab">Tour de taille<span class="hint">Ruban à mi-distance côte basse / crête iliaque.</span></span>'+
      '<input type="number" step="0.5" inputmode="decimal" placeholder="—" value="'+esc(e.waist||"")+'" data-f="'+k+'|waist"><span class="unit">cm</span></div>';
-  /* Tension : le verdict se rend sur une série d'automesure, pas sur une
-     prise. La bascule « série » n'apparaît qu'une fois les deux chiffres
-     saisis — cocher une série vide n'aurait rien à qualifier. */
-  const bpFull=(num(e.sys)!==null&&num(e.dia)!==null);
-  h+='<div class="log-row"><span class="log-lab">Tension<span class="hint">Série trimestrielle, 3 matin + 3 soir sur 3 jours — saisis la moyenne de la série, pas une prise isolée. Cible < '+BP_SYS+'/'+BP_DIA+'.</span></span>'+
-     '<div class="bp"><input type="number" step="1" inputmode="numeric" placeholder="sys" value="'+esc(e.sys||"")+'" data-f="'+k+'|sys">'+
-     '<span class="bp-sep">/</span><input type="number" step="1" inputmode="numeric" placeholder="dia" value="'+esc(e.dia||"")+'" data-f="'+k+'|dia">'+
-     '<button class="pill sm" data-bs="'+k+'" data-live="bs|'+k+'" data-on="'+(e.bpSeries?1:0)+'"'+(bpFull?'':' style="display:none"')+'>série</button>'+
-     '</div><span class="unit">mmHg</span></div>';
   h+='</div></div>';   /* .log puis .detail */
   return h;
 }
@@ -1153,7 +1144,6 @@ function frozenDetail(k,extra){
   if(num(e.runKm)!==null)h+=row("Km courus",e.runKm,"km");
   OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)h+=row(o[1],e[o[0]],"km");});
   if(num(e.vo2)!==null)h+=row("VO2max relevée",e.vo2,"ml");
-  if(num(e.sys)!==null&&num(e.dia)!==null)h+=row("Tension"+(e.bpSeries?" (série)":""),e.sys+"/"+e.dia,"mmHg");
   if(typeof e.alcohol==="number")h+=row("Verres d'alcool",String(e.alcohol),"");
   h+=row("Protéines","≈ "+protG(e)+" / "+PROTEIN,"g");
   if(e.note)h+=row("Séance",e.note,"");
@@ -1186,8 +1176,6 @@ function renderTargets(){
   const sl=sleepCounts(lastN(TODAY,7)),slAvg=avg(vals(lastN(TODAY,7),"sleep"));
   const drinks=drinksIn(weekDays(mon));
   const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
-  /* Tension : la série fait foi seule, une prise opportuniste informe. */
-  const bpS=lastSeriesBP(),bpL=lastBP();
   /* Protéines : décompte sur les 7 journées terminées, et l'état du jour
      montré à part pour qu'il soit visible sans peser sur le verdict. */
   const pd=protDays(7),pgToday=protG(rd(TODAY));
@@ -1232,15 +1220,6 @@ function renderTargets(){
         {t:"7 h, 5/7",ok:slAvg===null?null:(slAvg>=7&&sl.n7>=SLEEP_NIGHTS)}]},
     {l:"Alcool",cur:drinks+" verres/sem",
      c:[{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK},{t:"≤ 5/sem",ok:drinks<=DRINK_WEEK}]},
-    /* Tension : objectif de santé n°1, échéance à 12 mois. Seule une
-       série d'automesure tranche. À défaut, la dernière prise s'affiche
-       et le dit : elle informe, elle ne conclut pas. Les deux premières
-       colonnes n'ont pas de palier chiffré. */
-    {l:"Tension",
-     cur:bpS!==null?bpS.s+"/"+bpS.d+" mmHg · série du "+dm(bpS.k)
-        :(bpL!==null?bpL.s+"/"+bpL.d+" mmHg · "+dm(bpL.k)+" — hors protocole, ne décide de rien":null),
-     c:[{t:"—",ok:null},{t:"—",ok:null},
-        {t:"< "+BP_SYS+"/"+BP_DIA,ok:bpS===null?null:(bpS.s<BP_SYS&&bpS.d<BP_DIA)}]},
     /* Cible : 160 g atteints 5 jours sur 7. Un décompte, pas une
        moyenne — une journée à 300 g ne rachète pas deux journées à 60. */
     {l:"Protéines",cur:pd+"/7 jours ≥ "+PROTEIN+" g"+(pgToday?" · ≈ "+pgToday+" g aujourd'hui":""),
@@ -1272,20 +1251,6 @@ function lastVal(f){
   for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
   return null;
 }
-/* Dernière tension complète : les deux chiffres n'ont de sens qu'ensemble.
-   serieOnly : ne retient que les journées portant une série d'automesure,
-   les seules sur lesquelles la ligne de cibles se prononce. */
-function lastBP(serieOnly){
-  const ks=Object.keys(DB.days).sort();
-  for(let i=ks.length-1;i>=0;i--){
-    const e=DB.days[ks[i]],s=num(e.sys),d=num(e.dia);
-    if(s===null||d===null)continue;
-    if(serieOnly&&!e.bpSeries)continue;
-    return{s:s,d:d,k:ks[i]};
-  }
-  return null;
-}
-function lastSeriesBP(){return lastBP(true);}
 /* Une date venue des réglages peut arriver de n'importe où — champ vide,
    base importée, saisie d'un autre navigateur. La formater sans vérifier
    donnait « NaN/ne ». */
@@ -1438,7 +1403,6 @@ function contextBlock(){
     sleepNights7h:sl.n7,
     bedBefore2330:sl.bed,
     drinksWeek:drinksIn(weekDays(mon)),
-    heelMax7:heelMax(lastN(TODAY,7)),
     p1Done:p1.done,p1Planned:p1.planned,
     /* Matière brute de la progression, sans règle qui en soit tirée :
        l'app ne calcule plus le plafond, c'est la session coach qui
@@ -1449,9 +1413,6 @@ function contextBlock(){
     impactWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm"))+total(vals(weekDays(m),"hikeKm")))})),
     regimeWeek:regimeOf(mon),regimeManual:regimeSet(mon),
     proteinDays7:protDays(7),proteinAvgG7:protAvgG(7),
-    /* La série tranche, la prise informe : deux champs distincts. */
-    bpSeries:(()=>{const b=lastSeriesBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
-    bpLast:(()=>{const b=lastBP();return b?{sys:b.s,dia:b.d,date:b.k}:null;})(),
     lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge()
   };
 }
@@ -1548,7 +1509,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-bs],[data-pr],[data-a],[data-h],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],#exp,#imp,#impPlan,#rev");
   if(!t)return;
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
   if(t.id==="exp"){
@@ -1590,7 +1551,6 @@ document.addEventListener("click",ev=>{
     const nx=ord[(ord.indexOf(regimeOf(m))+1)%3];
     if(!DB.settings.regime)DB.settings.regime={};
     DB.settings.regime[m]=nx;save();render();return;}
-  if(t.dataset.bs!==undefined){const e=entry(t.dataset.bs);e.bpSeries=!e.bpSeries;save();render();return;}
   if(t.dataset.a){const a=t.dataset.a.split("|"),e=entry(a[0]),n=Number(a[1]);
     /* La pastille 4+ n'enregistre plus 4 : elle ouvre le champ libre,
        qui reçoit le focus. Un second clic dessus efface la valeur. */
@@ -1603,15 +1563,16 @@ document.addEventListener("click",ev=>{
       if(f){f.focus();f.select();}
     }
     return;}
-  if(t.dataset.h){const a=t.dataset.h.split("|"),e=entry(a[0]),n=Number(a[1]);e.heel=(+e.heel===n)?0:n;save();render();}
 });
 document.addEventListener("change",ev=>{
-  const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n;
+  const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n,hm=ev.target.dataset.hm;
   if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
   /* Champ numérique dont le type compte : drinksIn() n'additionne que les
      nombres, une chaîne sortirait la journée du comptage. */
   if(n){const a=n.split("|"),v=num(ev.target.value);
     entry(a[0])[a[1]]=(v===null||v<0)?"":v;save();refreshLive();return;}
+  /* Durée saisie en h:mm, rangée en heures décimales. */
+  if(hm){const a=hm.split("|");entry(a[0])[a[1]]=hmTo(ev.target.value);save();refreshLive();return;}
   if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();}
 });
 
