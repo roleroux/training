@@ -1,0 +1,19 @@
+# Données de santé nominatives — ne doivent jamais entrer dans ce dépôt public.
+# Exports Health Auto Export
+*.zip
+HealthAutoExport*
+Workouts-*.csv
+*-Route-*.gpx
+*-Route-*.csv
+ECG-*.csv
+Symptoms-*.csv
+
+# Doctrine de coaching : contient âge, poids, tension, sommeil, alcool,
+# et des éléments professionnels nominatifs. Elle vit dans localStorage et
+# dans les sauvegardes de l'utilisateur, jamais ici.
+doctrine.md
+doctrine*.md
+
+# Sauvegardes de l'app (journal complet)
+pimperel-*.json
+sauvegarde*.json

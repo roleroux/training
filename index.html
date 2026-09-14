@@ -1,0 +1,2592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Pas de maximum-scale : brider le zoom prive de l'agrandissement
+     tactile. Le zoom automatique au focus se règle par la taille de
+     police des champs, pas en interdisant le geste. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- Ces deux valeurs sont écrasées au démarrage depuis la constante APP. -->
+<meta name="apple-mobile-web-app-title" content="Pimperel">
+<title>Pimperel</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0B151E">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAFT0lEQVR4nIxWCziVdxj/vnNONRrLXWRulbKyYprHLblfjhx3cmtkNM2Q0eNRw8Zmmh5bxtrcWopUKJclPBEWWvZkeygNRU2Tu9wOvr3nfOccn3O+c3gPz/P//7/3/3vv7/uniWvoIcIJY/9WEwo/9iH+AUVREQAITSg0xgEmB0A5/xiXU5gc2vqhQ/w8nO0sYNH7fLCq7l7FnbtcQSjGJlIx1A1SSoLoKJuI5z+fTXSxt2rr6AQGuuVBHxc6k8lsefAnTxUeP99FGik6nxZ25iazs3O6Nm5M5iJspd6RvFP8S0J0WFN7x+9cGfhFAIA/IgCFgM6OH5krNVS3RSZ8i6NTKBRNtXc9Q08uLS35utL5ONm3MZ6TWSd4FrFPMGGBemvTprn5ed62sbSASqUqKyoMDb82cPAW5GcL4IBxLUBFpRsRXVLi7Tczs/ve2yUnI7V31w5vhr0gPwsKJVggOs+IJCu95WZB5vvaWrwTELbb1HFkbBwRNIIlBaWtyFyLFOVkb13M1N6piW8jznxzYP9eHW2t+YUFhMwIjgwxiAGGrSlARUmxviRXSVEe387OzcntMSEGU5DYPQClINga6m/auDHQ24WIDvR6dFw0OoK3FIxVBxiCoMKgPQ/bxkeEKG9V4Pv0+J9+ZF2EoWLqeqQGWJoY5GekQE2R3lteXm59+Gh4ZOyjyHhijvHDC1qgpanmRrdWU1E+4uwg7Fpze8df3T09fc9PhgQsMJmISAtofO6BRjY59UZTVYWU/b+RUZfAcICHdVRIwIVLJWAKIoJQQqvACfrBD7mFr4ZH8C1kC77o7O6J/CJ1j5kTju7n5vhpkM+VsireRQVZmfAg3ydNla1VRXHhwbxzGmmMIcHxRV5R2SdHvSampk2d/RcWVrxBo1Ldg6MGXg5Ba/JxcfBzO2ykv7/wRsWplHMbaLRzSafGJqayCorwLOKHD/X3VJSXhQWobHvIGBbxqd8T0VmCi8tszIwKMlIsTAyoFErpb3WfJ52dnpmpL8kb/HcoKT3Lm2HHEsCu5FUmxIYFnYk63tT2MPar9K0KcoCSnPFT7pUbPAZoczAPPjvmq6O9s7K28URcckVtw+Iiq9FaGBtAL1lcWhwdn6DR8B6BrbIATsGzID81Mwe24JmahhYQaaSv6xMWA/LMjT8MD/SBT1kXixmB4ZNT00Sz6pruGzv5zs0v/Pj16Xutf+CH7FYB5cAWQ7cyiw0LNHUOIFbpFkmJpvJfxcXFIIww0c7nXS6triNNHoicvYWpl5Md1LmDb+j45BRLaZQ7aoC+jDmRlJ7NQ9+hrupGtzp2xA2+5ly+fvXm7Z6+ZwgZQYQhFxi2Fndb2tOy8oCZoz7K7aYACpUlsXlzaXUt+NHVwRoavZ6OdlVdY0hMQn1zG6nKgOvhaMOws+x9NgDzWc/GvftpHw8QV5o30TAIETidbnUw1M+jq6f3WmVNya3b0AwEcSHHwCw/V3r/4MuCq+U1Dc3gEz4ejNuhORbIy0pDU9Parl5cXg0xIHUFzDLIHxcHKwNdHZZlsYngEISMiCHkCIgL/xjy73hsoqy0lCD6IcMDRz0ZDFvz6vqmnMJrXqHReF4KR1+ZABwBZob6yRkX0k5Hb4PB0tzWP/ACDmHqRgT7wxNoZnYWXPFddv6jrieISMJVJ7ZnjgBwIszxtOz83ds1Xgy9crQ283GmQ5U13H8AFQDtE1kHkc52TpANP9hXnn/+78dPobkryMlACnd29UCtQ7TXBc19IwsOR5T3uoasd3e0BuhL1yugRNd4/K5Ac/wijA1d9/Od79W+giD6vfA/AAAA//8xaAYFAAAABklEQVQDAP6/ZJToKkopAAAAAElFTkSuQmCC">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --paper:#FFFFFF;--surface:#FFFFFF;--tint:#F7FAFB;--edge:#D6DFE4;
+  --ink:#0A2233;--fog:#5E7180;
+  --buoy:#C24A2C;--depth:#1E7F72;--brass:#8A6E1B;
+  --wave:#DCE6EB;--chart-grid:#C7D4DA;--press:rgba(10,34,51,.05);--veil:rgba(255,255,255,.82);
+  /* Posé sur --depth : blanc en clair, encre en sombre. Le blanc sur
+     l'accent sombre ne donnait que 2,92:1, sous le seuil de 3:1. */
+  --on-accent:#FFFFFF;
+  /* Fond du monogramme. En sombre, le bleu nuit d'origine tombait à
+     1,13:1 contre la page : le disque disparaissait et les quatre
+     repères orange flottaient sans ancrage. */
+  --mark-bg:#0A2233;
+  --k-run:#C24A2C;--k-str:#1E7F72;--k-pos:#8A6E1B;--k-swim:#3E7FA3;--k-rest:#5E7180;
+  --shadow:0 1px 2px rgba(10,34,51,.04),0 5px 16px rgba(10,34,51,.05);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#0B151E;--surface:#121F2B;--tint:#1A2A39;--edge:#263B4D;
+  --ink:#E9EFF4;--fog:#8FA5B5;
+  --buoy:#E8764F;--depth:#3AA893;--brass:#CBA84C;
+  --wave:#152230;--chart-grid:#2A4054;--press:rgba(255,255,255,.06);--veil:rgba(11,21,30,.82);
+  --on-accent:#08121A;
+  --mark-bg:#1B3149;
+  --k-run:#E8764F;--k-str:#3AA893;--k-pos:#CBA84C;--k-swim:#6FB0D6;--k-rest:#8296A6;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+}}
+html,body{margin:0;background:var(--paper)}
+body{
+  color:var(--ink);font-family:var(--sans);
+  padding:0 env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 70px) env(safe-area-inset-left);
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+}
+.wrap{max-width:640px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
+.bg{position:fixed;inset:0;pointer-events:none;opacity:.9;z-index:0}
+#bg path{stroke:var(--wave)}
+.mark-bg{fill:var(--mark-bg)}
+button{user-select:none;-webkit-user-select:none;touch-action:manipulation}
+:focus-visible{outline:2px solid var(--depth);outline-offset:2px;border-radius:4px}
+.box,.pill,.tool{transition:transform .08s ease,background-color .12s ease,border-color .12s ease}
+.box:active,.pill:active,.tool:active{transform:scale(.93)}
+
+header{
+  position:sticky;top:0;z-index:5;
+  margin:0 -18px;padding:calc(12px + env(safe-area-inset-top)) 18px 16px;
+  border-bottom:1px solid var(--edge);
+  background:var(--veil);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+  transition:padding .18s ease;
+}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  header{background:var(--paper)}
+}
+header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:10px}
+.mark,h1,.eyebrow,.prog,.ring,.g-val{transition:all .18s ease}
+.compact .mark{flex-basis:40px;width:40px;height:40px}
+.compact h1{font-size:22px}
+.compact .eyebrow{max-height:0;opacity:0;margin-top:0}
+.compact .prog{margin-top:10px;gap:9px 22px}
+.compact .ring{width:31px;height:31px;flex-basis:31px}
+.compact .g-val{font-size:14px}
+.hdr-top{display:block}
+.brand{display:flex;align-items:center;gap:13px}
+.mark{width:58px;height:58px;flex:0 0 58px}
+.brand-txt{min-width:0}
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin-top:5px;max-height:22px;overflow:hidden}
+h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;margin:0;letter-spacing:-.01em}
+
+.prog{display:grid;grid-template-columns:repeat(2,auto);gap:16px 26px;justify-content:center;margin-top:20px}
+@media (min-width:600px){.prog{grid-template-columns:repeat(4,auto);gap:24px}}
+.gauge{display:flex;align-items:center;gap:8px}
+.ring{width:38px;height:38px;flex:0 0 38px;transform:rotate(-90deg)}
+.g-val{font-family:var(--mono);font-size:16px;font-weight:500;line-height:1;white-space:nowrap}
+.g-sub{color:var(--fog);font-size:11px}
+.g-lab{font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:5px;white-space:nowrap}
+@media (max-width:430px){.prog{gap:14px 20px}}
+
+/* Pas de position:sticky ici : sans « top » elle n'a jamais collé, et
+   l'en-tête figé porte déjà le repère. Le fond voilé reste nécessaire,
+   les vagues du fond défilent derrière. */
+.tabs{margin:0 -18px;padding:0 18px;display:flex;gap:0;border-bottom:1px solid var(--edge);
+  background:var(--veil);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px)}
+.tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--fog);cursor:pointer;
+  font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:13px 4px}
+.tab.on{color:var(--ink);border-bottom-color:var(--buoy)}
+.tab .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--buoy);margin-left:5px;vertical-align:middle}
+.mo{margin:26px 0 10px;display:flex;align-items:baseline;gap:10px}
+.mo-name{font-family:var(--serif);font-style:italic;font-size:18px;text-transform:capitalize}
+.mo-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog)}
+.jrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:inherit;
+  font:inherit;cursor:pointer;padding:11px 13px;border-bottom:1px solid var(--edge)}
+.jrow:last-child{border-bottom:none}
+.jrow:active{background:var(--press)}
+.jrow.today{background:var(--tint)}
+/* today et « ouvert » partageaient le même fond : on ne savait plus
+   laquelle des deux lignes était le jour courant. */
+.jrow.on{background:var(--tint);box-shadow:inset 3px 0 0 var(--depth)}
+.jdet{border-bottom:1px solid var(--edge)}
+.jbox>.jdet:last-child{border-bottom:none}
+.jbox{border:1px solid var(--edge);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
+.jd{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;min-width:52px;color:var(--fog)}
+.jd b{color:var(--ink);font-weight:600}
+.js{font-size:12px;color:var(--fog);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jm{font-family:var(--mono);font-size:10px;color:var(--fog)}
+.jm.full{color:var(--depth)}
+.banners{margin-top:12px;display:grid;gap:6px}
+.banner{font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:7px;border-left:3px solid var(--fog);background:var(--tint);color:var(--ink)}
+.banner.warn{border-left-color:var(--buoy)}
+.banner.info{border-left-color:var(--depth)}
+
+.review{margin-top:20px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:15px}
+.review-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog)}
+.review-d{font-size:12px;color:var(--fog);line-height:1.5;margin-top:6px}
+.big{display:block;width:100%;margin-top:11px;padding:13px;border-radius:9px;border:none;background:var(--depth);color:var(--on-accent);font-family:var(--mono);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
+.big.sec{background:none;border:1px solid var(--edge);color:var(--fog)}
+
+/* Le nom, la bascule de régime et le trait tiennent la première ligne ;
+   les volumes passent dessous plutôt que de casser le nom en deux. */
+.week{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;flex-wrap:wrap}
+.week-name{font-family:var(--serif);font-style:italic;font-size:19px;flex:0 0 auto}
+.week-sub{font-size:11.5px;color:var(--fog);flex:0 0 100%;order:9}
+.reg{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--fog);
+  background:none;border:1px solid var(--edge);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.reg.hot{color:var(--buoy);border-color:var(--buoy)}
+.reg.man{background:var(--tint)}
+.reg:active{background:var(--press)}
+.reg{position:relative}
+.reg::after{width:100%;height:40px}
+.rule{height:1px;background:var(--edge);flex:1;min-width:14px}
+
+.route{position:relative;padding-left:34px}
+.line{position:absolute;left:8px;top:6px;bottom:6px;width:1px;background:var(--edge)}
+.day{position:relative;margin-bottom:9px}
+.node{position:absolute;left:-31px;top:18px;width:11px;height:11px;border-radius:50%;border:1px solid var(--fog);background:var(--paper)}
+.node.done{background:var(--depth);border-color:var(--depth)}
+.node.now{background:var(--buoy);border-color:var(--buoy)}
+
+.card{background:var(--surface);border:1px solid var(--edge);border-radius:9px;box-shadow:var(--shadow);overflow:hidden}
+.card.now{border-color:var(--buoy)}
+.card-head{width:100%;text-align:left;background:none;border:none;color:inherit;font:inherit;padding:14px 15px;display:block;cursor:pointer;transition:background-color .15s ease}
+.card-head:active{background:var(--press)}
+.card-top{display:flex;align-items:center;gap:10px}
+.date{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;min-width:60px}
+.date b{font-weight:600}
+.sum{font-size:12.5px;color:var(--fog);flex:1}
+.count{font-family:var(--mono);font-size:10.5px;color:var(--fog);background:var(--tint);border:1px solid var(--edge);border-radius:99px;padding:3px 9px}
+.count.full{color:var(--on-accent);background:var(--depth);border-color:var(--depth)}
+
+.detail{border-top:1px solid var(--edge);padding:13px 15px 15px}
+.sess{padding:10px 0;border-bottom:1px solid var(--edge)}
+.sess:last-of-type{border-bottom:none}
+.sess-head{display:flex;align-items:flex-start;gap:11px}
+.box{flex:0 0 26px;width:26px;height:26px;border:1.5px solid var(--fog);border-radius:8px;background:none;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;position:relative}
+/* Zone de touche élargie sans toucher au dessin. La case fait 26 px à
+   l'œil — c'est le geste le plus répété de l'app, et il tombait sous le
+   minimum de 44 px recommandé sur iOS. Le halo reste sous les 44 px pour
+   ne pas mordre sur la commande voisine, mesurée à 6 px d'écart. */
+.box::after,.alt::after,.reg::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.box::after{width:40px;height:40px}
+.box[data-on="1"]{background:var(--depth);border-color:var(--depth)}
+.box svg path{stroke:var(--on-accent)}
+.box.sm{flex:0 0 22px;width:22px;height:22px;border-radius:7px}
+.tags{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase}
+.rank{font-family:var(--mono);font-size:9px;letter-spacing:.1em;border:1px solid var(--edge);border-radius:99px;padding:2px 7px;color:var(--fog)}
+.rank.p1{color:var(--buoy);border-color:var(--buoy)}
+.sess-lab{font-size:14px;margin-top:4px;line-height:1.35;font-weight:500}
+.sess-lab.off{color:var(--fog);text-decoration:line-through}
+.cue{font-size:12px;color:var(--fog);line-height:1.5;margin-top:5px}
+.alt{margin-top:8px;background:none;border:1px solid var(--edge);border-radius:7px;color:var(--fog);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 9px;cursor:pointer;position:relative}
+.alt::after{width:100%;height:40px}
+.fallback{margin-top:9px;padding:10px 11px;background:var(--tint);border-left:2px solid var(--brass);border-radius:0 8px 8px 0;display:flex;gap:10px;align-items:flex-start}
+.fallback .fb-t{font-size:12.5px;line-height:1.45;flex:1}
+.conv{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--buoy);margin-top:6px}
+.ro{font-family:var(--mono);font-size:14px;color:var(--ink);text-align:right}
+/* Bloc des mesures : lecture seule, et il le dit. Séparé du formulaire
+   par sa teinte, pour qu'on ne cherche pas à y taper. */
+.mes{margin-top:16px;padding:12px 13px 4px;background:var(--tint);border-radius:10px}
+.mes-t{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog)}
+.mes .log{margin-top:9px;padding-top:9px;border-top:1px solid var(--edge);gap:9px}
+/* Champs de texte libre : le menu doit tenir vingt secondes, pas être
+   un formulaire. Il s'étend, il ne défile pas. */
+textarea.menu{width:100%;min-height:52px;background:none;border:1px solid var(--edge);border-radius:9px;
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;padding:9px 10px;resize:vertical}
+textarea.menu:focus{outline:none;border-color:var(--brass)}
+/* Lien d'exception : discret, mais de taille tapable. */
+.lnk{background:none;border:none;color:var(--fog);font-family:var(--sans);font-size:12.5px;
+  text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:9px 0;text-align:left}
+/* Les séances s'enroulent : tronquer la ligne coupait le % hors zone,
+   qui est précisément ce qu'on vient y lire. */
+.srow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--edge)}
+.srow .js{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.45}
+.srow .jd{flex:none}
+.log-row.seance{align-items:flex-start;gap:8px}
+.log-row.seance .log-lab{flex:none;min-width:44px}
+.log-row.seance .ro{flex:1;text-align:left;font-size:12.5px;line-height:1.5}
+.srow:last-child{border-bottom:none}
+.imp .big{margin-top:6px}
+.pivot{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--buoy);border-left:3px solid var(--buoy);background:var(--tint);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:12px}
+.todo{font-size:11.5px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
+
+.log{margin-top:14px;padding-top:13px;border-top:1px solid var(--edge);display:grid;gap:13px}
+.log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.log-row.col{align-items:flex-start;flex-direction:column;gap:8px}
+.log-row.col .pills{width:100%}
+.log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);flex:1;min-width:120px}
+.log-lab .hint{text-transform:none;letter-spacing:0;display:block;font-family:var(--sans);font-size:11px;margin-top:3px;line-height:1.4}
+.log-lab .hint.warn{color:var(--buoy)}
+/* 16 px partout : en dessous, iOS zoome la page à la prise de focus et
+   ne la dézoome jamais. Les champs date et heure en héritaient pas. */
+input[type=number],input[type=text]{background:none;border:none;border-bottom:1px solid var(--edge);color:var(--ink);font-family:var(--mono);font-size:16px;width:76px;text-align:right;padding:4px;border-radius:0}
+input[type=date],input[type=time]{font-family:var(--mono);font-size:16px;color:var(--ink);background:none;border:none;border-bottom:1px solid var(--edge);padding:4px;border-radius:0}
+input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color:var(--brass)}
+.unit{font-family:var(--mono);font-size:9.5px;color:var(--fog);width:34px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{min-width:40px;height:38px;border:1px solid var(--edge);background:none;border-radius:9px;color:var(--fog);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0 9px}
+.pill[data-on="1"]{border-color:var(--depth);color:var(--depth)}
+.pill[data-on="1"][data-over="1"]{border-color:var(--buoy);color:var(--buoy)}
+/* Les deux créneaux qui font la journée sont marqués même décochés. */
+.pill.key{border-style:solid;border-color:var(--fog)}
+.pill.key[data-on="1"]{border-color:var(--depth);color:var(--depth);background:var(--tint)}
+.pg{opacity:.55;font-size:10px}
+.alx{width:74px}
+/* Deux valeurs et leur unité sur une seule ligne : en flex, l'unité
+   passait à la ligne et se retrouvait sous le libellé de la suivante. */
+.log-row.pair{display:grid;grid-template-columns:1fr 68px 68px 30px;gap:8px;align-items:center}
+.log-row.pair input{width:100%}
+.pair-h span{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);text-align:center}
+.g-dot.hollow{fill:var(--surface);stroke:var(--brass);stroke-width:1.6}
+input.bad{border-color:var(--buoy)}
+.week-note{font-size:11.5px;line-height:1.5;color:var(--fog);margin:-6px 0 12px}
+.obs{margin-top:20px}
+
+.panel{margin-top:34px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);padding:20px 18px;box-shadow:var(--shadow)}
+.panel h2{font-family:var(--serif);font-style:italic;font-size:19px;margin:0 0 4px;font-weight:600}
+.panel-sub{font-size:11.5px;color:var(--fog);margin:0 0 16px;line-height:1.5}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.tgt{border-collapse:collapse;width:100%;min-width:330px}
+table.tgt th,table.tgt td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--edge);vertical-align:top}
+/* Première colonne figée : sans elle, faire défiler vers la 3e échéance
+   fait perdre de vue la ligne qu'on lit. */
+table.tgt th:first-child,table.tgt td:first-child{position:sticky;left:0;background:var(--surface);width:104px;min-width:104px;padding-left:0}
+table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);font-weight:400}
+.t-lab{font-size:11.5px;line-height:1.35}
+.t-cur{font-family:var(--mono);font-size:10px;color:var(--fog);display:block;margin-top:3px}
+.t-cell{font-family:var(--mono);font-size:10.5px;line-height:1.35;white-space:nowrap}
+.t-st{font-family:var(--mono);font-size:11px;margin-right:4px}
+.ok{color:var(--depth)}.warn{color:var(--buoy)}.dim{color:var(--fog)}
+
+.meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-bottom:9px}
+.graph{margin-top:22px}
+.gl-ref{stroke:var(--depth)}.gt-ref{fill:var(--depth)}.gl-start{stroke:var(--chart-grid)}
+.g-txt{fill:var(--fog)}.g-line{stroke:var(--brass)}.g-dot{fill:var(--brass)}
+.g-trend{stroke:var(--depth);fill:none}
+.g-bar{fill:var(--depth)}.g-bar.hot{fill:var(--buoy)}
+.empty{font-size:12.5px;color:var(--fog);line-height:1.55;padding:10px 0;margin:0}
+.foot{font-size:11.5px;color:var(--fog);line-height:1.6;margin:22px 0 0;padding-top:16px;border-top:1px solid var(--edge)}
+.tools{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.tool{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);background:none;border:1px solid var(--edge);border-radius:8px;padding:10px 14px;cursor:pointer}
+.save{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);margin-top:12px}
+.backup{font-size:11.5px;color:var(--fog);margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+.backup.warn{color:var(--buoy)}
+.refs-grid{display:grid;gap:12px}
+.refs-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:6px}
+.mtgt{display:grid;gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:3px 8px;background:var(--surface);padding:9px 11px;align-items:baseline}
+.mlab{font-size:12.5px}
+.mline{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--fog);line-height:1.5}
+.mline b{font-size:13.5px;color:var(--ink);font-weight:500}
+.mgap{font-family:var(--mono)}
+.mgap.ok{color:var(--depth)}.mgap.warn{color:var(--buoy)}
+.pace{font-size:11.5px;color:var(--fog);margin:0 0 4px;line-height:1.5}
+table.tgt th.now,table.tgt td.now{background:var(--tint)}
+table.tgt th.base,table.tgt td.base{color:var(--fog)}
+.g-goal{stroke:var(--depth);fill:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:400px){h1{font-size:28px}}
+</style>
+</head>
+<body>
+<svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
+<div class="wrap">
+  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" class="mark-bg"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="view"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ================= Identité ================= */
+/* Un seul point de changement pour le nom : title, meta iOS et h1 en dérivent. */
+const APP="Pimperel";
+const KEY="pimperel-v1";
+/* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
+   version.txt à la racine. Les deux doivent être identiques. */
+const VERSION="2026-09-14.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+
+/* ================= Cibles et constantes ================= */
+/* ================= Cibles mensuelles ================= */
+/* Treize mois, d'août 2026 à août 2027. Août est la LIGNE DE BASE : elle
+   s'affiche et ne s'évalue jamais.
+   ★ = valeur provisoire, à corriger le 30/08 après la première pesée.
+   Elles sont toutes ici, c'est le seul endroit à toucher.
+   waist = écart en cm sous la mesure de référence, pas une valeur absolue.
+   sleep = heures décimales, comme le champ de saisie.
+   prot  = nombre de jours sur 7 atteignant PROTEIN.
+   La baisse de volume en août 2027 (48 → 40) est l'affûtage avant le
+   semi du 28, pas une faute de frappe. */
+const MONTHS=[
+  {m:"2026-08",w:95.0,waist:0,   vol:22,sleep:5.83,prot:3,vo2:43,base:true},  /* ★ w, sleep */
+  {m:"2026-09",w:93.5,waist:-1,  vol:26,sleep:6.17,prot:4,vo2:43},
+  {m:"2026-10",w:92.2,waist:-2.5,vol:28,sleep:6.5, prot:4,vo2:44},
+  {m:"2026-11",w:91.0,waist:-4,  vol:30,sleep:6.75,prot:5,vo2:44},
+  {m:"2026-12",w:90.5,waist:-5,  vol:30,sleep:6.75,prot:5,vo2:45},
+  {m:"2027-01",w:89.5,waist:-6,  vol:35,sleep:6.83,prot:5,vo2:45},
+  {m:"2027-02",w:89.0,waist:-7,  vol:40,sleep:7.0, prot:5,vo2:46},
+  {m:"2027-03",w:88.5,waist:-7.5,vol:40,sleep:7.0, prot:5,vo2:46},
+  {m:"2027-04",w:88.0,waist:-8,  vol:42,sleep:7.0, prot:5,vo2:47},
+  {m:"2027-05",w:87.5,waist:-8.5,vol:45,sleep:7.0, prot:5,vo2:47},
+  {m:"2027-06",w:87.0,waist:-9,  vol:45,sleep:7.0, prot:5,vo2:48},
+  {m:"2027-07",w:86.5,waist:-9.5,vol:48,sleep:7.0, prot:5,vo2:49},
+  {m:"2027-08",w:86.0,waist:-10, vol:40,sleep:7.0, prot:5,vo2:49}   /* affûtage */
+];
+/* Les chronos ne sont pas mensuels : ce sont des tests datés. */
+const TESTS=[
+  {d:"2026-09-12",dist:"5 km",cible:null},   /* référence, sans cible */
+  {d:"2026-11-28",dist:"5 km",cible:"26:30"},
+  {d:"2027-01-30",dist:"10 km",cible:"57:00"},
+  {d:"2027-02-27",dist:"10 km",cible:"55:00"},
+  {d:"2027-04-24",dist:"10 km",cible:"53:00"},
+  {d:"2027-06-26",dist:"10 km",cible:"51:00"},
+  {d:"2027-07-24",dist:"semi",cible:"1:55:00"},
+  {d:"2027-08-28",dist:"semi",cible:"1:52:00"}
+];
+/* Allure d'endurance de référence. Indication seulement, jamais évaluée. */
+const PACES=[
+  {until:"2026-11-30",txt:"6:10–6:30/km"},
+  {until:"2027-02-28",txt:"5:55–6:20/km"},
+  {until:"2027-08-31",txt:"5:40–6:00/km"}
+];
+/* Première pesée : la balance à impédance est en France. Avant cette date
+   il n'existe aucune mesure de poids ni de tour de taille — les champs
+   sont masqués et la jauge poids reste en veille. Aucune valeur de
+   départ n'est supposée. */
+const MEASURE_START="2026-08-30";
+const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
+const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
+/* Bas de la jauge sommeil : en dessous, l'anneau reste vide. */
+const SLEEP_LOW=5;
+/* Protéines : quatre prises, chacune sa valeur. La whey fait 30 g, un
+   déjeuner en brasserie 55. Total 165 g, soit la cible atteinte à 4/4
+   seulement — trois prises plafonnent à 135 g, sous la fourchette. Les
+   grammes ne sont pas une pesée : tout affichage est préfixé de « ≈ ».
+   [clé, libellé, grammes, créneau clé] */
+const PROT_SLOTS=[
+  ["whey","Whey matin",30,1],
+  ["midi","Déjeuner",55,0],
+  ["diner","Dîner",50,1],
+  ["coll","Collation",30,0]
+];
+const PROT_DAYS=5;   /* cible : 160 g atteints 5 jours sur 7 */
+/* Plafond dur course, valeur par défaut. Aucun plan, même importé, ne
+   peut autoriser davantage tant qu'elle n'est pas révisée en session
+   coach — d'où le champ éditable settings.refs.runAbsMax plutôt qu'une
+   constante figée : la décision ne doit pas attendre un déploiement. */
+const RUN_ABS_MAX=40;
+const TEST5K_TARGET=1590;   /* 26:30 en secondes, cible novembre */
+/* Sauvegarde : au-delà, le journal ne tient plus qu'à un appareil. */
+const EXPORT_MAX=10;
+
+const KIND={
+  salle:{t:"SALLE",c:"var(--k-str)"},course:{t:"COURSE",c:"var(--k-run)"},
+  qualite:{t:"QUALITÉ",c:"var(--k-run)"},vtt:{t:"VTT",c:"var(--k-swim)"},
+  natation:{t:"NATATION",c:"var(--k-swim)"},rando:{t:"RANDONNÉE",c:"var(--k-pos)"},mesures:{t:"MESURES",c:"var(--brass)"},
+  marche:{t:"MARCHE",c:"var(--k-rest)"},repos:{t:"REPOS",c:"var(--k-rest)"}
+};
+const REGIME={normale:"semaine normale",chargee:"semaine chargée",vacances:"vacances"};
+const DOW=["dim","lun","mar","mer","jeu","ven","sam"];
+
+const SALLE={rank:"P1",kind:"salle",label:"Salle 60 min",
+  detail:"Développé couché 4×5-6 · tractions 4×max · rowing barre 4×8 · presse ou squat 4×8 — charges de maintien · gainage 5 min · élévations mollets lentes 3×15.",
+  fallback:"30 min : les 4 mouvements de référence, 2 séries chacun, rien d'autre."};
+const FASCIA="Élévations talon lentes 3×12 (3 s de descente) + serviette sous les orteils 3×15.";
+
+/* ================= Données mesurées =================
+   Il n'y a plus aucune donnée de santé dans ce fichier. Poids, FC de
+   repos, VFC, VO2max, sommeil, kilomètres et verres d'alcool d'août 2026
+   y figuraient en dur : c'est un dossier médical nominatif dans un dépôt
+   public. Tout cela vient désormais des exports Health Auto Export,
+   déposés par l'utilisateur et stockés dans son seul navigateur.
+   L'amorçage historique se fait par le même bouton que la revue
+   hebdomadaire : un ou plusieurs zips couvrant la période voulue. */
+
+/* ================= Plan embarqué (§5.5) ================= */
+/* Premier contenu uniquement : le premier import de plan le remplace. */
+const SEED_PLAN={
+generated:"2026-08-22",
+weeks:[
+/* Semaine du 17/08 : les jours 17 à 21 sont antérieurs au plan et ne
+   portent aucune séance ; seuls le 22 et le 23 sont planifiés. Leurs
+   mesures viennent de l'import, comme partout ailleurs. */
+{start:"2026-08-17",regime:"vacances",runCapKm:25,days:[
+ {d:"2026-08-17",fascia:false,sessions:[]},
+ {d:"2026-08-18",fascia:false,sessions:[]},
+ {d:"2026-08-19",fascia:false,sessions:[]},
+ {d:"2026-08-20",fascia:false,sessions:[]},
+ {d:"2026-08-21",fascia:false,sessions:[]},
+ {d:"2026-08-22",fascia:true,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Endurance 6:20–7:15/km, Central Park.",fallback:"5 km, allure libre."},
+   {rank:"P2",kind:"salle",label:"Circuit tirage élastiques",detail:"Rowing 3×15 · face pull 3×20 · curl 3×15 · tractions 3×max si barre disponible.",fallback:"Rowing + face pull, 2 séries."}]},
+ {d:"2026-08-23",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Même allure, terrain plat.",fallback:"5 km."}]}
+]},
+{start:"2026-08-24",regime:"normale",runCapKm:22,days:[
+ {d:"2026-08-24",fascia:true,sessions:[
+   {rank:"P2",kind:"salle",label:"Circuit poussée poids du corps",detail:"Pompes déclinées 4×12 · pompes piquées 3×10 · pompes diamant 3×10 · gainage 3×45 s.",fallback:"Pompes + gainage, 2 séries."},
+   {rank:"P3",kind:"marche",label:"Marche urbaine 45 min",detail:"GPS actif."}]},
+ {d:"2026-08-25",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Footing tranquille 6 km",detail:"Le matin, avant le vol. Allure basse, aucune intensité.",fallback:"4 km."}]},
+ {d:"2026-08-26",fascia:true,sessions:[
+   {rank:"P1",kind:"course",label:"Footing tranquille 5 km",detail:"Fin d'après-midi à Versailles, après le vol de nuit. Décalage : allure libre, ne pas chercher le chrono.",fallback:"Marche 40 min."}]},
+ {d:"2026-08-27",fascia:false,sessions:[
+   {rank:"P3",kind:"marche",label:"Marche 40 min ou repos complet",detail:"Journée de récupération."}]},
+ {d:"2026-08-28",fascia:true,sessions:[
+   {rank:"P1",kind:"salle",label:"Séance de référence",detail:"1re séance à Versailles. Développé couché 4×5-6 · tractions 4×max · rowing barre 4×8 · presse ou squat 4×8 · gainage 5 min · mollets lents 3×15. Noter les charges des 4 mouvements dans Références.",fallback:"Les 4 mouvements, 2 séries, charges notées quand même."}]},
+ {d:"2026-08-29",fascia:false,sessions:[
+   {rank:"P1",kind:"course",label:"Sortie longue 11 km",detail:"Endurance 6:20–7:15/km.",fallback:"7 km."}]},
+ {d:"2026-08-30",fascia:true,sessions:[
+   {rank:"P1",kind:"mesures",label:"Pesée + tour de taille",detail:"Ruban à mi-distance côte basse / crête iliaque, puis export de la revue.",fallback:"Pesée seule si le ruban manque."},
+   {rank:"P3",kind:"vtt",label:"Sortie souple 1 h",detail:"VTT, ou marche 45 min. Sans intensité.",fallback:"Marche 30 min."}]}
+]}]};
+
+/* ================= Stockage ================= */
+/* Les données jdb-v1 du carnet de voyage ne sont ni lues ni effacées. */
+let DB={days:{},settings:{refs:{},bloodwork:{}},plan:null}, memOnly=false, stale="", lastCheck=0;
+function load(){
+  let fresh=false;
+  try{
+    const r=localStorage.getItem(KEY);
+    if(r){const p=JSON.parse(r); if(p&&typeof p==="object")DB=p; else fresh=true;}
+    else fresh=true;
+    setSave("Synchronisé");
+  }catch(e){memOnly=true;setSave("Stockage indisponible — données de cette session uniquement");}
+  const seeded=normalize();
+  /* Le premier lancement écrit l'état initial : sans ça la clé n'existe
+     qu'après la première saisie, et un export lancé avant ne verrait rien. */
+  if(fresh||seeded)save();
+}
+/* Complète une base venue du disque ou d'un import : les champs absents
+   sont recréés. Ne relit jamais le disque — un import doit pouvoir
+   s'appuyer dessus sans être écrasé. Aucune donnée n'est supprimée : les
+   bases des versions antérieures gardent leurs journées telles quelles. */
+function normalize(){
+  if(!DB.days||typeof DB.days!=="object")DB.days={};
+  if(!DB.settings)DB.settings={};
+  if(!DB.settings.refs)DB.settings.refs={};
+  if(!DB.settings.bloodwork)DB.settings.bloodwork={};
+  if(!DB.settings.regime)DB.settings.regime={};
+  if(!DB.settings.tests)DB.settings.tests={};
+  /* Reprise du champ unique test5k des versions antérieures : il visait
+     le test de référence du 12/09. */
+  const R0=DB.settings.refs;
+  if(R0.test5k&&!Object.keys(DB.settings.tests).length){
+    DB.settings.tests[isDate(R0.test5kDate)?R0.test5kDate:TESTS[0].d]=R0.test5k;
+    delete R0.test5k;delete R0.test5kDate;
+  }
+  if(!Array.isArray(DB.imports))DB.imports=[];
+  if(!DB.agenda)DB.agenda={};
+  /* Charge professionnelle, une note par semaine, demandée au dépôt du
+     zip. Absente = inconnue, jamais 3. */
+  if(!DB.charge)DB.charge={};
+  if(!DB.settings.zones)DB.settings.zones={bas:128,haut:141};
+  if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
+  return false;
+}
+function save(){
+  if(memOnly)return;
+  try{localStorage.setItem(KEY,JSON.stringify(DB));setSave("Enregistré");}
+  catch(e){memOnly=true;setSave("Enregistrement impossible");}
+}
+function setSave(t){const el=document.getElementById("save");if(el)el.textContent=t;}
+function entry(k){
+  if(!DB.days[k])DB.days[k]={done:{},weight:"",waist:"",rhr:"",hrv:"",vo2:"",sleep:"",bed:false,
+    prot:{},alcohol:"",runKm:"",hikeKm:"",swimKm:"",bikeKm:"",kayakKm:"",bedTime:"",
+    };
+  const e=DB.days[k]; if(!e.done)e.done={}; return e;
+}
+/* Prises de protéines. L'ancienne case unique « 160 g atteints » vaut les
+   quatre prises : elle affirmait la même chose, sans dire où. Elle est
+   lue, jamais réécrite — la conversion n'a lieu qu'à la première coche. */
+function protSet(e){
+  if(e&&e.prot&&typeof e.prot==="object")return e.prot;
+  if(e&&e.protein===true){const o={};PROT_SLOTS.forEach(s=>{o[s[0]]=true;});return o;}
+  return {};
+}
+function protCount(e){const s=protSet(e);let n=0;PROT_SLOTS.forEach(x=>{if(s[x[0]])n++;});return n;}
+function protG(e){const s=protSet(e);let g=0;PROT_SLOTS.forEach(x=>{if(s[x[0]])g+=x[2];});return g;}
+/* Jours de la fenêtre atteignant la cible. La fenêtre s'arrête hier : la
+   journée en cours est incomplète par construction, l'inclure durcirait
+   la cible d'une unité chaque matin sans le dire. Un jour sans entrée en
+   base vaut 0 g — c'est une journée non tenue, pas une donnée manquante. */
+/* Les prises de protéines ne se saisissent plus : le menu en texte libre
+   les a remplacées, et son estimation est hebdomadaire, faite par la
+   session coach. Une fenêtre sans aucune donnée vaut « non mesuré » —
+   null — et surtout pas zéro, qui se lirait comme une cible manquée. */
+function protAny(ks){return ks.some(k=>{const e=rd(k);return e.prot&&typeof e.prot==="object"&&Object.keys(e.prot).length;});}
+function protDays(n){
+  const ks=lastN(addDays(TODAY,-1),n);
+  if(!protAny(ks))return null;
+  let c=0;ks.forEach(k=>{if(protG(rd(k))>=PROTEIN)c++;});
+  return c;
+}
+function protAvgG(n){
+  const ks=lastN(addDays(TODAY,-1),n);
+  if(!protAny(ks))return null;
+  let g=0;ks.forEach(k=>{g+=protG(rd(k));});
+  return Math.round(g/n);
+}
+/* Lecture seule : le rendu passe par ici. entry() créait une journée vide
+   pour chaque jour affiché, si bien que parcourir le plan ou le journal
+   gonflait la base — et l'export — de journées jamais saisies. L'objet
+   renvoyé est partagé : ne jamais y écrire. */
+const NODAY=Object.freeze({done:Object.freeze({})});
+function rd(k){return DB.days[k]||NODAY;}
+/* Seul runKm entre dans le plafond talon ; randonnée, natation, vélo et
+   kayak sont suivis mais ne consomment pas le volume course. */
+const OTHER_KM=[["hikeKm","Km randonnés","km"],["swimKm","Km nagés","km"],["bikeKm","Km vélo","km"],["kayakKm","Km kayak","km"]];
+
+/* ================= Mise à jour du raccourci ================= */
+function ses(op,v,k){const key=k||RKEY;try{return op==="get"?sessionStorage.getItem(key):op==="set"?sessionStorage.setItem(key,v):sessionStorage.removeItem(key);}catch(e){return null;}}
+const MAX_TRIES=3;
+function checkVersion(){
+  const now=Date.now(); if(now-lastCheck<60000)return; lastCheck=now;
+  const rec=String(ses("get")||"").split("|"), triedV=rec[0], tries=+rec[1]||0;
+  fetch("version.txt",{cache:"no-store"}).then(r=>r.ok?r.text():null).then(t=>{
+    const v=t&&t.trim();
+    if(!v||v===VERSION){ses("del"); if(stale){stale="";render();} return;}
+    const n=(triedV===v)?tries:0;
+    if(n>=MAX_TRIES){
+      /* Trois URL neuves n'ont pas suffi : le cache ne cédera pas seul. */
+      stale="Version "+v+" publiée, cette page reste sur "+VERSION+" — ferme puis rouvre le raccourci.";
+      setSave(stale); render(); return;
+    }
+    ses("set",v+"|"+(n+1)); ses("set",open||"",OKEY); ses("set",tab,TKEY);
+    /* Horodatage en plus du numéro de version : si un rechargement
+       antérieur a été servi avant la propagation du CDN, l'URL
+       ?v=<version> porte l'ancienne page en cache et la réutiliser la
+       resservirait indéfiniment. Chaque tentative vise une URL inédite. */
+    location.replace(location.pathname+"?v="+encodeURIComponent(v)+"."+Date.now());
+  }).catch(()=>{});
+}
+addEventListener("scroll",()=>{
+  const h=document.querySelector("header"),on=h.classList.contains("compact");
+  if(!on&&scrollY>56)h.classList.add("compact");
+  else if(on&&scrollY<20)h.classList.remove("compact");
+},{passive:true});
+/* Retour au premier plan : d'abord la date, ensuite la version. Le
+   changement de jour doit être pris en compte même si la vérification de
+   version est encore sous son délai de garde. */
+function onResume(){if(dayRoll())render();checkVersion();}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")onResume();});
+addEventListener("pageshow",e=>{if(e.persisted)onResume();});
+addEventListener("focus",onResume);
+
+/* ================= Dates ================= */
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseD=k=>{const a=k.split("-").map(Number);return new Date(a[0],a[1]-1,a[2]);};
+function addDays(k,n){const d=parseD(k);d.setDate(d.getDate()+n);return iso(d);}
+function mondayOf(k){const d=parseD(k),o=(d.getDay()+6)%7;d.setDate(d.getDate()-o);return iso(d);}
+function fmt(k){const d=parseD(k);return{dow:DOW[d.getDay()],num:pad(d.getDate())};}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const r1=n=>Math.round(n*10)/10;
+/* Volontairement une variable, pas une constante. iOS suspend l'app sans
+   relancer le script : au retour le lendemain matin, un TODAY figé au
+   chargement valait encore la veille — la carte « Aujourd'hui » montrait
+   hier, et toute saisie s'écrivait sur la mauvaise journée. dayRoll() la
+   remet à l'heure à chaque retour au premier plan. */
+let TODAY=iso(new Date());
+function dayRoll(){
+  const now=iso(new Date());
+  if(now===TODAY)return false;
+  /* Si la journée en cours était dépliée, elle le reste — c'est la
+     nouvelle qu'on veut sous les yeux, pas celle d'hier. */
+  const wasToday=(open===TODAY);
+  TODAY=now;
+  if(wasToday)open=TODAY;
+  return true;
+}
+
+/* ================= Agrégats ================= */
+function num(v){if(v===""||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:null;}
+function weekDays(mon){const a=[];for(let i=0;i<7;i++)a.push(addDays(mon,i));return a;}
+function lastN(k,n){const a=[];for(let i=n-1;i>=0;i--)a.push(addDays(k,-i));return a;}
+function vals(keys,f){const o=[];keys.forEach(k=>{const e=DB.days[k];if(!e)return;const v=num(e[f]);if(v!==null)o.push(v);});return o;}
+function avg(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null;}
+function total(a){return a.reduce((x,y)=>x+y,0);}
+/* Seuil à 2 pesées : avec 3 à 5 nuits hors domicile par mois, l'exiger à
+   3 éteignait la jauge, la ligne de cibles et l'alerte de perte sans
+   rien dire. weekWeight() garde son type de retour — un nombre ou null,
+   sept appelants en dépendent — et weekWeightN() dit sur combien de
+   pesées la moyenne repose, pour afficher « partiel » à 2. */
+const WEIGHT_MIN=2;
+function weekWeightN(mon){return vals(weekDays(mon),"weight").length;}
+function weekWeight(mon){const v=vals(weekDays(mon),"weight");return v.length>=WEIGHT_MIN?avg(v):null;}
+function weekRun(mon){return r1(total(vals(weekDays(mon),"runKm")));}
+function drinksIn(keys){let n=0;keys.forEach(k=>{const e=DB.days[k];if(e&&typeof e.alcohol==="number")n+=e.alcohol;});return n;}
+/* Heure de coucher : stockée en HH:MM. Un coucher après minuit appartient
+   à la nuit précédente, on le compte donc au-delà de 24 h pour que les
+   moyennes et les comparaisons restent ordonnées. */
+const BED_LIMIT=23*60+30;
+function bedMin(e){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(String(e&&e.bedTime||""));
+  if(!m)return null;
+  const h=+m[1],mi=+m[2]; if(h>23||mi>59)return null;
+  return h*60+mi+(h<12?24*60:0);
+}
+/* Repli sur l'ancienne case à cocher pour les jours saisis avant que
+   l'heure exacte n'existe. */
+function bedOk(e){const v=bedMin(e);return v!==null?v<BED_LIMIT:!!(e&&e.bed);}
+function fmtMin(v){const t=Math.round(v)%(24*60);return pad(Math.floor(t/60))+":"+pad(t%60);}
+/* Durée, pas heure d'horloge : 7h20 et non 07:20, sans repli à 24 h. */
+function fmtDur(h){const t=Math.round(h*60);return Math.floor(t/60)+"h"+pad(t%60);}
+/* Le sommeil s'AFFICHE en heures et minutes mais se STOCKE en heures
+   décimales. num(e.sleep) est lu par sleepCounts et par la moyenne du
+   tableau des cibles ; l'import écrit un nombre. Stocker « 7:20 » ferait
+   renvoyer 7 à parseFloat : les minutes disparaîtraient en silence.
+   hmTo sert encore à l'import d'un plan qui porterait des durées. */
+function hmTo(x){
+  const m=/^(\d{1,2}):(\d{2})$/.exec(String(x||""));
+  if(!m)return"";
+  const h=+m[1],mi=+m[2];
+  if(h>23||mi>59)return"";
+  return String(Math.round((h+mi/60)*1000)/1000);
+}
+function sleepCounts(keys){let n7=0,bed=0;keys.forEach(k=>{const e=DB.days[k];if(!e)return;const s=num(e.sleep);if(s!==null&&s>=SLEEP_H)n7++;if(bedOk(e))bed++;});return{n7:n7,bed:bed};}
+function weekWaist(mon){const v=vals(weekDays(mon),"waist");return v.length?avg(v):null;}
+function weekVo2Max(mon){const v=vals(weekDays(mon),"vo2");return v.length?Math.max.apply(null,v):null;}
+/* Nombre de pesées de la dernière semaine ayant produit une moyenne. */
+function lastWeeklyN(){
+  let m=mondayOf(TODAY);
+  for(let i=0;i<60;i++){if(weekWeight(m)!==null)return weekWeightN(m);m=addDays(m,-7);}
+  return 0;
+}
+function lastWeekly(f){
+  /* Dernière valeur hebdomadaire connue, en remontant les semaines. */
+  let m=mondayOf(TODAY);
+  for(let i=0;i<60;i++){const v=f(m);if(v!==null)return v;m=addDays(m,-7);}
+  return null;
+}
+function firstVo2(){
+  const ks=Object.keys(DB.days).sort();
+  for(const k of ks){const v=num(DB.days[k].vo2);if(v!==null)return v;}
+  return null;
+}
+function dryStreak(){let n=0,k=TODAY;for(let i=0;i<60;i++){const e=DB.days[k];if(!e||typeof e.alcohol!=="number")break;if(e.alcohol>0)break;n++;k=addDays(k,-1);}return n;}
+
+/* ================= Import Health & Sport =================
+   Lecture d'un export Health Auto Export, sans aucune dépendance.
+
+   Cinq pièges, tous présents dans les exports réels :
+   1. L'énergie est en KILOJOULES. 4 104 kJ = 981 kcal, pas 4 104.
+   2. iOS écrit les noms de fichiers en UTF-8 NFD : « Extérieur » est un
+      « e » suivi d'un accent combinant. Tout nom est normalisé en NFC
+      avant le moindre test, et les tests sont des motifs, jamais des
+      égalités.
+   3. L'offset du central directory pointe l'EN-TÊTE LOCAL, pas les
+      données. Les longueurs de nom et d'extra y diffèrent souvent de
+      celles du central directory : il faut relire l'en-tête local.
+   4. new Date("2026-09-07 00:00:00") vaut Invalid Date sur Safari —
+      l'espace n'est pas ISO. Les dates restent des chaînes, découpées.
+      Aucune conversion de fuseau : l'export est déjà en heure locale, et
+      passer par UTC décalerait les nuits de sommeil d'un jour.
+   5. Le fichier de fréquence cardiaque porte les secondes (170855) là où
+      Workouts tronque à la minute (17:08). L'appariement se fait sur le
+      préfixe à la minute, avec tolérance. */
+
+const ZIP_MAX_ENTRY=8*1024*1024;   /* garde-fou mémoire par entrée lue */
+
+/* --- Lecture du central directory, puis des seules entrées retenues --- */
+function zipEntries(buf){
+  const dv=new DataView(buf),n=buf.byteLength;
+  /* Fin du central directory : signature 0x06054b50, cherchée depuis la
+     fin car le commentaire final est de longueur variable. */
+  let eocd=-1;
+  for(let i=n-22;i>=Math.max(0,n-66000);i--){
+    if(dv.getUint32(i,true)===0x06054b50){eocd=i;break;}
+  }
+  if(eocd<0)throw new Error("Archive illisible : fin de répertoire introuvable.");
+  const count=dv.getUint16(eocd+10,true);
+  let p=dv.getUint32(eocd+16,true);
+  const out=[],dec=new TextDecoder("utf-8");
+  for(let i=0;i<count&&p+46<=n;i++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true);
+    const compSize=dv.getUint32(p+20,true);
+    const size=dv.getUint32(p+24,true);
+    const nameLen=dv.getUint16(p+28,true);
+    const extraLen=dv.getUint16(p+30,true);
+    const commLen=dv.getUint16(p+32,true);
+    const localOff=dv.getUint32(p+42,true);
+    const name=dec.decode(new Uint8Array(buf,p+46,nameLen)).normalize("NFC");
+    out.push({name:name,method:method,compSize:compSize,size:size,localOff:localOff});
+    p+=46+nameLen+extraLen+commLen;
+  }
+  return out;
+}
+/* Début réel des données : il faut relire l'en-tête local, dont les
+   longueurs de nom et d'extra diffèrent de celles du répertoire. */
+function zipDataStart(buf,e){
+  const dv=new DataView(buf);
+  if(dv.getUint32(e.localOff,true)!==0x04034b50)
+    throw new Error("Entrée corrompue : en-tête local absent.");
+  return e.localOff+30+dv.getUint16(e.localOff+26,true)+dv.getUint16(e.localOff+28,true);
+}
+async function zipRead(buf,e){
+  if(e.size>ZIP_MAX_ENTRY)throw new Error("Fichier trop volumineux dans l'archive : "+e.name);
+  const start=zipDataStart(buf,e);
+  const raw=new Uint8Array(buf,start,e.compSize);
+  if(e.method===0)return new TextDecoder("utf-8").decode(raw);
+  if(e.method!==8)throw new Error("Compression non gérée ("+e.method+") : "+e.name);
+  const ds=new DecompressionStream("deflate-raw");
+  const out=new Response(new Blob([raw]).stream().pipeThrough(ds));
+  return new TextDecoder("utf-8").decode(await out.arrayBuffer());
+}
+function zipSupported(){
+  try{return typeof DecompressionStream==="function"&&!!new DecompressionStream("deflate-raw");}
+  catch(e){return false;}
+}
+
+/* --- CSV : séparateur virgule, champs éventuellement guillemetés --- */
+function csvRows(txt){
+  const rows=[];let row=[],cur="",q=false;
+  for(let i=0;i<txt.length;i++){
+    const c=txt[i];
+    if(q){
+      if(c==='"'){if(txt[i+1]==='"'){cur+='"';i++;}else q=false;}
+      else cur+=c;
+    }else if(c==='"')q=true;
+    else if(c===","){row.push(cur);cur="";}
+    else if(c==="\n"){row.push(cur);cur="";if(row.length>1||row[0]!=="")rows.push(row);row=[];}
+    else if(c!=="\r")cur+=c;
+  }
+  row.push(cur);
+  if(row.length>1||row[0]!=="")rows.push(row);
+  return rows;
+}
+function csvTable(txt){
+  const r=csvRows(txt);
+  if(!r.length)return{head:[],rows:[]};
+  return{head:r[0].map(h=>h.trim().normalize("NFC")),rows:r.slice(1)};
+}
+/* Colonne repérée par motif : les libellés portent des unités et des
+   accents qui varient d'une version d'export à l'autre. */
+function colIdx(head,re){for(let i=0;i<head.length;i++)if(re.test(head[i]))return i;return -1;}
+function cnum(v){
+  if(v===undefined||v===null)return null;
+  const t=String(v).trim().replace(",",".");
+  if(!t)return null;
+  const n=parseFloat(t);
+  return isFinite(n)?n:null;
+}
+const KJ=4.184;   /* kilojoules -> kilocalories */
+const r2=n=>Math.round(n*100)/100;   /* km : le dixième masque 10,02 */
+/* Lecture d'une cellule numérique arrondie au dixième, null si vide :
+   l'export écrit 140.13754008120202, personne ne lit une FC ainsi. */
+function nr1(v){const n=cnum(v);return n===null?null:r1(n);}
+
+/* --- Agrégation horaire -> quotidienne du CSV principal (§2.3) --- */
+const MAIN_COLS=[
+  ["poids",        /^Poids/i,                                   "moy"],
+  ["mgPct",        /Graisse Corporelle/i,                       "moy"],
+  ["maigre",       /Masse Corporelle Maigre/i,                  "moy"],
+  ["taille",       /Tour de taille/i,                           "last"],
+  ["fcRepos",      /Fr.quence cardiaque au repos/i,             "moy"],
+  ["vfc",          /Variabilit. de la Fr.quence Cardiaque/i,    "moy"],
+  ["sommeilH",     /Analyse du Sommeil \[Total\]/i,             "som"],
+  ["sommeilProfondH",/Analyse du Sommeil \[Profond\]/i,         "som"],
+  ["sommeilRemH",  /Analyse du Sommeil \[REM\]/i,               "som"],
+  ["pas",          /Nombre de Pas/i,                            "somE"],
+  ["kmMarcheCourse",/Distance Marche \+ Course/i,               "som"],
+  ["kcalActives",  /.nergie Active/i,                           "somKJ"],
+  ["kcalRepos",    /.nergie de repos/i,                         "somKJ"],
+  ["minExo",       /Temps d.exercice Apple/i,                   "som"],
+  ["vo2",          /VO2 ?Max/i,                                 "max"],
+  ["recupCardio",  /R.cup.ration Cardio/i,                      "moy"],
+  ["sys",          /Tension art.rielle \[Systolique\]/i,        "moy"],
+  ["dia",          /Tension art.rielle \[Diastolique\]/i,       "moy"],
+  ["alcoolMesure", /Consommation d.alcool/i,                    "som"]
+];
+function parseMain(txt){
+  const T=csvTable(txt);
+  const dateI=colIdx(T.head,/^Date\/?\s?(Heure|Time)/i);
+  if(dateI<0)throw new Error("CSV principal : colonne de date introuvable.");
+  const idx=MAIN_COLS.map(c=>[c[0],colIdx(T.head,c[1]),c[2]]);
+  const acc={};
+  T.rows.forEach(r=>{
+    const d=String(r[dateI]||"").trim();
+    /* Piège 4 : la date reste une chaîne, jamais new Date(). */
+    if(!/^\d{4}-\d{2}-\d{2}/.test(d))return;
+    const k=d.slice(0,10);
+    const a=acc[k]||(acc[k]={});
+    idx.forEach(c=>{
+      if(c[1]<0)return;
+      const v=cnum(r[c[1]]);
+      if(v===null)return;
+      const s=a[c[0]]||(a[c[0]]={n:0,som:0,max:-Infinity,last:null});
+      s.n++;s.som+=v;if(v>s.max)s.max=v;s.last=v;
+    });
+  });
+  const jours={};
+  Object.keys(acc).sort().forEach(k=>{
+    const a=acc[k],o={};
+    idx.forEach(c=>{
+      const s=a[c[0]];
+      if(!s){o[c[0]]=null;return;}                     /* absent = null, jamais 0 */
+      if(c[2]==="moy")o[c[0]]=r1(s.som/s.n);
+      else if(c[2]==="som")o[c[0]]=r1(s.som);
+      /* Les pas se tronquent, ils ne s'arrondissent pas : Apple affiche
+         16 927 là où la somme horaire vaut 16 927,73. */
+      else if(c[2]==="somE")o[c[0]]=Math.floor(s.som);
+      else if(c[2]==="somKJ")o[c[0]]=Math.round(s.som/KJ);   /* piège 1 */
+      else if(c[2]==="max")o[c[0]]=r1(s.max);
+      else o[c[0]]=s.last;
+    });
+    if(o.poids!==null&&o.mgPct!==null)o.mgKg=r1(o.poids*o.mgPct/100);
+    else o.mgKg=null;
+    if(o.taille!==null)o.taille=r1(o.taille);
+    jours[k]=o;
+  });
+  return jours;
+}
+
+/* --- Séances (§2.4) --- */
+const WK_KIND=[
+  [/Course/i,"course"],[/Cyclisme/i,"vtt"],[/force/i,"salle"],
+  [/Randonn/i,"rando"],[/Marcher|Marche/i,"marche"],[/Natation/i,"natation"]
+];
+function wkKind(t){
+  const s=String(t||"").normalize("NFC");
+  for(const p of WK_KIND)if(p[0].test(s))return p[1];
+  return "autre";
+}
+function hmsMin(v){
+  const m=/^(\d+):(\d{2}):(\d{2})/.exec(String(v||"").trim());
+  if(m)return (+m[1])*60+(+m[2])+(+m[3])/60;
+  const n=cnum(v);return n===null?null:n;
+}
+function allureOf(min,km){
+  if(!min||!km)return null;
+  const t=Math.round(min/km*60);
+  return Math.floor(t/60)+":"+pad(t%60);
+}
+function parseWorkouts(txt){
+  const T=csvTable(txt);
+  const c={
+    type:colIdx(T.head,/Workout Type|Type d.entra/i),
+    start:colIdx(T.head,/^Start|D.but/i),
+    dur:colIdx(T.head,/Duration|Dur.e/i),
+    kj:colIdx(T.head,/.nergie Active/i),
+    fcMoy:colIdx(T.head,/Fr.quence Cardiaque Moyenne|Avg.*Heart/i),
+    fcMax:colIdx(T.head,/Fr.quence Cardiaque Max/i),
+    km:colIdx(T.head,/^Distance/i),
+    dplus:colIdx(T.head,/.l.vation ascendante|Elevation Ascended/i)
+  };
+  if(c.start<0||c.type<0)return [];
+  const out=[];
+  T.rows.forEach(r=>{
+    const st=String(r[c.start]||"").trim();
+    if(!/^\d{4}-\d{2}-\d{2}/.test(st))return;
+    const kind=wkKind(r[c.type]);
+    const min=c.dur>=0?hmsMin(r[c.dur]):null;
+    const km=c.km>=0?cnum(r[c.km]):null;
+    const kj=c.kj>=0?cnum(r[c.kj]):null;
+    const s={
+      date:st.slice(0,10),
+      heureCle:st.slice(0,10).replace(/-/g,"")+"_"+st.slice(11,13)+st.slice(14,16),
+      kind:kind,
+      debut:st.slice(11,16),
+      /* Durée gardée en secondes : 2 h 08:59 ne se reconstitue pas depuis
+         129,0 min, et une durée de séance s'annonce à la seconde. */
+      dureeMin:min===null?null:r2(min),
+      dureeSec:min===null?null:Math.round(min*60),
+      /* Deux décimales : 10,02 km et 40,29 km disparaîtraient au dixième. */
+      km:km===null?null:r2(km),
+      allure:kind==="course"?allureOf(min,km):null,
+      fcMoy:c.fcMoy>=0?nr1(r[c.fcMoy]):null,
+      fcMax:c.fcMax>=0?nr1(r[c.fcMax]):null,
+      kcal:kj===null?null:Math.round(kj/KJ),          /* piège 1 */
+      denivele:c.dplus>=0?nr1(r[c.dplus]):null,
+      pctHorsZoneHaut:null,pctHorsZoneBas:null
+    };
+    out.push(s);
+  });
+  return out;
+}
+
+/* --- % de temps hors zone (§2.5) ---
+   Le nom du fichier porte les secondes, Workouts tronque à la minute :
+   l'appariement se fait sur AAAAMMJJ_HHMM avec tolérance de deux
+   minutes. Le calcul porte sur la colonne Avg, à la minute — une
+   approximation, mais identique d'une semaine sur l'autre, ce qui est la
+   seule chose qui compte pour comparer. */
+const HZ_METHOD="minute/avg";
+function hrKeyMinutes(k){
+  const m=/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/.exec(k);
+  if(!m)return null;
+  return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5])/60000;
+}
+function parseHR(txt,zones){
+  const T=csvTable(txt);
+  const avgI=colIdx(T.head,/^Avg|Moyenne/i);
+  if(avgI<0)return null;
+  let n=0,haut=0,bas=0;
+  T.rows.forEach(r=>{
+    const v=cnum(r[avgI]);
+    if(v===null)return;
+    n++;
+    if(v>zones.haut)haut++;
+    if(v<zones.bas)bas++;
+  });
+  if(!n)return null;
+  return{n:n,haut:Math.round(haut/n*100),bas:Math.round(bas/n*100)};
+}
+
+/* --- Assemblage du digest (§3) --- */
+function emptyDigest(){
+  return{source:"",importe:TODAY,du:null,au:null,jours:{},seances:[],
+         semaine:{},manquant:[],symptomes:[],methodeHorsZone:HZ_METHOD};
+}
+async function parseExport(file,zones){
+  const buf=await file.arrayBuffer();
+  /* Vingt-deux octets est la taille d'une archive vide : en dessous, il
+     n'y a rien à lire, et lire quatre octets jetterait une erreur de
+     tableau typé que personne ne sait interpréter. */
+  if(buf.byteLength<22)throw new Error("Fichier vide ou tronqué.");
+  const sig=new Uint8Array(buf,0,4);
+  if(!(sig[0]===0x50&&sig[1]===0x4b&&sig[2]===0x03&&sig[3]===0x04))
+    throw new Error("Ce fichier n'est pas une archive zip.");
+  const all=zipEntries(buf);
+  /* On ne décompresse que ce qui sert : les traces GPS pèsent 99 % de
+     l'archive et n'apportent rien. */
+  const garde=e=>!/-Route-/.test(e.name)&&!/\.gpx$/i.test(e.name);
+  const main=all.filter(e=>garde(e)&&/HealthAutoExport-\d{4}-\d{2}-\d{2}/.test(e.name)&&/\.csv$/i.test(e.name));
+  const wk=all.filter(e=>garde(e)&&/(^|\/)Workouts[-_]/i.test(e.name)&&/\.csv$/i.test(e.name));
+  /* Le tiret avant « Fréquence » est ce qui distingue la série de la
+     « Récupération de la Fréquence Cardiaque », qui porte le même mot. */
+  const hr=all.filter(e=>garde(e)&&/-Fr.quence Cardiaque-/i.test(e.name)&&/\.csv$/i.test(e.name));
+  const sym=all.filter(e=>garde(e)&&/(^|\/)(Symptoms|ECG)-/i.test(e.name)&&/\.csv$/i.test(e.name));
+
+  const d=emptyDigest();
+  d.source=file.name;
+  for(const e of main){
+    const j=parseMain(await zipRead(buf,e));
+    Object.keys(j).forEach(k=>{
+      const cur=d.jours[k]||{};
+      /* Fusion par date : la dernière valeur non nulle l'emporte. */
+      Object.keys(j[k]).forEach(f=>{if(j[k][f]!==null||cur[f]===undefined)cur[f]=j[k][f];});
+      d.jours[k]=cur;
+    });
+  }
+  for(const e of wk)d.seances=d.seances.concat(parseWorkouts(await zipRead(buf,e)));
+  /* Appariement des séries de FC aux séances de course. */
+  const hrIdx=hr.map(e=>{
+    const m=/(\d{8}_\d{4})/.exec(e.name);
+    return{e:e,min:m?hrKeyMinutes(m[1]):null};
+  }).filter(x=>x.min!==null);
+  for(const s of d.seances){
+    if(s.kind!=="course")continue;
+    const t=hrKeyMinutes(s.heureCle);
+    if(t===null)continue;
+    let best=null,bd=3;
+    hrIdx.forEach(x=>{const dd=Math.abs(x.min-t);if(dd<bd){bd=dd;best=x;}});
+    if(!best)continue;
+    const z=parseHR(await zipRead(buf,best.e),zones);
+    if(z){s.pctHorsZoneHaut=z.haut;s.pctHorsZoneBas=z.bas;s.minutesFC=z.n;}
+  }
+  for(const e of sym){
+    const t=(await zipRead(buf,e)).trim();
+    const r=csvRows(t);
+    if(r.length>1)d.symptomes.push({fichier:e.name,lignes:r.length-1});
+  }
+  const ks=Object.keys(d.jours).sort();
+  d.du=ks[0]||null;d.au=ks[ks.length-1]||null;
+  d.seances.sort((a,b)=>(a.date+a.debut).localeCompare(b.date+b.debut));
+  d.semaineDu=ks.slice(-7)[0]||null;
+  d.semaine=digestWeek(d);
+  d.manquant=digestManquant(d);
+  return d;
+}
+/* Le bloc « semaine » porte sur les SEPT DERNIERS jours du digest, même
+   quand l'import en couvre quarante-quatre : un amorçage historique et
+   une revue hebdomadaire passent par le même code, et une moyenne sur
+   six semaines ne voudrait rien dire. */
+function weekKeys(d){return Object.keys(d.jours).sort().slice(-7);}
+/* Les séances de la fenêtre, et elles seules : un amorçage de six
+   semaines compterait sinon cinquante-sept séances dans « la semaine ». */
+function weekSeances(d){
+  const ks=weekKeys(d);
+  if(!ks.length)return [];
+  const a=ks[0],b=ks[ks.length-1];
+  return (d.seances||[]).filter(s=>s.date>=a&&s.date<=b);
+}
+function digestWeek(d){
+  const ks=weekKeys(d),S=weekSeances(d);
+  const col=f=>ks.map(k=>d.jours[k][f]).filter(v=>v!==null&&v!==undefined);
+  const moy=a=>a.length?r1(a.reduce((x,y)=>x+y,0)/a.length):null;
+  const kmBy=kind=>r2(S.filter(s=>s.kind===kind).reduce((x,s)=>x+(s.km||0),0));
+  const sMoy=col("sommeilH");
+  /* Minutes d'entraînement = durée des séances, pas le « temps
+     d'exercice Apple », qui compte aussi la marche du quotidien et
+     gonflerait la semaine de moitié. */
+  const minSeances=S.reduce((x,s)=>x+(s.dureeMin||0),0);
+  return{
+    poidsMoy:moy(col("poids")),mgKgMoy:moy(col("mgKg")),mgPctMoy:moy(col("mgPct")),
+    fcReposMoy:moy(col("fcRepos")),vfcMoy:moy(col("vfc")),
+    sommeilMoyH:moy(sMoy),nuits7h:sMoy.filter(v=>v>=7).length,
+    pasMoy:col("pas").length?Math.round(col("pas").reduce((x,y)=>x+y,0)/col("pas").length):null,
+    minTotal:S.length?Math.round(minSeances):null,
+    minExoApple:col("minExo").length?Math.round(col("minExo").reduce((x,y)=>x+y,0)):null,
+    kmCourse:kmBy("course"),kmVelo:kmBy("vtt"),kmRando:kmBy("rando"),kmNat:kmBy("natation"),
+    nbSeances:S.length,
+    vo2Max:col("vo2").length?r1(Math.max.apply(null,col("vo2"))):null
+  };
+}
+/* « Manquant » décrit la semaine revue : une tension relevée il y a
+   trois semaines ne comble pas le trou de celle-ci. */
+function digestManquant(d){
+  const ks=weekKeys(d),m=[];
+  const aucun=f=>!ks.some(k=>d.jours[k][f]!==null&&d.jours[k][f]!==undefined);
+  if(aucun("sys")||aucun("dia"))m.push("tension");
+  if(aucun("taille"))m.push("tourDeTaille");
+  if(aucun("poids"))m.push("poids");
+  return m;
+}
+
+/* --- Rangement : digests idempotents, puis fusion dans le journal --- */
+function storeDigest(d){
+  if(!Array.isArray(DB.imports))DB.imports=[];
+  /* Un digest est identifié par sa période : réimporter le même zip
+     remplace l'entrée, n'en empile pas une seconde. */
+  const i=DB.imports.findIndex(x=>x.du===d.du&&x.au===d.au);
+  if(i>=0)DB.imports[i]=d;else DB.imports.push(d);
+  DB.imports.sort((a,b)=>String(a.du).localeCompare(String(b.du)));
+  while(DB.imports.length>8)DB.imports.shift();
+}
+/* Champs mesurés du journal : ils viennent du zip et de lui seul. Aucun
+   n'est proposé à la saisie, donc aucune saisie n'est écrasée. */
+const MESURE=[["poids","weight"],["taille","waist"],["fcRepos","rhr"],["vfc","hrv"],
+  ["vo2","vo2"],["sommeilH","sleep"],["mgPct","mgPct"],["maigre","maigre"],["mgKg","mgKg"],
+  ["pas","pas"],["minExo","minExo"],["kcalActives","kcalActives"],["sys","sys"],["dia","dia"],
+  ["recupCardio","recupCardio"]];
+const KM_BY_KIND={course:"runKm",rando:"hikeKm",natation:"swimKm",vtt:"bikeKm"};
+function mergeDigest(d){
+  let jours=0;
+  Object.keys(d.jours).forEach(k=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return;
+    const src=d.jours[k],e=entry(k);
+    let touche=false;
+    MESURE.forEach(p=>{
+      const v=src[p[0]];
+      if(v===null||v===undefined)return;
+      const val=String(v);
+      if(e[p[1]]!==val){e[p[1]]=val;touche=true;}
+    });
+    if(touche)jours++;
+  });
+  /* Kilomètres par jour et par type, reconstruits depuis les séances. */
+  const parJour={};
+  d.seances.forEach(s=>{
+    const f=KM_BY_KIND[s.kind];
+    if(!f||!s.km)return;
+    (parJour[s.date]||(parJour[s.date]={}))[f]=r2(((parJour[s.date]||{})[f]||0)+s.km);
+  });
+  Object.keys(parJour).forEach(k=>{
+    const e=entry(k);
+    Object.keys(parJour[k]).forEach(f=>{e[f]=String(parJour[k][f]);});
+  });
+  return jours;
+}
+async function importFiles(files){
+  if(!zipSupported())throw new Error("Navigateur trop ancien pour lire le zip (DecompressionStream absent).");
+  const zones=DB.settings.zones||{bas:128,haut:141};
+  const res={fichiers:0,jours:0,seances:0,du:null,au:null,erreurs:[]};
+  for(const f of files){
+    try{
+      const d=await parseExport(f,zones);
+      if(!d.du){res.erreurs.push(f.name+" : aucune donnée quotidienne lisible.");continue;}
+      storeDigest(d);
+      res.jours+=mergeDigest(d);
+      res.seances+=d.seances.length;
+      res.fichiers++;
+      if(!res.du||d.du<res.du)res.du=d.du;
+      if(!res.au||d.au>res.au)res.au=d.au;
+    }catch(e){res.erreurs.push(f.name+" : "+(e&&e.message||e));}
+  }
+  if(res.fichiers)save();
+  return res;
+}
+/* Dernier digest couvrant une date, pour afficher la source d'une mesure. */
+function digestAt(k){
+  const L=DB.imports||[];
+  for(let i=L.length-1;i>=0;i--)if(L[i].jours&&L[i].jours[k])return L[i];
+  return null;
+}
+function seancesAt(k){
+  const L=DB.imports||[],out=[],vus={};
+  for(let i=L.length-1;i>=0;i--)(L[i].seances||[]).forEach(s=>{
+    if(s.date!==k)return;
+    const id=s.heureCle+"|"+s.kind;
+    if(vus[id])return;vus[id]=1;out.push(s);
+  });
+  return out.sort((a,b)=>String(a.debut).localeCompare(String(b.debut)));
+}
+
+/* ================= Plan actif ================= */
+function lastCap(){
+  const ws=DB.plan&&DB.plan.weeks||[];
+  for(let i=ws.length-1;i>=0;i--)if(num(ws[i].runCapKm)!==null)return num(ws[i].runCapKm);
+  return 10;
+}
+function defaultWeek(mon){
+  const cap=lastCap(),days=[];
+  for(let i=0;i<7;i++){
+    const ss=[];
+    if(i===0)ss.push(SALLE);
+    if(i===5)ss.push({rank:"P1",kind:"course",label:"Sortie longue",detail:"Endurance 6:20–7:15/km, "+cap+" km au plus — plafond de la dernière semaine connue.",fallback:"Moitié de la distance, allure libre."});
+    days.push({d:addDays(mon,i),fascia:i%2===0,sessions:ss});
+  }
+  return {start:mon,regime:"normale",runCapKm:cap,days:days,fallbackWeek:true};
+}
+/* Un plan qui n'a pas encore commencé n'est pas un plan expiré : on
+   l'affiche tel quel. Seule une date postérieure au dernier jour couvert
+   déclenche la semaine par défaut. */
+function activePlan(){
+  const ws=(DB.plan&&DB.plan.weeks)||[],all=[];
+  ws.forEach(w=>(w.days||[]).forEach(d=>all.push(d.d)));
+  if(!all.length)return{weeks:[defaultWeek(mondayOf(TODAY))],expired:true};
+  if(all.indexOf(TODAY)>=0)return{weeks:ws,expired:false};
+  const min=all.reduce((a,b)=>a<b?a:b);
+  if(TODAY<min)return{weeks:ws,expired:false,pending:min};
+  return{weeks:[defaultWeek(mondayOf(TODAY))],expired:true};
+}
+function weekOf(k){
+  const ap=activePlan();
+  for(const w of ap.weeks)if((w.days||[]).some(d=>d.d===k))return w;
+  return null;
+}
+/* Semaine d'un lundi. On interroge d'abord w.start : une semaine dont les
+   jours ne commencent pas au lundi — un plan qui démarre en milieu de
+   semaine — n'était retrouvée par aucune sonde, si bien que son régime et
+   son plafond retombaient sur les valeurs par défaut alors que l'en-tête
+   de semaine, lui, affichait bien ceux du plan. La sonde sur les jours
+   reste en repli, pour les semaines sans start exploitable. */
+function weekAt(mon){
+  const ap=activePlan();
+  for(const w of ap.weeks)if(w.start===mon)return w;
+  return weekOf(mon)||weekOf(addDays(mon,1));
+}
+function dayOf(k){
+  const ap=activePlan();
+  for(const w of ap.weeks)for(const d of (w.days||[]))if(d.d===k)return d;
+  return null;
+}
+
+/* ================= Règles automatiques (§6) ================= */
+/* Plafond dur en vigueur. Éditable dans Références : une révision de
+   coaching ne doit pas dépendre d'un déploiement. */
+function runAbsMax(){
+  const v=num((DB.settings.refs||{}).runAbsMax);
+  return v!==null&&v>0?v:RUN_ABS_MAX;
+}
+/* L'app ne calcule plus le plafond, elle affiche celui du plan et alerte
+   au dépassement.
+   Toute référence assise sur les seuls km courus se trompait : calée sur
+   la semaine précédente elle effondrait le plafond après un déplacement
+   (8 km courus → 8,8 autorisés) ; calée sur la meilleure des quatre, elle
+   ne clippait plus rien pendant un mois (31,7 km début août → 34,9 de
+   plafond, quand les deux semaines suivantes faisaient 11,3 et 6 km). Le
+   volume de course est intermittent par construction : la randonnée s'y
+   substitue — 62 km randonnés la semaine du 10/08, comptés zéro.
+   Le seul garde-fou honnête est un plafond absolu, révisé à la main.
+   implicit : semaine hors plan, qui ne s'est jamais vu opposer de
+   plafond. La valeur sert l'alerte, pas la ligne de référence du graphe,
+   qui inventerait un plafond rétroactif. */
+function capFor(mon){
+  const w=weekAt(mon),planned=w?num(w.runCapKm):null;
+  const max=runAbsMax();
+  return{
+    cap:planned===null?max:Math.min(planned,max),
+    clamped:planned!==null&&planned>max,
+    planned:planned,implicit:planned===null,max:max
+  };
+}
+/* Récupération : la valeur du jour est comparée à la moyenne des 7 jours
+   qui la précèdent, pour que la mesure ne dilue pas sa propre référence.
+   Le message dépend de ce qui est réellement au programme. Promettre
+   qu'« une séance qualité passe en facile » un jour qui n'en porte pas —
+   c'est-à-dire presque tous — annonçait une décision qui n'était prise
+   nulle part. La séance est cherchée parmi celles RETENUES : sous régime
+   chargé une P2 qualité est masquée, le bandeau ne doit pas promettre
+   une conversion sur une séance invisible. */
+function hasQualityToday(){
+  const d=dayOf(TODAY);
+  return !!(d&&kept(d).some(x=>x.s.kind==="qualite"));
+}
+function recovery(){
+  const base=lastN(addDays(TODAY,-1),7);
+  const e=DB.days[TODAY]; if(!e)return null;
+  const rhr=num(e.rhr),hrv=num(e.hrv);
+  const rB=avg(vals(base,"rhr")),hB=avg(vals(base,"hrv"));
+  let metric=null,head="";
+  if(rhr!==null&&rB!==null&&rhr>rB+5){
+    metric="rhr";head="FC repos "+rhr+" bpm, soit +"+r1(rhr-rB)+" vs moyenne 7 j";
+  }else if(hrv!==null&&hB!==null&&hrv<hB*0.85){
+    metric="hrv";head="VFC "+hrv+" ms, soit "+r1((hrv/hB-1)*100)+" % vs moyenne 7 j";
+  }else return null;
+  return{metric:metric,text:head+(hasQualityToday()
+    ?" — la séance qualité passe en facile."
+    :" — pas d'intensité ajoutée aujourd'hui, allure basse sur ce qui est prévu.")};
+}
+function weightDrop(mon){
+  const a=weekWeight(mon),b=weekWeight(addDays(mon,-7));
+  if(a===null||b===null)return null;
+  /* Une alerte de perte trop rapide assise sur deux pesées serait du
+     bruit : les deux semaines comparées doivent être pleines. */
+  if(weekWeightN(mon)<3||weekWeightN(addDays(mon,-7))<3)return null;
+  /* Comparaison sur la valeur arrondie affichée : sans ça une baisse de
+     0,7 kg pile déclenche l'alerte « au-delà de 0,7 kg » par flottant. */
+  const d=r1(b-a);
+  return d>0.7?d:null;
+}
+/* ================= Mois ================= */
+const MOISKEY=k=>String(k).slice(0,7);
+/* Horizon du dispositif. Août 2027 existe — c'est l'affûtage et le semi
+   du 28 — mais il s'affiche à la demande : la trajectoire se pilote
+   jusqu'en juillet. */
+const HORIZON="2027-07";
+function monthEnd(m){const a=m.split("-").map(Number);return iso(new Date(a[0],a[1],0));}
+function monthStart(m){return m+"-01";}
+function monthAt(m){for(const x of MONTHS)if(x.m===m)return x;return null;}
+/* Cible en vigueur : le mois courant, ou le dernier connu une fois la
+   période terminée. */
+function currentMonth(){
+  const m=MOISKEY(TODAY),f=monthAt(m);
+  if(f)return f;
+  return TODAY<MONTHS[0].m?MONTHS[0]:MONTHS[MONTHS.length-1];
+}
+function paceAt(k){for(const p of PACES)if(k<=p.until)return p.txt;return PACES[PACES.length-1].txt;}
+
+/* --- Médiane de volume sur 4 semaines pleines ---
+   Une cible de volume ne se juge pas sur un total hebdomadaire : une
+   semaine à 40 km suivie de trois à 15 ne vaut pas 40. La médiane des
+   quatre semaines pleines qui précèdent résiste à ce pic. Une semaine
+   sans donnée compte zéro — c'est une semaine sans course, pas une
+   semaine inconnue. */
+function runMedian4(mon){
+  const v=[];
+  for(let i=1;i<=4;i++)v.push(r1(total(vals(weekDays(addDays(mon,-7*i)),"runKm"))));
+  v.sort((a,b)=>a-b);
+  return r1((v[1]+v[2])/2);
+}
+
+/* --- Valeurs telles qu'elles se lisaient à une date donnée ---
+   Un mois écoulé se juge sur ce qu'il affichait à sa fin, pas sur ce
+   qu'on sait aujourd'hui. */
+/* Agrégats hebdomadaires BORNÉS à une date. La semaine d'un 30 septembre
+   déborde sur octobre : sans cette borne, septembre se jugeait sur des
+   pesées d'octobre — exactement ce que « un mois écoulé se juge sur la
+   valeur atteinte à sa fin » interdit. */
+function weekWeightAt(mon,k){
+  const v=vals(weekDays(mon).filter(d=>d<=k),"weight");
+  return v.length>=WEIGHT_MIN?avg(v):null;
+}
+function weekVo2MaxAt(mon,k){
+  const v=vals(weekDays(mon).filter(d=>d<=k),"vo2");
+  return v.length?Math.max.apply(null,v):null;
+}
+function lastWeeklyAt(fn,k){
+  let m=mondayOf(k);
+  for(let i=0;i<60;i++){const v=fn(m,k);if(v!==null)return v;m=addDays(m,-7);}
+  return null;
+}
+function lastValAt(f,k){
+  const ks=Object.keys(DB.days).filter(x=>x<=k).sort();
+  for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
+  return null;
+}
+function protDaysAt(k){
+  /* La journée en cours est incomplète : la fenêtre s'arrête la veille. */
+  const end=(k>=TODAY)?addDays(TODAY,-1):k;
+  const ks=lastN(end,7);
+  if(!protAny(ks))return null;
+  let c=0;ks.forEach(x=>{if(protG(rd(x))>=PROTEIN)c++;});
+  return c;
+}
+function snapAt(k){
+  const mon=mondayOf(k);
+  return{
+    w:lastWeeklyAt(weekWeightAt,k),
+    waist:lastValAt("waist",k),
+    vol:runMedian4(mon),
+    sleep:avg(vals(lastN(k,7),"sleep")),
+    prot:protDaysAt(k),
+    vo2:lastWeeklyAt(weekVo2MaxAt,k)
+  };
+}
+/* Tour de taille : la cible mensuelle est un écart, la mesure est
+   absolue. Sans mesure de référence, la ligne reste une estimation. */
+function waistTarget(f){
+  const b=num((DB.settings.refs||{}).waistBase);
+  return b===null?null:r1(b+f.waist);
+}
+/* Les sept cibles d'un mois, confrontées aux valeurs d'une date.
+   dir : -1 si l'on vise en dessous, +1 si l'on vise au-dessus. */
+const TGT=[
+  {k:"w",   l:"Poids",          u:"kg",dir:-1,dec:1},
+  {k:"waist",l:"Tour de taille",u:"cm",dir:-1,dec:1},
+  {k:"vol", l:"Volume course",  u:"km",dir:1, dec:1},
+  {k:"sleep",l:"Sommeil",       u:"",  dir:1, dec:2},
+  {k:"prot",l:"Protéines",      u:"j/7",dir:1,dec:0},
+  {k:"vo2", l:"VO2max",         u:"",  dir:1, dec:1}
+];
+function tgtValue(f,t){return t.k==="waist"?waistTarget(f):f[t.k];}
+function fmtTgt(v,t){
+  if(v===null)return"—";
+  return t.k==="sleep"?fmtDur(v):(t.dec?v.toFixed(t.dec===2?1:t.dec):String(v))+(t.u?" "+t.u:"");
+}
+function fmtCur(v,t){
+  if(v===null)return null;
+  return t.k==="sleep"?fmtDur(v):(t.dec?r1(v).toFixed(t.dec===2?1:t.dec):String(v))+(t.u?" "+t.u:"");
+}
+function tgtOk(cur,tv,t){
+  if(cur===null||tv===null)return null;
+  return t.dir<0?cur<=tv:cur>=tv;
+}
+/* Ancienneté du dernier export. null = jamais exporté. Le journal ne
+   vit que dans le stockage de ce navigateur : un effacement de données
+   de site, un téléphone perdu, et il n'en reste rien. */
+function exportAge(){
+  const k=(DB.settings||{}).lastExport;
+  if(!k||!/^\d{4}-\d{2}-\d{2}$/.test(k))return null;
+  return Math.round((parseD(TODAY)-parseD(k))/86400000);
+}
+function exportTxt(){
+  const a=exportAge();
+  if(a===null)return"jamais exporté";
+  return a<=0?"aujourd'hui":a===1?"hier":"il y a "+a+" jours";
+}
+
+/* ================= Régime de la semaine ================= */
+/* Le plan importé propose un régime ; la bascule manuelle le remplace.
+   Une semaine dérape un mardi, pas le dimanche de la revue — sans ce
+   bouton le dispositif à trois régimes ne sert qu'une fois par semaine. */
+function regimeOf(mon){
+  const ov=(DB.settings.regime||{})[mon];
+  if(ov)return ov;
+  const w=weekAt(mon);
+  return (w&&w.regime)||"normale";
+}
+function regimeSet(mon){return !!(DB.settings.regime||{})[mon];}
+/* Séances retenues, avec leur indice d'origine : les cases cochées sont
+   indexées par position dans le plan, masquer une séance ne doit pas
+   décaler celles qui restent. */
+function kept(d){
+  const ss=(d.sessions||[]).map((s,i)=>({s:s,i:i}));
+  return regimeOf(mondayOf(d.d))==="chargee"?ss.filter(x=>x.s.rank==="P1"):ss;
+}
+function cut(d){return (d.sessions||[]).length-kept(d).length;}
+
+/* ================= Séances ================= */
+function sessDone(k,i){const d=rd(k).done||{};return!!(d["s"+i]||d["s"+i+"f"]);}
+function dayUnits(d){return kept(d).length+(d.fascia?1:0);}
+function dayDone(k,d){
+  let n=0;kept(d).forEach(x=>{if(sessDone(k,x.i))n++;});
+  if(d.fascia&&(rd(k).done||{}).fascia)n++;
+  return n;
+}
+function p1Week(mon){
+  const w=weekAt(mon);let done=0,planned=0;
+  if(w)(w.days||[]).forEach(d=>(d.sessions||[]).forEach((s,i)=>{
+    if(s.rank!=="P1")return;planned++;if(sessDone(d.d,i))done++;}));
+  return{done:done,planned:planned};
+}
+function nextDayHasKey(k){
+  const d=dayOf(addDays(k,1));
+  return!!(d&&(d.sessions||[]).some(s=>s.rank==="P1"||s.rank==="P2"));
+}
+
+/* ================= Rendu : fond et jauges ================= */
+function bg(){
+  let s="";for(let i=0;i<9;i++){const y=40+i*78;
+    s+='<path d="M-20 '+y+' C 90 '+(y-34)+', 200 '+(y+40)+', 320 '+(y-12)+' S 540 '+(y+30)+', 700 '+(y-20)+'" fill="none" stroke="#DCE6EB" stroke-width="1"/>';}
+  document.getElementById("bg").innerHTML=s;
+}
+function gauge(frac,val,sub,lab,col,title){
+  const C=2*Math.PI*19,on=C*Math.max(0,Math.min(1,frac||0));
+  return'<div class="gauge" title="'+esc(title)+'"><svg class="ring" viewBox="0 0 44 44" aria-hidden="true">'+
+    '<circle cx="22" cy="22" r="19" fill="none" style="stroke:var(--edge)" stroke-width="4"/>'+
+    (on>0?'<circle cx="22" cy="22" r="19" fill="none" style="stroke:'+col+'" stroke-width="4" stroke-linecap="round" stroke-dasharray="'+on.toFixed(2)+' '+(C-on).toFixed(2)+'"/>':'')+
+    '</svg><div><div class="g-val">'+val+(sub?'<span class="g-sub">'+sub+'</span>':'')+'</div><div class="g-lab">'+lab+'</div></div></div>';
+}
+const dash='<span class="g-sub">—</span>';
+
+/* ================= Rendu principal ================= */
+let open=null, tab="today";
+const TABS=[["today","Aujourd'hui"],["plan","Plan"],["log","Journal"],["revue","Revue"],["goals","Cibles"]];
+
+function render(){
+  renderHeader();
+  renderTabs();
+  renderView();
+  setSave(stale||(memOnly?"Stockage indisponible":"Enregistré"));
+}
+
+/* Saisie d'un champ : seul l'en-tête est reconstruit. Reconstruire la
+   liste détruirait l'input en cours et refermerait le clavier entre
+   chaque valeur.
+   Reste la pastille 4+, qui porte le nombre réel saisi à côté d'elle.
+   Sans ce rafraîchissement ciblé elle restait figée jusqu'au prochain
+   rendu complet — c'est-à-dire jamais, pendant une saisie. */
+function refreshLive(){renderHeader();refreshBits();}
+function refreshBits(){
+  const els=document.querySelectorAll("[data-live]");
+  for(let i=0;i<els.length;i++){
+    const el=els[i],a=el.dataset.live.split("|"),e=rd(a[1]);
+    if(a[0]==="al"){
+      const v=e.alcohol,big=(typeof v==="number"&&v>=4);
+      el.textContent=big?v:"4+";
+      el.dataset.on=big?1:0;
+    }
+  }
+}
+
+function renderHeader(){
+  const mon=mondayOf(TODAY),f=currentMonth();
+  const wk=weekWeight(mon)!==null?weekWeight(mon):lastWeekly(weekWeight);
+  const wa=weekWaist(mon)!==null?weekWaist(mon):lastWeekly(weekWaist);
+  const vo=weekVo2Max(mon)!==null?weekVo2Max(mon):lastWeekly(weekVo2Max);
+  const sl7=avg(vals(lastN(TODAY,7),"sleep"));
+  const w0=firstWeekWeight(),wb=num((DB.settings.refs||{}).waistBase),v0=firstVo2();
+  const wT=f.w,waT=waistTarget(f),slT=f.sleep,voT=f.vo2;
+
+  document.getElementById("eyebrow").textContent="";
+
+  /* Les quatre jauges visent la cible DU MOIS, pas une échéance
+     trimestrielle : c'est l'écart du moment qui se pilote. */
+  /* 1 · poids moyen hebdo — origine : première moyenne connue. */
+  const wFrac=(wk===null||w0===null||w0<=wT)?0:(w0-wk)/(w0-wT);
+  /* 2 · tour de taille — origine : mesure de référence. */
+  const wtFrac=(wa===null||wb===null||waT===null||wb<=waT)?0:(wb-wa)/(wb-waT);
+  /* 3 · sommeil moyen 7 j — vide à 5 h, plein à la cible du mois. */
+  const bFrac=(sl7===null||slT<=SLEEP_LOW)?0:(sl7-SLEEP_LOW)/(slT-SLEEP_LOW);
+  /* 4 · VO2max maxi hebdo — origine : premier relevé enregistré. */
+  const vFrac=(vo===null||v0===null||v0>=voT)?0:(vo-v0)/(voT-v0);
+
+  const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
+  const MOISC=MOIS[+f.m.slice(5,7)-1];
+
+  document.getElementById("prog").innerHTML=
+    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+wT.toFixed(1),
+      wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":(wkN===2?"poids moy. partiel":"poids moy."),"var(--depth)",
+      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées, cible "+MOISC+" "+wT.toFixed(1))+
+    gauge(wtFrac,wa===null?dash:wa.toFixed(1),(wa===null||waT===null)?"":"/"+waT.toFixed(1),
+      wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
+      wa===null?"Premier tour de taille prévu le "+MEASURE_START
+        :(waT===null?"Mesure de référence manquante dans Références"
+          :"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+MOISC+" "+waT.toFixed(1)))+
+    gauge(bFrac,sl7===null?dash:fmtDur(sl7),sl7===null?"":"/"+fmtDur(slT),"sommeil moy.","var(--brass)",
+      sl7===null?"Aucune durée de sommeil saisie":"Moyenne sur 7 jours "+fmtDur(sl7)+", cible "+MOISC+" "+fmtDur(slT))+
+    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+voT,"vo2max hebdo","var(--k-run)",
+      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+MOISC+" "+voT);
+
+  const B=[];
+  if(stale)B.push(["warn",stale]);
+  const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
+  if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
+  if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+"."]);
+  /* Un relèvement du plafond dur ne doit jamais être silencieux : le
+     bandeau nomme la valeur en vigueur, pas une constante supposée. */
+  if(cap.clamped)B.push(["warn","Plan à "+cap.planned+" km — ramené au plafond dur de "+cap.max+" km."]);
+  if(over)B.push(["warn","Cumul course "+runKm+" km — plafond de "+cap.cap+" km dépassé."]);
+  const rec=recovery(); if(rec)B.push(["warn",rec.text]);
+  const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
+  const dw=drinksIn(weekDays(mon));
+  if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
+  const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
+  const xa=exportAge();
+  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur. Cibles › Exporter les données."]);
+  else if(xa!==null&&xa>EXPORT_MAX)B.push(["warn","Dernière sauvegarde "+exportTxt()+" — au-delà de "+EXPORT_MAX+" jours, un effacement coûterait tout ce qui a suivi."]);
+  document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+'">'+esc(b[1])+'</div>').join("");
+}
+
+function reviewDue(){const d=parseD(TODAY).getDay();return d===6||d===0;}
+function renderTabs(){
+  document.getElementById("tabs").innerHTML=TABS.map(t=>
+    '<button class="tab '+(tab===t[0]?"on":"")+'" data-tab="'+t[0]+'">'+esc(t[1])+
+    (t[0]==="today"&&reviewDue()?'<span class="dot"></span>':"")+'</button>').join("");
+}
+
+function renderView(){
+  const v=document.getElementById("view");
+  if(tab==="today")v.innerHTML=viewToday();
+  else if(tab==="plan")v.innerHTML=viewPlan();
+  else if(tab==="log")v.innerHTML=viewLog();
+  else if(tab==="revue")v.innerHTML=viewRevue();
+  else v.innerHTML='<section class="panel" id="targets"></section><section class="panel" id="refs"></section><section class="panel" id="tools"></section>';
+  if(tab==="goals"){renderTargets();renderRefs();renderTools();}
+}
+
+/* --- Onglet Aujourd'hui : la journée en cours, dépliée, puis la revue. --- */
+function viewToday(){
+  const d=dayOf(TODAY);
+  const prev=open; open=TODAY;
+  let h='<div class="route" style="margin-top:22px"><div class="line"></div>';
+  h+= dayCard(d||{d:TODAY,fascia:false,sessions:[]},weekOf(TODAY));
+  h+='</div>';
+  open=prev;
+  /* Observance P1 et volume course : les deux chiffres consultés tous les
+     jours. p1Week() était calculé pour l'export sans jamais être montré. */
+  const mon=mondayOf(TODAY),p1=p1Week(mon),c=capFor(mon);
+  h+='<div class="meta obs">P1 de la semaine · '+p1.done+'/'+p1.planned+
+     ' · course '+weekRun(mon)+'/'+c.cap+' km</div>';
+  /* La revue dominicale a son onglet : elle commence par le dépôt du zip,
+     et l'écran du jour tient en moins de trente secondes. */
+  if(reviewDue())h+='<div class="banner info">Revue dominicale — onglet Revue.</div>';
+  return h;
+}
+
+/* --- Onglet Revue : le dépôt du zip, et ce qu'il a produit. ---
+   Un seul bouton. Le même sert au zip de la semaine et à l'amorçage de
+   plusieurs zips d'un coup : deux boutons auraient créé deux modes, et
+   l'un des deux aurait été le mauvais un dimanche sur deux. */
+let impRes=null,impBusy=false;
+function lastDigest(){const L=DB.imports||[];return L.length?L[L.length-1]:null;}
+function daysSince(k){return isDate(k)?Math.round((parseD(TODAY)-parseD(k))/86400000):null;}
+/* Dernière date portant une mesure, tous imports confondus. Sert aux
+   rappels : une tension d'il y a six semaines n'est pas une tension. */
+function lastDateWith(f){
+  const ks=Object.keys(DB.days).sort();
+  for(let i=ks.length-1;i>=0;i--)if(num(DB.days[ks[i]][f])!==null)return ks[i];
+  return null;
+}
+const CHARGE=["très calme","calme","normale","dense","très dense"];
+function viewRevue(){
+  const d=lastDigest();
+  let h='<section class="panel imp"><h2>Revue</h2>'+
+    '<p class="panel-sub">Le zip Health Auto Export est la seule source des mesures. '+
+    'Dépose celui de la semaine, ou plusieurs d\'un coup pour rattraper l\'historique.</p>';
+  if(!zipSupported())
+    h+='<div class="banner warn">Ce navigateur ne sait pas décompresser le zip (DecompressionStream absent). '+
+       'Safari 16.4 ou plus récent, ou Chrome, sont nécessaires.</div>';
+  h+='<button class="big" id="impBtn"'+(impBusy?' disabled':'')+'>'+
+     (impBusy?"Lecture en cours…":"Import Health & Sport")+'</button>'+
+     '<input type="file" id="impFile" multiple accept=".zip,application/zip,application/octet-stream" hidden>';
+
+  if(impRes){
+    const r=impRes;
+    if(r.fichiers)h+='<div class="banner info">'+
+      esc(r.fichiers+" fichier"+(r.fichiers>1?"s":"")+" lu"+(r.fichiers>1?"s":"")+" · "+
+          dm(r.du)+" → "+dm(r.au)+" · "+r.jours+" jour"+(r.jours>1?"s":"")+
+          " ajouté"+(r.jours>1?"s":"")+" ou mis à jour · "+r.seances+" séance"+(r.seances>1?"s":""))+'</div>';
+    r.erreurs.forEach(x=>{h+='<div class="banner warn">'+esc(x)+'</div>';});
+  }
+
+  /* Date de la dernière revue, alerte au-delà de dix jours. */
+  const age=d?daysSince(d.importe):null;
+  if(d)h+='<div class="meta">Dernier import : '+esc(dm(d.importe))+
+     (age===null?"":age===0?" · aujourd'hui":age===1?" · hier":" · il y a "+age+" jours")+'</div>';
+  if(age!==null&&age>REVUE_MAX)
+    h+='<div class="banner warn">Dernier import il y a '+age+' jours — au-delà de '+REVUE_MAX+
+       ', la revue porte sur des données périmées.</div>';
+  if(!d)h+='<p class="empty">Aucun import. Les mesures affichées ailleurs dans l\'app resteront vides.</p>';
+  h+='</section>';
+
+  if(d){
+    const s=d.semaine||{},du=d.semaineDu;
+    h+='<section class="panel"><div class="meta">Semaine mesurée · '+esc(dm(du))+' → '+esc(dm(d.au))+'</div>';
+    h+='<div class="mtgt">';
+    const row=(lab,v,unit)=>'<div class="mrow"><span class="mlab">'+esc(lab)+'</span>'+
+      '<span class="mline">'+(v===null||v===undefined?'<span class="dim">—</span>':'<b>'+esc(String(v))+'</b>'+(unit?' '+esc(unit):''))+'</span></div>';
+    h+=row("Poids moyen",s.poidsMoy,"kg");
+    h+=row("Masse grasse",s.mgKgMoy===null||s.mgKgMoy===undefined?null:s.mgKgMoy+" kg ("+s.mgPctMoy+" %)","");
+    h+=row("FC repos",s.fcReposMoy,"bpm");
+    h+=row("VFC",s.vfcMoy,"ms");
+    h+=row("Sommeil",s.sommeilMoyH===null||s.sommeilMoyH===undefined?null:fmtDur(s.sommeilMoyH)+" · "+s.nuits7h+" nuit"+(s.nuits7h>1?"s":"")+" d'au moins 7 h","");
+    h+=row("Pas",s.pasMoy===null||s.pasMoy===undefined?null:milliers(s.pasMoy),"par jour");
+    h+=row("Séances",s.nbSeances===null?null:s.nbSeances+" · "+s.minTotal+" min","");
+    h+=row("Course",s.kmCourse,"km");
+    h+=row("Vélo",s.kmVelo,"km");
+    h+=row("VO2max",s.vo2Max,"ml/kg/min");
+    h+='</div>';
+    /* Le manquant se dit en clair : une colonne vide est une mesure non
+       prise, jamais une panne. */
+    if((d.manquant||[]).length)
+      h+='<div class="banner info">Non mesuré cette semaine : '+esc((d.manquant||[]).map(x=>MANQ[x]||x).join(", "))+'.</div>';
+    const tS=lastDateWith("sys"),tW=lastDateWith("waist");
+    const aS=tS?daysSince(tS):null,aW=tW?daysSince(tW):null;
+    if(aS===null||aS>TENSION_MAX)
+      h+='<div class="banner warn">Tension : '+(tS?"dernière mesure le "+dm(tS)+", il y a "+aS+" jours":"aucune mesure enregistrée")+
+         '. Une prise au BPM Core la fera remonter dans le prochain zip.</div>';
+    if(aW===null||aW>WAIST_MAX)
+      h+='<div class="banner warn">Tour de taille : '+(tW?"dernière mesure le "+dm(tW)+", il y a "+aW+" jours":"aucune mesure enregistrée")+
+         '. Il se saisit à la main dans l\'app Santé, hors de Pimperel.</div>';
+    /* Charge professionnelle : un tap, non bloquant. Ignorée, elle reste
+       inconnue — pas « normale ». */
+    const cv=DB.charge[du];
+    h+='<div class="log-row col"><span class="log-lab">Charge professionnelle de la semaine'+
+       '<span class="hint">'+(cv?esc(CHARGE[cv-1]):"non renseignée — facultatif")+'</span></span><div class="pills">';
+    for(let i=1;i<=5;i++)h+='<button class="pill" data-ch="'+esc(du)+'|'+i+'" data-on="'+(cv===i?1:0)+'">'+i+'</button>';
+    h+='</div></div>';
+    h+='</section>';
+
+    /* Les séances de la semaine, telles que la montre les a vues. */
+    const S=weekSeances(d);
+    if(S.length){
+      h+='<section class="panel"><div class="meta">Séances</div><div class="jbox">';
+      S.forEach(x=>{h+='<div class="srow"><span class="jd">'+esc(fmt(x.date).dow+" ")+'<b>'+esc(fmt(x.date).num)+'</b></span>'+
+        '<span class="js">'+esc(seanceTxt(x))+'</span></div>';});
+      h+='</div></section>';
+    }
+  }
+
+  h+='<section class="review">'+
+    '<div class="review-t">Revue dominicale</div>'+
+    '<div class="review-d">'+(reviewDue()
+      ? "À faire : importer le zip ci-dessus, exporter, coller dans la session coach, puis importer le plan de 2 semaines qu'elle produit."
+      : "Chaque dimanche soir. L'export est la seule source de données de la revue — l'app ne lit aucun service de santé.")+'</div>'+
+    '<button class="big" id="rev">Exporter la revue</button></section>';
+  return h;
+}
+const MANQ={tension:"tension",tourDeTaille:"tour de taille",poids:"poids"};
+const REVUE_MAX=10, TENSION_MAX=30, WAIST_MAX=21;
+/* Une séance en une ligne : ce que la montre a vu, sans interprétation. */
+function seanceTxt(x){
+  const b=[];
+  if(x.km)b.push(x.km+" km");
+  if(x.dureeSec)b.push(fmtHMS(x.dureeSec));
+  if(x.allure)b.push(x.allure+"/km");
+  if(x.denivele)b.push(x.denivele+" m D+");
+  if(x.fcMoy)b.push("FC "+x.fcMoy);
+  if(x.kcal)b.push(x.kcal+" kcal");
+  if(x.pctHorsZoneHaut!==null&&x.pctHorsZoneHaut!==undefined)b.push(x.pctHorsZoneHaut+" % hors zone");
+  return (KINDLAB[x.kind]||x.kind)+" · "+(b.length?b.join(" · "):"durée inconnue");
+}
+const KINDLAB={course:"Course",vtt:"Vélo",salle:"Salle",rando:"Randonnée",marche:"Marche",natation:"Natation",autre:"Autre"};
+/* 1 h 09:44 plutôt que 69,73 min : une durée de séance se lit ainsi. */
+function fmtHMS(sec){
+  const H=Math.floor(sec/3600),M=Math.floor(sec%3600/60),S=Math.round(sec%60);
+  return (H?H+" h "+pad(M):M+" min ")+(H?":"+pad(S):pad(S)+" s");
+}
+
+/* --- Onglet Plan : les semaines chargées, comme avant. --- */
+function viewPlan(){
+  const ap=activePlan();
+  let html="";
+  ap.weeks.forEach(w=>{
+    const c=capFor(w.start),ks=weekDays(w.start);
+    const vol=[["runKm","couru"],["hikeKm","rando"],["swimKm","nagé"],["bikeKm","vélo"],["kayakKm","kayak"]]
+      .map(o=>{const t=r1(total(vals(ks,o[0])));return t>0?t+" "+o[1]:null;}).filter(Boolean);
+    const rg=regimeOf(w.start);
+    html+='<div class="week"><span class="week-name">Semaine du '+fmt(w.start).num+'</span>'+
+      '<button class="reg'+(rg==="chargee"?" hot":"")+(regimeSet(w.start)?" man":"")+'" data-reg="'+w.start+'">'+esc(REGIME[rg]||rg)+'</button>'+
+      '<span class="week-sub">'+(c.cap!==null?"plafond "+c.cap+" km":"")+
+      (vol.length?(c.cap!==null?" · ":"")+vol.join(" · "):"")+'</span><span class="rule"></span></div>';
+    /* Un régime sans effet visible n'est qu'un libellé : la bascule dit
+       ce qu'elle engage. Vacances ne filtre rien — c'est une fenêtre de
+       surcharge, pas un allègement. */
+    if(rg==="vacances")html+='<div class="week-note">Fenêtre de surcharge. Le volume additionnel passe par le VTT, la natation, la randonnée. La course reste plafonnée.</div>';
+    else if(rg==="chargee")html+='<div class="week-note">Seules les P1 tiennent. Une semaine allégée n\'est pas une semaine perdue.</div>';
+    html+='<div class="route"><div class="line"></div>';
+    (w.days||[]).forEach(d=>{html+=dayCard(d,w);});
+    html+='</div>';
+  });
+  return html;
+}
+
+/* --- Onglet Journal : tous les jours connus, empilés par mois.
+   L'horizon s'arrête au dernier jour du plan chargé : au-delà il n'y a
+   ni séance ni saisie possible, des cartes vides jusqu'en 2027
+   n'apporteraient rien. --- */
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+/* Abréviations sans ambiguïté : tronquer à trois lettres donnait « jui »
+   pour juin comme pour juillet, sur le même axe. */
+const MOIS3=["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"];
+const mois3=m=>MOIS3[+String(m).slice(5,7)-1];
+function logRange(){
+  const ks=Object.keys(DB.days).sort(),ap=activePlan(),pd=[];
+  ap.weeks.forEach(w=>(w.days||[]).forEach(x=>pd.push(x.d)));
+  const all=ks.concat(pd).concat([TODAY]).sort();
+  return{from:all[0],to:all[all.length-1]};
+}
+function viewLog(){
+  const R=logRange();
+  if(!R.from)return'<p class="empty">Aucun jour enregistré.</p>';
+  const months={},order=[];
+  for(let k=R.from;k<=R.to;k=addDays(k,1)){
+    const mk=k.slice(0,7);
+    if(!months[mk]){months[mk]=[];order.push(mk);}
+    months[mk].push(k);
+  }
+  let h="";
+  order.forEach(mk=>{
+    const ks=months[mk],y=mk.slice(0,4),mi=+mk.slice(5,7)-1;
+    let km=0,done=0,tot=0;
+    ks.forEach(k=>{const e=DB.days[k];if(e){const r=num(e.runKm);if(r!==null)km+=r;}
+      const d=dayOf(k);if(d){tot+=dayUnits(d);done+=dayDone(k,d);}});
+    h+='<div class="mo"><span class="mo-name">'+MOIS[mi]+' '+y+'</span>'+
+       '<span class="mo-sub">'+(km>0?r1(km)+" km courus":"—")+(tot?" · "+done+"/"+tot:"")+'</span><span class="rule"></span></div>';
+    h+='<div class="jbox">';
+    ks.forEach(k=>{h+=logRow(k);});
+    h+='</div>';
+  });
+  return h;
+}
+function logRow(k){
+  const e=DB.days[k],d=dayOf(k),f=fmt(k);
+  const bits=[];
+  if(e){
+    if(num(e.runKm)!==null)bits.push(e.runKm+" km");
+    OTHER_KM.forEach(o=>{if(num(e[o[0]])!==null)bits.push(e[o[0]]+" "+o[1].toLowerCase().replace("km ",""));});
+    if(num(e.weight)!==null)bits.push(e.weight+" kg");
+    if(num(e.vo2)!==null)bits.push("vo2 "+e.vo2);
+  }
+  let lab=bits.join(" · ");
+  if(!lab&&d&&(d.sessions||[]).length)lab=(d.sessions||[]).map(s=>s.label).join(" · ");
+  if(!lab)lab="—";
+  let chip="";
+  if(d&&dayUnits(d)){const u=dayUnits(d),n=dayDone(k,d);chip='<span class="jm '+(n===u?"full":"")+'">'+n+'/'+u+'</span>';}
+  let h='<button class="jrow '+(k===TODAY?"today":"")+(open===k?" on":"")+'" data-open="'+k+'">'+
+    '<span class="jd">'+f.dow+' <b>'+f.num+'</b></span><span class="js">'+esc(lab)+'</span>'+chip+'</button>';
+  /* Le journal déplie sur place, y compris les jours hors plan : ils
+     n'existent nulle part ailleurs, un tapotement sans effet était une
+     impasse. */
+  if(open===k)h+=dayDetail(d||{d:k,fascia:false,sessions:[]},"jdet");
+  return h;
+}
+
+function dayCard(d,w){
+  const k=d.d,u=dayUnits(d),dn=dayDone(k,d),f=fmt(k);
+  const isT=k===TODAY,isO=open===k,full=u>0&&dn===u;
+  const parts=kept(d).map(x=>x.s.label);
+  if(d.fascia)parts.push("fascia");
+  const sum=parts.length?parts.join(" · "):"repos";
+  let h='<div class="day"><span class="node '+(isT?"now":full?"done":"")+'"></span><div class="card '+(isT?"now":"")+'">'+
+    '<button class="card-head" data-open="'+k+'"><div class="card-top"><span class="date">'+f.dow+' <b>'+f.num+'</b></span>'+
+    '<span class="sum">'+esc(sum)+'</span>'+(u?'<span class="count '+(full?"full":"")+'">'+dn+'/'+u+'</span>':'')+'</div></button>';
+  if(!isO)return h+'</div></div>';
+  return h+dayDetail(d)+'</div></div>';
+}
+/* Corps déplié d'une journée : séances puis saisie. Isolé du bandeau
+   pour que le journal puisse déplier un jour sur place, sans la
+   chronologie du plan autour. */
+function dayDetail(d,extra){
+  const k=d.d,e=rd(k);
+  let h='<div class="detail '+(extra||"")+'">';
+  /* Le 30/08 est la bascule : premières mesures et première revue. */
+  if(k===MEASURE_START)h+='<div class="pivot">Mesures de référence + première revue dominicale</div>';
+  /* La règle de récupération lit les valeurs du jour même : elle ne
+     requalifie que la séance qualité d'aujourd'hui, pas celles à venir.
+     C'est le type qui porte l'intensité, pas le rang : une P2 de salle
+     n'est pas la séance dure, et la convertir laissait le fractionné
+     intact — l'inverse exact de ce que le bandeau annonce. */
+  const conv=(k===TODAY)&&recovery();
+  kept(d).forEach(x=>{
+    const s=x.s,i=x.i;
+    const on=!!e.done["s"+i],onF=!!e.done["s"+i+"f"],altOpen=e.done["alt"+i];
+    const kd=KIND[s.kind]||{t:String(s.kind||"SÉANCE").toUpperCase(),c:"var(--fog)"};
+    const converted=conv&&s.kind==="qualite";
+    h+='<div class="sess"><div class="sess-head">'+
+      '<button class="box" data-t="'+k+'|s'+i+'" data-on="'+(on?1:0)+'">'+(on?chk(15):"")+'</button>'+
+      '<div style="flex:1;min-width:0"><div class="tags"><span class="rank '+(s.rank==="P1"?"p1":"")+'">'+esc(s.rank||"P3")+'</span>'+
+      '<span class="tag" style="color:'+kd.c+'">'+esc(kd.t)+'</span></div>'+
+      '<div class="sess-lab '+((on||onF)?"off":"")+'">'+esc(s.label||"")+'</div>'+
+      (s.detail?'<div class="cue">'+esc(s.detail)+'</div>':"")+
+      (converted?'<div class="conv">convertie en facile — récupération</div>':"")+
+      (s.fallback?'<button class="alt" data-alt="'+k+'|'+i+'">'+(altOpen?"Masquer":"Version dégradée")+'</button>':"")+
+      (s.fallback&&altOpen?'<div class="fallback"><button class="box sm" data-t="'+k+'|s'+i+'f" data-on="'+(onF?1:0)+'">'+(onF?chk(13):"")+'</button><div class="fb-t">'+esc(s.fallback)+'</div></div>':"")+
+      '</div></div></div>';
+  });
+  if(d.fascia){
+    const fo=!!e.done.fascia;
+    h+='<div class="sess"><div class="sess-head"><button class="box" data-t="'+k+'|fascia" data-on="'+(fo?1:0)+'">'+(fo?chk(15):"")+'</button>'+
+      '<div style="flex:1;min-width:0"><div class="tags"><span class="rank">FASCIA</span></div>'+
+      '<div class="sess-lab '+(fo?"off":"")+'">Bloc fascia</div><div class="cue">'+esc(FASCIA)+'</div></div></div></div>';
+  }
+  const nCut=cut(d);
+  if(nCut)h+='<p class="empty">'+nCut+' séance'+(nCut>1?"s":"")+' écartée'+(nCut>1?"s":"")+' — semaine chargée, seules les P1 tiennent.</p>';
+  /* « Rien de prévu » ne se dit que si rien n'a été fait non plus : le
+     jour où la montre a vu deux séances, la phrase était un contresens. */
+  if(!kept(d).length&&!d.fascia&&!nCut&&!seancesAt(k).length)
+    h+='<p class="empty">Rien de prévu. Une séance manquée ne se rattrape pas.</p>';
+
+  /* --- saisie quotidienne (§9.3) ---
+     Cinq éléments, et rien d'autre : tout ce que le zip mesure a été
+     retiré du formulaire. Budget de trente secondes par jour, dont vingt
+     pour le menu ; chaque champ ajouté ici se paie sur ce budget. */
+  h+='<div class="log">';
+  /* 1 · alcool. Un tap, défaut zéro. La pastille 4+ ouvre un champ libre :
+     sur deux à trois dîners d'affaires par semaine, c'est le seul chiffre
+     qui compte qu'on sous-estimait. */
+  const al=e.alcohol,alBig=(typeof al==="number"&&al>=4);
+  h+='<div class="log-row"><span class="log-lab">Verres d\'alcool'+(nextDayHasKey(k)&&typeof al==="number"&&al>0?'<span class="hint warn">Séance P1 ou P2 demain.</span>':'')+'</span><div class="pills">';
+  [0,1,2,3].forEach(n=>{h+='<button class="pill" data-a="'+k+'|'+n+'" data-on="'+(al===n?1:0)+'" data-over="'+(n>=3?1:0)+'">'+n+'</button>';});
+  h+='<button class="pill" data-a="'+k+'|4" data-live="al|'+k+'" data-on="'+(alBig?1:0)+'" data-over="1">'+(alBig?al:"4+")+'</button>';
+  if(alBig)h+='<input class="alx" type="number" min="4" step="1" inputmode="numeric" value="'+al+'" data-n="'+k+'|alcohol">';
+  h+='</div></div>';
+  /* 2 · menu, en clair. Aucun gramme imposé, aucun compteur affiché :
+     ce champ répond à une seule question, posée une fois par semaine —
+     l'apport est-il à 2 000 kcal ou au-dessus. */
+  h+='<div class="log-row col"><span class="log-lab">Menu du jour<span class="hint">En clair, sans peser. Estimé une fois par semaine, jamais compté ici.</span></span>'+
+     '<textarea class="menu" rows="2" placeholder="skyr + whey, salade de bœuf, amandes, poulet + légumes…" data-f="'+k+'|menu">'+esc(e.menu||"")+'</textarea></div>';
+  /* 3 · protocole tendineux réellement fait. « fasciaFait » et non
+     « fascia » : le second dit ce que le plan prescrit ce jour-là, et
+     cocher la prescription à la place de la réalisation ferait mentir les
+     deux. */
+  const ff=!!e.fasciaFait;
+  h+='<div class="log-row"><span class="log-lab">Protocole tendineux<span class="hint">Talon, mollets. Fait aujourd\'hui.</span></span>'+
+     '<button class="box" data-ff="'+k+'" data-on="'+(ff?1:0)+'">'+(ff?chk(15):"")+'</button></div>';
+  /* 4 · heure de coucher. Le zip donne une durée de sommeil, jamais une
+     heure d'endormissement : sans cette saisie, « avant 23h30 quatre
+     soirs sur sept » ne s'évalue pas. */
+  h+='<div class="log-row"><span class="log-lab">Heure de coucher<span class="hint">Cible avant '+fmtMin(BED_LIMIT)+'.</span></span>'+
+     '<input type="time" value="'+esc(e.bedTime||"")+'" data-f="'+k+'|bedTime"><span class="unit"></span></div>';
+  /* 5 · commentaire de séance, les jours de salle seulement, replié.
+     C'est la seule source restante du second signal d'arrêt du déficit :
+     un commentaire non vide vaut alerte, son absence vaut séance tenue. */
+  if(hasSalle(d)){
+    const sn=e.seanceNote||"",snOpen=!!e.done["sn"]||!!sn;
+    h+='<div class="log-row col"><span class="log-lab">Séance de salle'+
+       '<span class="hint">Vide = tenue comme prévue.</span></span>';
+    if(snOpen)h+='<textarea class="menu" rows="2" placeholder="charges, douleur, séance écourtée…" data-f="'+k+'|seanceNote">'+esc(sn)+'</textarea>';
+    else h+='<button class="lnk" data-sn="'+k+'">ajouter un commentaire</button>';
+    h+='</div>';
+  }
+  /* Exception : le talon ne s'ouvre que si on le demande. Un champ vide
+     tous les jours finit par se remplir de « rien à signaler ». */
+  const tl=e.talon||"",tlOpen=!!e.done["tl"]||!!tl;
+  h+='<div class="log-row col">';
+  if(tlOpen)h+='<span class="log-lab">Talon<span class="hint">Vide = pas de problème.</span></span>'+
+     '<textarea class="menu" rows="2" placeholder="gêne au réveil, douleur en fin de sortie…" data-f="'+k+'|talon">'+esc(tl)+'</textarea>';
+  /* Le lien se nomme : deux « signaler quelque chose » l'un sous l'autre
+     ne disaient pas lequel parlait du talon. */
+  else h+='<button class="lnk" data-tl="'+k+'">signaler une gêne au talon</button>';
+  h+='</div>';
+  h+='</div>';        /* .log */
+  h+=mesureBlock(k);
+  h+='</div>';        /* .detail */
+  return h;
+}
+/* Les jours de salle portent le commentaire d'exception. Le type de
+   séance vient du plan ; à défaut, une séance de salle importée. */
+function hasSalle(d){
+  if(kept(d).some(x=>x.s.kind==="force"||/salle|force/i.test(x.s.label||"")))return true;
+  return seancesAt(d.d).some(s=>s.kind==="salle");
+}
+/* Mesures : lecture seule, et la source est nommée. Rien de ce bloc ne
+   se saisit — tout vient du zip Apple Santé. */
+/* Un millier se lit avec une espace : 16 927, pas 16927. Espace fine
+   insécable, pour que le nombre ne se coupe pas en fin de ligne. */
+function milliers(v){return String(v).replace(/\B(?=(\d{3})+(?!\d))/g,"\u202f");}
+const MESURE_VUE=[
+  ["weight","Poids","kg"],["mg","Masse grasse",""],
+  ["maigre","Masse maigre","kg"],["waist","Tour de taille","cm"],
+  ["rhr","FC repos","bpm"],["hrv","VFC","ms"],["vo2","VO2max","ml/kg/min"],
+  ["sleep","Sommeil",""],["pas","Pas",""],["kcalActives","Énergie active","kcal"],
+  ["sys","Tension systolique","mmHg"],["dia","Tension diastolique","mmHg"]
+];
+function mesureBlock(k){
+  const e=rd(k),S=seancesAt(k),dg=digestAt(k);
+  const rows=MESURE_VUE.map(m=>{
+    let val;
+    if(m[0]==="mg"){
+      /* Les kilogrammes et le pourcentage disent la même mesure : deux
+         lignes du même nom se liraient comme deux mesures distinctes. */
+      const kg=num(e.mgKg),pc=num(e.mgPct);
+      if(kg===null&&pc===null)return "";
+      val=(kg===null?"":kg+" kg")+(kg!==null&&pc!==null?" · ":"")+(pc===null?"":pc+" %");
+    }else{
+      const v=num(e[m[0]]);
+      if(v===null)return "";
+      val=m[0]==="sleep"?fmtDur(v):(m[0]==="pas"||m[0]==="kcalActives")?milliers(e[m[0]]):String(e[m[0]]);
+    }
+    return'<div class="log-row"><span class="log-lab">'+esc(m[1])+'</span><span class="ro">'+
+      esc(val)+(m[2]?' <span class="unit">'+esc(m[2])+'</span>':'')+'</span></div>';
+  }).filter(Boolean);
+  if(!rows.length&&!S.length)return "";
+  let h='<div class="mes"><div class="mes-t">Mesuré — Apple Santé'+
+    (dg&&isDate(dg.importe)?', import du '+esc(dm(dg.importe)):'')+'</div><div class="log">';
+  /* Une séance tient sur plusieurs lignes : alignée à droite comme une
+     valeur, elle sortait en escalier. Elle a sa propre ligne. */
+  S.forEach(s=>{h+='<div class="log-row seance"><span class="log-lab">'+esc(s.debut)+'</span>'+
+    '<span class="ro">'+esc(seanceTxt(s))+'</span></div>';});
+  h+=rows.join("")+'</div></div>';
+  return h;
+}
+
+/* Les journées « figées » des versions antérieures n'existent plus :
+   une journée importée est une journée comme une autre, dont les mesures
+   viennent du zip et dont les cinq champs déclaratifs restent saisissables.
+   Le drapeau frozen subsiste sans effet dans les bases anciennes. */
+function chk(s){return'<svg width="'+s+'" height="'+s+'" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.4 6.4 11.2 12.5 4.9" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
+
+/* ================= Panneau Cibles (§7.2) ================= */
+/* st(v,ok) : ✓ atteint · → échéance à venir · ✗ échéance passée et non
+   atteinte · — donnée manquante (la ligne est alors une estimation). */
+function st(ok,mileD){
+  if(ok===null)return'<span class="t-st dim">—</span>';
+  if(ok)return'<span class="t-st ok">✓</span>';
+  return TODAY>mileD?'<span class="t-st warn">✗</span>':'<span class="t-st dim">→</span>';
+}
+/* Les valeurs sont recalculées ici : le panneau est rendu à la demande,
+   quand on ouvre son onglet, et non plus dans la foulée de l'en-tête. */
+/* Fenêtre du tableau mensuel : mois en cours −1 à +3. Treize colonnes ne
+   tiennent pas sur un téléphone, et les mois lointains ne se pilotent
+   pas. Le bouton « Tous les mois » lève la fenêtre. */
+let allMonths=false;
+function monthIdx(){
+  const c=MOISKEY(TODAY);
+  const i=MONTHS.findIndex(x=>x.m===c);
+  return i>=0?i:(TODAY<MONTHS[0].m?0:MONTHS.length-1);
+}
+function monthWindow(){
+  if(allMonths)return MONTHS;
+  const i=monthIdx();
+  /* Du mois précédent jusqu'à l'horizon. Le tableau défile
+     horizontalement : mieux vaut voir toute la pente que quatre mois. */
+  const end=Math.max(i+1,MONTHS.findIndex(x=>x.m===HORIZON)+1);
+  return MONTHS.slice(Math.max(0,i-1),end);
+}
+/* Réel HEBDOMADAIRE, cible MENSUELLE, sur le même axe de dates.
+   Le réel garde sa finesse — une courbe mensuelle n'aurait qu'un point
+   avant octobre et ne tracerait rien — et la cible court jusqu'à
+   l'horizon. C'est l'écart entre les deux qui se lit.
+   Les grandeurs sont celles que le tableau juge : moyenne hebdomadaire
+   pour le poids, médiane 4 semaines pour le volume, maximum de la
+   semaine pour la VO2max. */
+function progWeeks(){
+  const a=[],end=mondayOf(TODAY);
+  let m=mondayOf(monthStart(MONTHS[0].m));
+  for(let i=0;i<80&&m<=end;i++){a.push(m);m=addDays(m,7);}
+  return a;
+}
+function monthSeries(t){
+  const pts=[],goal=[];
+  MONTHS.forEach(x=>{
+    if(!allMonths&&x.m>HORIZON)return;
+    const tv=tgtValue(x,t);
+    if(tv!==null)goal.push({k:monthStart(x.m),lab:mois3(x.m),v:tv});
+  });
+  progWeeks().forEach(m=>{
+    let v=null,hollow=false;
+    if(t.k==="w"){v=weekWeight(m);hollow=(weekWeightN(m)===2);}
+    else if(t.k==="vol")v=runMedian4(m);
+    else if(t.k==="vo2")v=weekVo2Max(m);
+    else v=snapAt(addDays(m,6)<TODAY?addDays(m,6):TODAY)[t.k];
+    if(v!==null)pts.push({k:m,lab:fmt(m).num,v:r1(v),hollow:hollow});
+  });
+  return{pts:pts,goal:goal};
+}
+function moisLab(m){return MOIS[+m.slice(5,7)-1].slice(0,4)+" "+m.slice(2,4);}
+/* Prochain test à venir, et dernier test passé avec son résultat. */
+function testAt(){
+  const done=DB.settings.tests||{};
+  let next=null,last=null,late=null;
+  TESTS.forEach(t=>{
+    const r=done[t.d];
+    if(t.d>=TODAY){if(!next)next=t;return;}
+    if(parseMMSS(r)!==null)last={t:t,r:r};
+    else if(!late)late=t;
+  });
+  return{next:next,last:last,late:late};
+}
+
+function renderTargets(){
+  const f=currentMonth(),cur=snapAt(TODAY);
+
+  /* --- A · la cible du mois, ce qui se lit tous les jours --- */
+  let h='<h2>Cibles</h2><p class="panel-sub">Une cible par mois, d\'août 2026 à août 2027. Août est la ligne de base : elle s\'affiche et ne s\'évalue pas. Une ligne sans donnée de référence reste une estimation.</p>';
+  h+='<div class="meta">Cible du mois — '+esc(MOIS[+f.m.slice(5,7)-1])+' '+f.m.slice(0,4)+'</div>';
+  h+='<div class="mtgt">';
+  TGT.forEach(t=>{
+    const tv=tgtValue(f,t),cv=cur[t.k];
+    const ok=f.base?null:tgtOk(cv,tv,t);
+    let gap="";
+    if(cv!==null&&tv!==null){
+      const d=r1(cv-tv);
+      gap=(d>0?"+":"")+(t.k==="sleep"?(d>=0?"+":"−")+fmtDur(Math.abs(d)):String(d));
+      if(t.k==="sleep")gap=(d>=0?"+":"−")+fmtDur(Math.abs(d));
+    }
+    h+='<div class="mrow"><span class="mlab">'+esc(t.l)+'</span>'+
+       (f.base?'<span class="t-st dim">—</span>':st(ok,monthEnd(f.m)))+
+       '<span class="mline">'+
+         (fmtCur(cv,t)===null?'<span class="dim">estimation</span>':'<b>'+esc(fmtCur(cv,t))+'</b>')+
+         ' · cible '+esc(fmtTgt(tv,t))+
+         (gap?' · <span class="mgap '+(ok===false?"warn":ok?"ok":"dim")+'">'+esc(gap)+'</span>':'')+
+       '</span></div>';
+  });
+  /* Chrono : pas de valeur mensuelle, des tests datés. */
+  const T=testAt();
+  h+='<div class="mrow"><span class="mlab">Chrono</span>'+
+     (T.late?'<span class="t-st warn">✗</span>':'<span class="t-st dim">→</span>')+
+     '<span class="mline">'+
+       (T.last?'<b>'+esc(T.last.t.dist+" "+T.last.r)+'</b> le '+esc(dm(T.last.t.d)):'<span class="dim">aucun test enregistré</span>')+
+       (T.next?' · prochain '+esc(T.next.dist+" le "+dm(T.next.d)+(T.next.cible?", cible "+T.next.cible:"")):'')+
+     '</span></div>';
+  h+='</div>';
+  if(T.late)h+='<p class="todo">Test du <b>'+esc(dm(T.late.d))+'</b> ('+esc(T.late.dist)+') passé sans résultat saisi. Panneau Références.</p>';
+  h+='<p class="pace">Allure d\'endurance de référence : <b>'+esc(paceAt(TODAY))+'</b>. Indication, jamais évaluée.</p>';
+
+  /* --- B · le tableau mensuel --- */
+  const win=monthWindow(),cm=MOISKEY(TODAY);
+  h+='<div class="meta" style="margin-top:26px">Trajectoire mensuelle</div>';
+  h+='<div class="scroll"><table class="tgt"><tr><th></th>'+
+     win.map(x=>'<th class="'+(x.m===cm?"now ":"")+(x.base?"base":"")+'">'+esc(moisLab(x.m))+'</th>').join("")+'</tr>';
+  TGT.forEach(t=>{
+    h+='<tr><td><div class="t-lab">'+esc(t.l)+'</div><span class="t-cur">'+
+       (fmtCur(cur[t.k],t)===null?"estimation":esc(fmtCur(cur[t.k],t)))+'</span></td>';
+    win.forEach(x=>{
+      const tv=tgtValue(x,t),end=monthEnd(x.m);
+      /* Un mois écoulé se juge sur ce qu'il affichait à sa fin ; le mois
+         en cours sur aujourd'hui ; un mois à venir ne se juge pas. */
+      let ok=null;
+      if(!x.base&&monthStart(x.m)<=TODAY){
+        const at=end<TODAY?end:TODAY;
+        ok=tgtOk(snapAt(at)[t.k],tv,t);
+      }
+      h+='<td class="t-cell'+(x.m===cm?" now":"")+(x.base?" base":"")+'">'+
+         (x.base?'<span class="dim">'+esc(fmtTgt(tv,t))+'</span>':st(ok,end)+esc(fmtTgt(tv,t)))+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</table></div>';
+  h+='<button class="tool" id="allm">'+(allMonths?"Masquer août 27":"Ajouter août 27")+'</button>';
+
+  /* --- graphes --- */
+  /* La masse grasse absolue passe devant le poids total : c'est elle
+     l'indicateur, le poids n'en est que la somme avec la masse maigre. */
+  h+='<div class="graph">'+mgChart()+'</div>';
+  h+='<div class="graph">'+weightChart()+'</div>';
+  h+='<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
+  h+='<div class="graph">'+volumeChart()+'</div>';
+  h+='<div class="graph">'+tgtChart("vo2","VO2max (ml/kg/min) — réel plein, cible pointillé",1)+'</div>';
+  h+='<div class="graph">'+horsZoneChart()+'</div>';
+  h+='<p class="foot">Une semaine allégée n\'est pas une semaine perdue. Une séance manquée ne se rattrape pas.</p>';
+  document.getElementById("targets").innerHTML=h;
+}
+function lastVal(f){
+  const ks=Object.keys(DB.days).sort();
+  for(let i=ks.length-1;i>=0;i--){const v=num(DB.days[ks[i]][f]);if(v!==null)return v;}
+  return null;
+}
+/* Une date venue des réglages peut arriver de n'importe où — champ vide,
+   base importée, saisie d'un autre navigateur. La formater sans vérifier
+   donnait « NaN/ne ». */
+function isDate(k){return /^\d{4}-\d{2}-\d{2}$/.test(String(k||""));}
+/* jj/mm — les dates d'un tableau tiennent en six caractères. */
+function dm(k){return isDate(k)?fmt(k).num+"/"+k.slice(5,7):"—";}
+/* Chrono mm:ss en secondes. null si le format n'est pas respecté : une
+   valeur en texte libre n'était comparée à rien. */
+function parseMMSS(s){
+  const t=String(s||"").trim();
+  /* Une seule heure : un chrono de course ne dépasse pas 9 h, et
+     « 26:30:00 » est une faute de frappe sur un 5 km, pas 26 h 30. */
+  let m=/^([0-9]):([0-5]\d):([0-5]\d)$/.exec(t);
+  if(m)return (+m[1])*3600+(+m[2])*60+(+m[3]);
+  m=/^(\d{1,3}):([0-5]\d)$/.exec(t);
+  return m?(+m[1])*60+(+m[2]):null;
+}
+function weekList(n){
+  const a=[],m=mondayOf(TODAY);
+  for(let i=n-1;i>=0;i--)a.push(addDays(m,-7*i));
+  return a;
+}
+/* Première moyenne hebdomadaire enregistrée, origine de la jauge poids. */
+function firstWeekWeight(){
+  const ms=Object.keys(DB.days).sort().map(mondayOf);
+  const seen={};
+  for(const m of ms){if(seen[m])continue;seen[m]=1;const v=weekWeight(m);if(v!==null)return v;}
+  return null;
+}
+/* Tant qu'aucune moyenne n'existe, le graphe n'affiche que les jalons :
+   aucune valeur de poids n'a été mesurée, il n'y a rien à tracer. */
+/* Les trois graphes portant une cible sont mensuels et prolongés jusqu'à
+   l'horizon : la valeur réelle est exactement celle que le tableau juge,
+   même chiffre et même règle, et la cible court jusqu'au bout. Le détail
+   hebdomadaire du poids se lit dans le journal, la pente se lit ici. */
+function tgtChart(key,title,dec){
+  const t=TGT.filter(x=>x.k===key)[0],S=monthSeries(t);
+  return seriesChart(title,S.pts,[],dec,S.goal);
+}
+function weightChart(){
+  /* La trajectoire se trace même sans mesure : avant la première pesée,
+     la pente attendue est la seule chose à montrer, et une ligne la dit
+     mieux que trois repères horizontaux qui se chevauchent. */
+  const h=tgtChart("w","Poids (kg) — réel plein, cible pointillé",1);
+  return monthSeries(TGT[0]).pts.length?h
+    :h+'<p class="empty">Première pesée le '+MEASURE_START+'. La trajectoire est tracée, rien d\'autre n\'est mesuré.</p>';
+}
+
+/* Série FC repos : moyennes hebdomadaires figées, puis moyennes mobiles
+   7 jours dès qu'il y a des saisies quotidiennes. */
+/* Un point par semaine. Sans cela, les moyennes figées et les moyennes
+   glissantes calculées sur les quotidiennes traçaient deux fois la même
+   période — une courbe qui se doublait elle-même sur trois semaines.
+   La moyenne des jours prime, mais seulement si la semaine est assez
+   couverte : celle du 27/07 n'a que ses deux derniers jours dans le
+   relevé quotidien, et leur moyenne (70) vaut moins que la moyenne
+   hebdomadaire figée, calculée sur les sept (64,8). */
+const WEEK_MIN=4;
+/* Un point par semaine, calculé sur les jours. Les moyennes hebdomadaires
+   figées ont disparu avec l'historique en dur : tout vient du zip. */
+function rhrSeries(){
+  const a=[];
+  weekList(12).forEach(m=>{
+    const d=vals(weekDays(m),"rhr");
+    if(d.length>=WEEK_MIN)a.push({k:m,lab:fmt(m).num,v:r1(avg(d))});
+  });
+  return a;
+}
+
+function volumeChart(){
+  /* Le réel est la médiane 4 semaines, celle que la cible juge — pas le
+     total d'une semaine, qu'un pic isolé gonflerait. Le plafond dur en
+     vigueur reste dans le titre. */
+  return tgtChart("vol","Volume course (km) — médiane 4 sem., cible pointillé · plafond dur "+runAbsMax(),1);
+}
+/* Masse grasse absolue, en kilogrammes : c'est elle qu'on veut voir
+   descendre, pas le poids total, qui mêle la masse maigre. Droite de
+   régression par moindres carrés sur les points mesurés — une pente sur
+   quarante jours dit ce qu'une variation quotidienne de 400 g cache. */
+function mgSeries(){
+  const ks=Object.keys(DB.days).sort(),a=[];
+  ks.forEach(k=>{const v=num(DB.days[k].mgKg);if(v!==null)a.push({k:k,lab:dm(k),v:r1(v)});});
+  return a.slice(-120);
+}
+function trendOf(pts){
+  if(pts.length<3)return null;
+  const xs=pts.map(p=>parseD(p.k).getTime()/86400000);
+  const n=xs.length,mx=xs.reduce((a,b)=>a+b,0)/n,my=pts.reduce((a,p)=>a+p.v,0)/n;
+  let num0=0,den=0;
+  for(let i=0;i<n;i++){num0+=(xs[i]-mx)*(pts[i].v-my);den+=(xs[i]-mx)*(xs[i]-mx);}
+  if(!den)return null;
+  const b=num0/den,a0=my-b*mx;
+  return{pts:[{k:pts[0].k,lab:"",v:a0+b*xs[0]},{k:pts[n-1].k,lab:"",v:a0+b*xs[n-1]}],
+         parSemaine:r1(b*7*10)/10};
+}
+function mgChart(){
+  const pts=mgSeries(),T=trendOf(pts);
+  const t="Masse grasse (kg) — indicateur primaire"+
+    (T?", tendance "+(T.parSemaine>=0?"+":"−")+Math.abs(T.parSemaine).toFixed(1)+" kg/sem.":"");
+  return seriesChart(t,pts,[],1,null,T?T.pts:null)+
+    (pts.length?"":'<p class="empty">Aucun import : la masse grasse vient du zip, elle ne se saisit pas.</p>');
+}
+/* Toutes les séances connues, doublons d'imports chevauchants écartés. */
+function allSeances(){
+  const out=[],vus={};
+  (DB.imports||[]).forEach(d=>(d.seances||[]).forEach(s=>{
+    const id=s.date+"|"+s.heureCle+"|"+s.kind;
+    if(vus[id])return;vus[id]=1;out.push(s);
+  }));
+  return out.sort((a,b)=>(a.date+a.debut).localeCompare(b.date+b.debut));
+}
+/* % de temps passé au-dessus de la zone haute, sortie par sortie. En
+   barres : ce sont des événements distincts, pas une série continue —
+   une ligne suggérerait une progression entre deux sorties espacées de
+   dix jours. */
+function horsZoneChart(){
+  const S=allSeances().filter(s=>s.kind==="course"&&s.pctHorsZoneHaut!==null&&s.pctHorsZoneHaut!==undefined).slice(-14);
+  const z=DB.settings.zones||{bas:128,haut:141};
+  const title="% de temps au-dessus de "+z.haut+" bpm, par sortie";
+  if(!S.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune sortie de course avec série de fréquence cardiaque importée.</p>';
+  const W=600,H=150,n=S.length;
+  const hi=Math.max(40,Math.max.apply(null,S.map(s=>s.pctHorsZoneHaut)));
+  const y=v=>18+((hi-v)/hi)*(H-48);
+  const bw=Math.min(34,(W-70)/n*0.62);
+  let s='<div class="meta">'+esc(title)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  S.forEach((x,i)=>{
+    const cx=34+(n===1?(W-70)/2:(i*(W-70))/(n-1)),v=x.pctHorsZoneHaut;
+    s+='<rect x="'+(cx-bw/2)+'" y="'+y(v)+'" width="'+bw+'" height="'+Math.max(1,(H-30)-y(v))+
+       '" class="g-bar'+(v>HZ_REF?" hot":"")+'"/>';
+    s+='<text x="'+cx+'" y="'+(y(v)-4)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+v+'</text>';
+    if(n<=8||i%2===0)s+='<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(dm(x.date))+'</text>';
+  });
+  /* Repère à 20 % tracé APRÈS les barres : dessous, il disparaissait
+     derrière elles dès que toutes les sorties dépassaient le seuil —
+     c'est-à-dire précisément quand il fallait le voir. */
+  s+='<line x1="26" y1="'+y(HZ_REF)+'" x2="'+(W-20)+'" y2="'+y(HZ_REF)+'" class="gl-ref" stroke-dasharray="4 5"/>';
+  s+='<text x="'+(W-20)+'" y="'+(y(HZ_REF)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+HZ_REF+' % · seuil</text>';
+  s+='</svg><div class="meta" style="margin-top:2px">Dernière sortie '+S[n-1].pctHorsZoneHaut+' %</div>';
+  return s;
+}
+const HZ_REF=20;
+function seriesChart(title,pts,refs,dec,goal,trend){
+  const G=goal||[],TR=trend||[];
+  if(!pts.length&&!G.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune donnée saisie.</p>';
+  const W=600,H=150;
+  const all=pts.concat(G).concat(TR);
+  let lo=Math.min.apply(null,all.map(p=>p.v)),hi=Math.max.apply(null,all.map(p=>p.v));
+  refs.forEach(r=>{lo=Math.min(lo,r.v);hi=Math.max(hi,r.v);});
+  if(hi-lo<1){hi+=1;lo-=1;}
+  const padV=(hi-lo)*0.15;lo-=padV;hi+=padV;
+  const y=v=>18+((hi-v)/(hi-lo))*(H-48);
+  /* Axe par date dès que les points en portent une. Le réel s'arrête au
+     jour dit, la cible continue jusqu'à l'horizon : sur un axe indexé,
+     une courbe de trois points et une de douze seraient étirées l'une
+     sur l'autre et l'écart deviendrait illisible. */
+  const dated=all.length&&all[0].k;
+  let t0=0,t1=1;
+  if(dated){
+    const ts=all.map(p=>parseD(p.k).getTime());
+    t0=Math.min.apply(null,ts);t1=Math.max.apply(null,ts);
+    if(t1===t0)t1=t0+1;
+  }
+  const X=(p,i)=>dated?34+((parseD(p.k).getTime()-t0)/(t1-t0))*(W-70)
+                      :34+(i*(W-70))/Math.max(pts.length-1,1);
+  let s='<div class="meta">'+esc(title)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  refs.forEach(r=>{
+    s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>';
+    s+='<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
+  });
+  /* La cible d'abord, en pointillé, sous la courbe réelle. */
+  if(G.length>1)
+    s+='<polyline points="'+G.map((p,i)=>X(p,i)+","+y(p.v)).join(" ")+'" fill="none" class="g-goal" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  if(pts.length>1)
+    s+='<polyline points="'+pts.map((p,i)=>X(p,i)+","+y(p.v)).join(" ")+'" fill="none" class="g-line" stroke-width="1.8"/>';
+  /* Droite de régression : deux points, tracée par-dessus le nuage. */
+  if(TR.length===2)
+    s+='<line x1="'+X(TR[0],0)+'" y1="'+y(TR[0].v)+'" x2="'+X(TR[1],1)+'" y2="'+y(TR[1].v)+'" class="g-trend" stroke-width="1.6" stroke-dasharray="7 4"/>';
+  /* Point creux : moyenne partielle, tracée mais distinguée. */
+  pts.forEach((p,i)=>{s+='<circle cx="'+X(p,i)+'" cy="'+y(p.v)+'" r="3.4" class="g-dot'+(p.hollow?" hollow":"")+'"/>';});
+  /* Les libellés viennent de la plus longue des deux séries, sinon ils se
+     tasseraient tous à gauche quand le réel ne couvre qu'un mois. */
+  const axe=G.length>=pts.length?G:pts;
+  const pas=Math.ceil(axe.length/12);
+  axe.forEach((p,i)=>{if(i%pas===0)s+='<text x="'+X(p,i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
+  s+='</svg><div class="meta" style="margin-top:2px">'+
+     (pts.length?'Dernier point '+pts[pts.length-1].v.toFixed(dec):'Aucune mesure encore')+'</div>';
+  return s;
+}
+
+/* ================= Panneau Références (§7.3) ================= */
+function renderRefs(){
+  const R=DB.settings.refs,B=DB.settings.bloodwork;
+  const f=(o,k,lab,unit,txt)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+'</span>'+
+    '<input type="'+(txt?"text":"number")+'" '+(txt?"":'step="0.5" inputmode="decimal"')+' placeholder="—" value="'+esc(o[k]||"")+'" data-s="'+(o===R?"refs":"bloodwork")+'|'+k+'"><span class="unit">'+esc(unit)+'</span></div>';
+  /* Deux colonnes : la référence de départ et la re-mesure. « Aucune
+     charge perdue » ne peut se constater sans la seconde — une valeur
+     saisie une fois et jamais reprise ne bougera jamais. */
+  const p=(k,lab,unit)=>'<div class="log-row pair"><span class="log-lab">'+esc(lab)+'</span>'+
+    '<input type="number" step="0.5" inputmode="decimal" placeholder="réf." value="'+esc(R[k]||"")+'" data-s="refs|'+k+'">'+
+    '<input type="number" step="0.5" inputmode="decimal" placeholder="actuel" value="'+esc(R[k+"Now"]||"")+'" data-s="refs|'+k+'Now">'+
+    '<span class="unit">'+esc(unit)+'</span></div>';
+  /* Rappel unique et non bloquant : il disparaît champ par champ. */
+  const need28=["bench","pullups","row","press"].filter(x=>!R[x]).length;
+  const need30=(lastVal("weight")===null?1:0)+(R.waistBase?0:1);
+  const todo=[];
+  if(need28)todo.push("<b>28/08</b> — charges des quatre mouvements ("+need28+" sur 4 manquantes), à la séance de référence");
+  if(need30)todo.push("<b>30/08</b> — première pesée et tour de taille");
+  const T=testAt();
+  if(T.next)todo.push("<b>"+dm(T.next.d)+"</b> — test "+esc(T.next.dist)+(T.next.cible?", cible "+T.next.cible:", référence")+"");
+  if(T.late)todo.push("<b>"+dm(T.late.d)+"</b> — test "+esc(T.late.dist)+" passé, résultat non saisi");
+  let h='<h2>Références</h2><p class="panel-sub">Mesures de départ, saisies une fois. Tant qu\'un champ reste vide, la ligne correspondante des cibles s\'affiche comme estimation.</p>';
+  if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le bilan sanguin reste ouvert, sans date.</p>';
+  h+='<div class="refs-grid">';
+  h+=f(R,"waistBase","Tour de taille de référence","cm");
+  h+='<div class="refs-h">Tests chronométrés</div>';
+  const done=DB.settings.tests||{};
+  TESTS.forEach(t=>{
+    const v=done[t.d]||"",bad=v&&parseMMSS(v)===null;
+    h+='<div class="log-row"><span class="log-lab">'+esc(t.dist)+' — '+esc(dm(t.d))+
+       '<span class="hint">'+(t.cible?"Cible "+esc(t.cible)+".":"Test de référence, sans cible.")+' Format mm:ss'+(t.dist==="semi"?" ou h:mm:ss":"")+'.</span></span>'+
+       '<input type="text" inputmode="numeric" placeholder="'+(t.cible||"mm:ss")+'" class="'+(bad?"bad":"")+'" value="'+esc(v)+'" data-tst="'+t.d+'"><span class="unit"></span></div>';
+  });
+  /* Le plafond dur vit ici, pas dans le code : une décision de coaching
+     ne doit pas attendre un déploiement pour s'appliquer. */
+  h+='<div class="log-row"><span class="log-lab">Plafond dur course<span class="hint">Révisé en session coach, jamais à la volée. Par défaut '+RUN_ABS_MAX+' km. Relèvements prévus : 45 km en janvier 2027, 50 km en mai 2027, à valider en session.</span></span>'+
+     '<input type="number" step="1" inputmode="numeric" placeholder="'+RUN_ABS_MAX+'" value="'+esc(R.runAbsMax||"")+'" data-s="refs|runAbsMax"><span class="unit">km/sem</span></div>';
+  h+='<div class="refs-h">Charges des quatre mouvements</div>';
+  /* Une fois les champs remplis, les placeholders disparaissent : sans
+     en-tête, « 80 82 » ne dit plus laquelle est la référence. */
+  h+='<div class="log-row pair pair-h"><span></span><span>Réf.</span><span>Actuel</span><span></span></div>';
+  h+=p("bench","Développé couché","kg");
+  h+=p("pullups","Tractions (max strictes)","reps");
+  h+=p("row","Rowing barre","kg");
+  h+=p("press","Presse ou squat","kg");
+  h+='<div class="log-row"><span class="log-lab">Date de la re-mesure</span>'+
+     '<input type="date" value="'+esc(R.refsNowDate||"")+'" data-s="refs|refsNowDate"><span class="unit"></span></div>';
+  h+='<div class="refs-h">Bilan sanguin</div>';
+  h+=f(B,"ldl","LDL","g/L");h+=f(B,"hdl","HDL","g/L");h+=f(B,"tg","Triglycérides","g/L");
+  h+=f(B,"hba1c","HbA1c","%");h+=f(B,"ferritin","Ferritine","µg/L");h+=f(B,"vitd","Vitamine D","ng/mL");
+  h+=f(B,"tsh","TSH","mUI/L");h+=f(B,"alat","ALAT","UI/L");
+  h+='</div>';
+  document.getElementById("refs").innerHTML=h;
+}
+
+/* ================= Export / import ================= */
+function contextBlock(){
+  const mon=mondayOf(TODAY),c=capFor(mon),sl=sleepCounts(lastN(TODAY,7));
+  const r7=avg(vals(lastN(TODAY,7),"rhr")),h7=avg(vals(lastN(TODAY,7),"hrv"));
+  const p1=p1Week(mon),wk=weekWeight(mon),wp=weekWeight(addDays(mon,-7));
+  return{
+    rhr7:r7===null?null:r1(r7),
+    hrv7:h7===null?null:r1(h7),
+    weightWeek:wk===null?null:r1(wk),
+    weightPrevWeek:wp===null?null:r1(wp),
+    runKmWeek:weekRun(mon),
+    runCapWeek:c.cap,
+    sleepNights7h:sl.n7,
+    bedBefore2330:sl.bed,
+    drinksWeek:drinksIn(weekDays(mon)),
+    p1Done:p1.done,p1Planned:p1.planned,
+    /* Matière brute de la progression, sans règle qui en soit tirée :
+       l'app ne calcule plus le plafond, c'est la session coach qui
+       décide. impactWeeks agrège course + randonnée, parce que la
+       randonnée se substitue à la course et que la compter zéro fausse
+       la lecture de la charge. */
+    runWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm")))})),
+    impactWeeks4:lastFullWeeks(4).map(m=>({week:m,km:r1(total(vals(weekDays(m),"runKm"))+total(vals(weekDays(m),"hikeKm")))})),
+    regimeWeek:regimeOf(mon),regimeManual:regimeSet(mon),
+    proteinDays7:protDays(7),proteinAvgG7:protAvgG(7),
+    /* Journal déclaratif : les quatorze derniers jours, réduits à ce que
+       l'export Apple ne contient jamais. Les jours vides sont omis — une
+       journée non renseignée n'est pas une faute, et la session coach doit
+       pouvoir dire sur combien de menus elle a estimé. */
+    journal14:lastN(TODAY,14).map(k=>{
+      const e=rd(k),o={date:k};
+      if(typeof e.alcohol==="number")o.alcool=e.alcohol;
+      if(e.menu)o.menu=e.menu;
+      if(e.fasciaFait)o.fasciaFait=true;
+      if(e.bedTime)o.coucher=e.bedTime;
+      if(e.talon)o.talon=e.talon;
+      if(e.seanceNote)o.seanceNote=e.seanceNote;
+      return o;
+    }).filter(o=>Object.keys(o).length>1),
+    chargePro:DB.charge[(lastDigest()||{}).semaineDu]||null,
+    /* Historique : les résumés hebdomadaires des huit derniers imports.
+       Sans tendance, ni la règle d'arrêt du déficit ni le plafond de
+       course ne se calculent. */
+    historique:(DB.imports||[]).map(d=>Object.assign({semaine:d.semaineDu,du:d.du,au:d.au},d.semaine)),
+    mesuresManquantes:(lastDigest()||{}).manquant||null,
+    dernierImport:(lastDigest()||{}).importe||null,
+    lastExport:(DB.settings||{}).lastExport||null,exportAgeDays:exportAge(),
+    /* Ce qui se lit en premier à la revue : où l'on en est du mois. */
+    monthTarget:(()=>{
+      const f=currentMonth(),cur=snapAt(TODAY),o={month:f.m,baseline:!!f.base,lines:{}};
+      TGT.forEach(t=>{
+        const tv=tgtValue(f,t),cv=cur[t.k];
+        o.lines[t.k]={target:tv,current:cv===null?null:r1(cv),
+          gap:(cv===null||tv===null)?null:r1(cv-tv),
+          ok:f.base?null:tgtOk(cv,tv,t)};
+      });
+      const T=testAt();
+      o.nextTest=T.next?{date:T.next.d,dist:T.next.dist,target:T.next.cible}:null;
+      o.lastTest=T.last?{date:T.last.t.d,dist:T.last.t.dist,result:T.last.r}:null;
+      o.testOverdue=T.late?T.late.d:null;
+      o.pace=paceAt(TODAY);
+      return o;
+    })()
+  };
+}
+/* Les n dernières semaines terminées, ordre chronologique. */
+function lastFullWeeks(n){
+  const a=[],mon=mondayOf(TODAY);
+  for(let i=n;i>=1;i--)a.push(addDays(mon,-7*i));
+  return a;
+}
+function reviewJSON(){
+  const days={},start=addDays(TODAY,-13);
+  for(let i=0;i<14;i++){const k=addDays(start,i);if(DB.days[k])days[k]=DB.days[k];}
+  return JSON.stringify({app:APP,version:VERSION,exported:TODAY,from:start,to:TODAY,
+    days:days,plan:DB.plan,settings:DB.settings,context:contextBlock()},null,1);
+}
+/* onDone n'est appelé que si quelque chose est réellement sorti : le
+   presse-papiers a accepté, ou la boîte de repli a été validée. Dater la
+   sauvegarde avant de le savoir affichait « sauvegardé aujourd'hui »
+   quand l'utilisateur venait d'annuler. */
+function copyOut(s,msg,onDone){
+  const fallback=()=>{if(prompt("Copie ce texte :",s)!==null&&onDone)onDone();};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(s).then(()=>{alert(msg);if(onDone)onDone();},fallback);
+  else fallback();
+}
+/* Rattrapage : le plan importé peut porter un bloc `backfill`, des
+   mesures par date relevées dans Santé au moment de la revue. Elles ne
+   s'appliquent qu'aux jours passés et seulement là où le champ est vide,
+   donc une saisie manuelle n'est jamais écrasée. Les champs déclaratifs
+   — protéines, alcool, coucher, talon — en sont exclus : ils ne se
+   lisent nulle part et personne d'autre que toi ne peut les affirmer. */
+const BACKFILL_FIELDS=["runKm","hikeKm","swimKm","bikeKm","vo2","rhr","hrv","sleep","weight","waist","bedTime","sys","dia"];
+function applyBackfill(bf){
+  let n=0,days=0;
+  Object.keys(bf||{}).forEach(k=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>TODAY)return;
+    const src=bf[k]; if(!src||typeof src!=="object")return;
+    /* La journée n'est créée qu'au premier champ réellement rempli :
+       un rattrapage sans rien à dire ne doit pas ajouter de jour vide. */
+    let e=DB.days[k]||null,touched=0;
+    BACKFILL_FIELDS.forEach(f=>{
+      if(!(f in src))return;
+      /* Poids et taille n'existent pas avant la première pesée : les
+         remplir avant alimenterait une jauge avec une valeur que l'app
+         n'affiche pas et qu'on ne pourrait pas corriger. */
+      if((f==="weight"||f==="waist")&&k<MEASURE_START)return;
+      const cur=e?e[f]:"";
+      if(cur!==""&&cur!==null&&cur!==undefined)return;
+      const v=src[f];
+      if(v===null||v===undefined||v==="")return;
+      if(!e)e=entry(k);
+      e[f]=String(v);n++;touched=1;
+    });
+    if(touched)days++;
+  });
+  return{n:n,days:days};
+}
+function importPlan(txt){
+  let p;try{p=JSON.parse(txt);}catch(e){return{err:"Plan non reconnu"};}
+  if(!p||typeof p!=="object"||!Array.isArray(p.weeks)||!p.weeks.length)return{err:"Plan non reconnu"};
+  const dre=/^\d{4}-\d{2}-\d{2}$/;
+  for(const w of p.weeks){
+    if(!w||typeof w.start!=="string"||!dre.test(w.start)||!Array.isArray(w.days))return{err:"Plan non reconnu"};
+    for(const d of w.days){
+      if(!d||typeof d.d!=="string"||!dre.test(d.d))return{err:"Plan non reconnu"};
+      if(d.sessions!==undefined&&!Array.isArray(d.sessions))return{err:"Plan non reconnu"};
+      for(const s of (d.sessions||[]))if(!s||typeof s.label!=="string")return{err:"Plan non reconnu"};
+    }
+  }
+  if(p.backfill!==undefined){
+    if(!p.backfill||typeof p.backfill!=="object"||Array.isArray(p.backfill))return{err:"Plan non reconnu"};
+    for(const k in p.backfill){
+      const o=p.backfill[k];
+      if(!dre.test(k)||!o||typeof o!=="object"||Array.isArray(o))return{err:"Plan non reconnu"};
+    }
+  }
+  DB.plan=p;
+  /* Un plan neuf reprend la main sur les bascules manuelles : elles
+     visaient les semaines qu'il remplace. */
+  (p.weeks||[]).forEach(w=>{if(DB.settings.regime)delete DB.settings.regime[w.start];});
+  const bf=applyBackfill(p.backfill);
+  save();open=null;render();
+  return{filled:bf.n,days:bf.days};
+}
+function renderTools(){
+  document.getElementById("tools").innerHTML=
+    '<h2>Données</h2><p class="panel-sub">Tout est stocké sur cet appareil. L\'import d\'un plan ne touche ni les cases cochées ni les saisies, indexées par date. Un plan peut porter un rattrapage de mesures : il ne remplit que les champs restés vides sur les jours passés.</p>'+
+    '<button class="big sec" id="impPlan">Importer un plan</button>'+
+    '<div class="tools"><button class="tool" id="exp">Exporter les données</button><button class="tool" id="imp">Importer les données</button></div>'+
+    '<div class="backup'+((exportAge()===null||exportAge()>EXPORT_MAX)?" warn":"")+'">Dernière sauvegarde : '+exportTxt()+
+      ' · '+Object.keys(DB.days).length+' journée'+(Object.keys(DB.days).length>1?"s":"")+' en base</div>'+
+    '<div class="save" id="save"></div>';
+}
+
+/* ================= Interactions ================= */
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn");
+  if(!t)return;
+  /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
+     champ de fichier nu ne se style pas et se tape mal. */
+  if(t.id==="impBtn"){const f=document.getElementById("impFile");if(f){f.value="";f.click();}return;}
+  if(t.id==="allm"){allMonths=!allMonths;renderTargets();return;}
+  if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
+  if(t.id==="exp"){
+    /* L'export est la seule sauvegarde : on date celui-ci pour pouvoir
+       dire depuis quand le journal ne tient plus qu'à cet appareil. */
+    copyOut(JSON.stringify(DB),"Données copiées. Colle-les dans une note ou un mail — c'est ta seule sauvegarde.",
+      ()=>{DB.settings.lastExport=TODAY;save();render();});
+    return;}
+  if(t.id==="imp"){
+    const s=prompt("Colle ici les données exportées :");
+    if(s){try{const p=JSON.parse(s);if(!p||typeof p!=="object"||Array.isArray(p))throw 0;
+      /* normalize() complète la base importée sans relire le disque :
+         repasser par load() rechargerait l'ancienne et perdrait l'import. */
+      DB=p;normalize();save();render();}catch(e){alert("Format non reconnu.");}}
+    return;}
+  if(t.id==="impPlan"){
+    const s=prompt("Colle ici le plan de 2 semaines :");
+    if(s){const r=importPlan(s);
+      alert(r.err||("Plan importé."+(r.filled?"\n"+r.filled+" valeur"+(r.filled>1?"s":"")+" complétée"+(r.filled>1?"s":"")+" sur "+r.days+" jour"+(r.days>1?"s":"")+".":"")));}
+    return;}
+  if(t.dataset.tab!==undefined){tab=t.dataset.tab;ses("set",tab,TKEY);render();scrollTo(0,0);return;}
+  if(t.dataset.open!==undefined){
+    const k=t.dataset.open,was=open===k;
+    open=was?null:k;render();
+    /* Le journal est long : rouvrir en gardant la ligne sous les yeux. */
+    if(!was&&tab==="log"){const r=document.querySelector('.jrow[data-open="'+k+'"]');
+      if(r)r.scrollIntoView({block:"nearest"});}
+    return;}
+  if(t.dataset.alt!==undefined){const a=t.dataset.alt.split("|"),e=entry(a[0]);e.done["alt"+a[1]]=!e.done["alt"+a[1]];save();render();return;}
+  if(t.dataset.t){const a=t.dataset.t.split("|"),e=entry(a[0]);e.done[a[1]]=!e.done[a[1]];save();render();return;}
+  if(t.dataset.b){const e=entry(t.dataset.b);e.bed=!e.bed;save();render();return;}
+  if(t.dataset.pr){const a=t.dataset.pr.split("|"),e=entry(a[0]);
+    /* Première coche sur une journée d'avant : la case unique est
+       convertie en ses quatre prises, puis c'est prot qui fait foi. */
+    if(!e.prot||typeof e.prot!=="object")e.prot=protSet(e);
+    e.prot[a[1]]=!e.prot[a[1]];save();render();return;}
+  if(t.dataset.reg!==undefined){
+    const m=t.dataset.reg,ord=["normale","chargee","vacances"];
+    const nx=ord[(ord.indexOf(regimeOf(m))+1)%3];
+    if(!DB.settings.regime)DB.settings.regime={};
+    DB.settings.regime[m]=nx;save();render();return;}
+  if(t.dataset.ff!==undefined){const e=entry(t.dataset.ff);e.fasciaFait=!e.fasciaFait;save();render();return;}
+  /* Les deux champs d'exception : le lien ouvre le champ, qui reste
+     ouvert tant qu'il porte du texte. */
+  if(t.dataset.sn!==undefined){const e=entry(t.dataset.sn);e.done["sn"]=true;save();render();
+    const f=document.querySelector('[data-f="'+t.dataset.sn+'|seanceNote"]');if(f)f.focus();return;}
+  if(t.dataset.tl!==undefined){const e=entry(t.dataset.tl);e.done["tl"]=true;save();render();
+    const f=document.querySelector('[data-f="'+t.dataset.tl+'|talon"]');if(f)f.focus();return;}
+  /* Charge professionnelle : un second tap sur la même note l'efface —
+     mieux vaut inconnue qu'une valeur posée par erreur. */
+  if(t.dataset.ch!==undefined){const a=t.dataset.ch.split("|"),v=Number(a[1]);
+    if(DB.charge[a[0]]===v)delete DB.charge[a[0]];else DB.charge[a[0]]=v;
+    save();render();return;}
+  if(t.dataset.a){const a=t.dataset.a.split("|"),e=entry(a[0]),n=Number(a[1]);
+    /* La pastille 4+ n'enregistre plus 4 : elle ouvre le champ libre,
+       qui reçoit le focus. Un second clic dessus efface la valeur. */
+    const isBig=(n===4),cur=e.alcohol;
+    if(isBig&&typeof cur==="number"&&cur>=4)e.alcohol="";
+    else e.alcohol=(!isBig&&cur===n)?"":n;
+    save();render();
+    if(isBig&&typeof e.alcohol==="number"){
+      const f=document.querySelector('.alx[data-n="'+a[0]+'|alcohol"]');
+      if(f){f.focus();f.select();}
+    }
+    return;}
+});
+/* Dépôt d'un ou plusieurs zips. Le travail est asynchrone : le bouton
+   passe en « lecture en cours » pour qu'un export de trois méga-octets ne
+   ressemble pas à un tap sans effet. */
+document.addEventListener("change",async ev=>{
+  if(ev.target.id==="impFile"){
+    const files=Array.prototype.slice.call(ev.target.files||[]);
+    if(!files.length)return;
+    impBusy=true;impRes=null;render();
+    try{impRes=await importFiles(files);}
+    catch(e){impRes={fichiers:0,jours:0,seances:0,du:null,au:null,erreurs:[String(e&&e.message||e)]};}
+    impBusy=false;render();
+    return;
+  }
+  const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n,hm=ev.target.dataset.hm;
+  if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
+  /* Champ numérique dont le type compte : drinksIn() n'additionne que les
+     nombres, une chaîne sortirait la journée du comptage. */
+  if(n){const a=n.split("|"),v=num(ev.target.value);
+    entry(a[0])[a[1]]=(v===null||v<0)?"":v;save();refreshLive();return;}
+  /* Durée saisie en h:mm, rangée en heures décimales. */
+  if(hm){const a=hm.split("|");entry(a[0])[a[1]]=hmTo(ev.target.value);save();refreshLive();return;}
+  if(s){const a=s.split("|");DB.settings[a[0]][a[1]]=ev.target.value;save();refreshLive();return;}
+  /* Résultat d'un test chronométré, rangé par date de test. */
+  if(ev.target.dataset.tst){
+    if(!DB.settings.tests)DB.settings.tests={};
+    DB.settings.tests[ev.target.dataset.tst]=ev.target.value;
+    save();renderTargets();renderRefs();}
+});
+
+/* ================= Démarrage ================= */
+document.title=APP;
+const mt=document.querySelector('meta[name="apple-mobile-web-app-title"]');
+if(mt)mt.setAttribute("content",APP);
+document.getElementById("title").textContent=APP;
+load();
+{const o=ses("get",null,OKEY);if(o!==null){open=o||null;ses("del",null,OKEY);}
+ const tb=ses("get",null,TKEY);if(tb&&TABS.some(x=>x[0]===tb)){tab=tb;ses("del",null,TKEY);}}
+if(open===null){
+  const ap=activePlan();
+  open=dayOf(TODAY)?TODAY:((ap.weeks[0].days||[])[0]||{}).d||null;
+}
+bg();render();checkVersion();
+</script>
+</body>
+</html>
