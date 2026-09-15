@@ -333,51 +333,82 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.2", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
-/* Treize mois, d'août 2026 à août 2027. Août est la LIGNE DE BASE : elle
-   s'affiche et ne s'évalue jamais.
-   ★ = valeur provisoire, à corriger le 30/08 après la première pesée.
-   Elles sont toutes ici, c'est le seul endroit à toucher.
-   waist = écart en cm sous la mesure de référence, pas une valeur absolue.
-   sleep = heures décimales, comme le champ de saisie.
-   prot  = nombre de jours sur 7 atteignant PROTEIN.
-   La baisse de volume en août 2027 (48 → 40) est l'affûtage avant le
-   semi du 28, pas une faute de frappe. */
-const MONTHS=[
-  {m:"2026-08",w:95.0,waist:0,   vol:22,sleep:5.83,prot:3,vo2:43,base:true},  /* ★ w, sleep */
-  {m:"2026-09",w:93.5,waist:-1,  vol:26,sleep:6.17,prot:4,vo2:43},
-  {m:"2026-10",w:92.2,waist:-2.5,vol:28,sleep:6.5, prot:4,vo2:44},
-  {m:"2026-11",w:91.0,waist:-4,  vol:30,sleep:6.75,prot:5,vo2:44},
-  {m:"2026-12",w:90.5,waist:-5,  vol:30,sleep:6.75,prot:5,vo2:45},
-  {m:"2027-01",w:89.5,waist:-6,  vol:35,sleep:6.83,prot:5,vo2:45},
-  {m:"2027-02",w:89.0,waist:-7,  vol:40,sleep:7.0, prot:5,vo2:46},
-  {m:"2027-03",w:88.5,waist:-7.5,vol:40,sleep:7.0, prot:5,vo2:46},
-  {m:"2027-04",w:88.0,waist:-8,  vol:42,sleep:7.0, prot:5,vo2:47},
-  {m:"2027-05",w:87.5,waist:-8.5,vol:45,sleep:7.0, prot:5,vo2:47},
-  {m:"2027-06",w:87.0,waist:-9,  vol:45,sleep:7.0, prot:5,vo2:48},
-  {m:"2027-07",w:86.5,waist:-9.5,vol:48,sleep:7.0, prot:5,vo2:49},
-  {m:"2027-08",w:86.0,waist:-10, vol:40,sleep:7.0, prot:5,vo2:49}   /* affûtage */
-];
-/* Les chronos ne sont pas mensuels : ce sont des tests datés. */
-const TESTS=[
-  {d:"2026-09-12",dist:"5 km",cible:null},   /* référence, sans cible */
-  {d:"2026-11-28",dist:"5 km",cible:"26:30"},
-  {d:"2027-01-30",dist:"10 km",cible:"57:00"},
-  {d:"2027-02-27",dist:"10 km",cible:"55:00"},
-  {d:"2027-04-24",dist:"10 km",cible:"53:00"},
-  {d:"2027-06-26",dist:"10 km",cible:"51:00"},
-  {d:"2027-07-24",dist:"semi",cible:"1:55:00"},
-  {d:"2027-08-28",dist:"semi",cible:"1:52:00"}
-];
-/* Allure d'endurance de référence. Indication seulement, jamais évaluée. */
-const PACES=[
-  {until:"2026-11-30",txt:"6:10–6:30/km"},
-  {until:"2027-02-28",txt:"5:55–6:20/km"},
-  {until:"2027-08-31",txt:"5:40–6:00/km"}
-];
+/* ================= Cibles : calculées, jamais stockées en dur =================
+   Les treize cibles mensuelles portaient une trajectoire de poids, un tour
+   de taille et des chronos datés — c'est-à-dire un dossier de santé
+   nominatif dans un dépôt public. Elles n'existent plus dans le code.
+
+   Ce qui reste ici : les dates du programme et la FORME de la courbe. Les
+   valeurs, elles, vivent dans DB.milestones, sur l'appareil, et se
+   paramètrent dans Références. Tant qu'elles manquent, l'app affiche
+   « non paramétré » — elle n'invente aucun chiffre.
+
+   Le poids ne s'interpole pas linéairement : il suit la règle de la
+   doctrine — un premier rythme jusqu'à un seuil, un second ensuite, et un
+   plancher au poids de forme, après lequel la trajectoire est plate.
+   C'est une phase de stabilisation, pas un déficit qui continue. */
+const BASE_MOIS="2026-08", DERNIER_MOIS="2027-08";
+function moisSuivant(m){
+  let y=+m.slice(0,4),i=+m.slice(5,7)+1;
+  if(i>12){i=1;y++;}
+  return y+"-"+pad(i);
+}
+function moisCles(){
+  const a=[];let m=BASE_MOIS;
+  for(let i=0;i<60;i++){a.push(m);if(m===DERNIER_MOIS)break;m=moisSuivant(m);}
+  return a;
+}
+/* Poids cible à une date : rythme 1 jusqu'au seuil, rythme 2 ensuite,
+   puis plat au poids de forme. */
+function poidsCible(k){
+  const P=(DB.milestones||{}).poids||{};
+  const base=num(P.base),d0=P.date,r1v=num(P.r1);
+  if(base===null||!isDate(d0)||!r1v)return null;
+  const sem=(parseD(k)-parseD(d0))/(7*86400000);
+  if(sem<=0)return r1(base);
+  const seuil=num(P.seuil),r2v=num(P.r2),forme=num(P.forme);
+  let v=base-r1v*sem;
+  if(seuil!==null&&r2v&&v<seuil){
+    const semSeuil=(base-seuil)/r1v;
+    v=seuil-r2v*(sem-semSeuil);
+  }
+  if(forme!==null&&v<forme)v=forme;
+  return r1(v);
+}
+/* Les autres métriques progressent linéairement de leur base à leur cible
+   d'horizon. Le volume de course fait exception : le dernier mois porte
+   l'affûtage, une baisse voulue avant la course. */
+function linCible(o,i,n){
+  if(!o)return null;
+  const b=num(o.base),c=num(o.cible);
+  if(b===null||c===null||!n)return null;
+  return r1(b+(c-b)*i/n);
+}
+function monthsTable(){
+  const M=DB.milestones||{},ks=moisCles(),n=ks.length-1;
+  return ks.map((mk,i)=>{
+    const o={m:mk,base:i===0,
+      w:poidsCible(monthEnd(mk)),
+      waist:linCible(M.taille,i,n),
+      vol:linCible(M.vol,i,n),
+      sleep:linCible(M.sommeil,i,n),
+      prot:linCible(M.prot,i,n),
+      vo2:linCible(M.vo2,i,n)};
+    const af=num((M.vol||{}).affutage);
+    if(i===n&&af!==null)o.vol=af;
+    return o;
+  });
+}
+/* Aucune cible paramétrée : le tableau le dit au lieu d'afficher des
+   tirets qu'on prendrait pour des données manquantes. */
+function ciblesParametrees(){
+  const P=(DB.milestones||{}).poids||{};
+  return num(P.base)!==null&&isDate(P.date)&&!!num(P.r1);
+}
 /* Première pesée : la balance à impédance est en France. Avant cette date
    il n'existe aucune mesure de poids ni de tour de taille — les champs
    sont masqués et la jauge poids reste en veille. Aucune valeur de
@@ -446,7 +477,7 @@ weeks:[
  {d:"2026-08-20",fascia:false,sessions:[]},
  {d:"2026-08-21",fascia:false,sessions:[]},
  {d:"2026-08-22",fascia:true,sessions:[
-   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Endurance 6:20–7:15/km, Central Park.",fallback:"5 km, allure libre."},
+   {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Endurance, allure de référence. Central Park.",fallback:"5 km, allure libre."},
    {rank:"P2",kind:"salle",label:"Circuit tirage élastiques",detail:"Rowing 3×15 · face pull 3×20 · curl 3×15 · tractions 3×max si barre disponible.",fallback:"Rowing + face pull, 2 séries."}]},
  {d:"2026-08-23",fascia:false,sessions:[
    {rank:"P1",kind:"course",label:"Sortie longue 8 km",detail:"Même allure, terrain plat.",fallback:"5 km."}]}
@@ -464,7 +495,7 @@ weeks:[
  {d:"2026-08-28",fascia:true,sessions:[
    {rank:"P1",kind:"salle",label:"Séance de référence",detail:"1re séance à Versailles. Développé couché 4×5-6 · tractions 4×max · rowing barre 4×8 · presse ou squat 4×8 · gainage 5 min · mollets lents 3×15. Noter les charges des 4 mouvements dans Références.",fallback:"Les 4 mouvements, 2 séries, charges notées quand même."}]},
  {d:"2026-08-29",fascia:false,sessions:[
-   {rank:"P1",kind:"course",label:"Sortie longue 11 km",detail:"Endurance 6:20–7:15/km.",fallback:"7 km."}]},
+   {rank:"P1",kind:"course",label:"Sortie longue 11 km",detail:"Endurance, allure de référence.",fallback:"7 km."}]},
  {d:"2026-08-30",fascia:true,sessions:[
    {rank:"P1",kind:"mesures",label:"Pesée + tour de taille",detail:"Ruban à mi-distance côte basse / crête iliaque, puis export de la revue.",fallback:"Pesée seule si le ruban manque."},
    {rank:"P3",kind:"vtt",label:"Sortie souple 1 h",detail:"VTT, ou marche 45 min. Sans intensité.",fallback:"Marche 30 min."}]}
@@ -501,7 +532,7 @@ function normalize(){
      le test de référence du 12/09. */
   const R0=DB.settings.refs;
   if(R0.test5k&&!Object.keys(DB.settings.tests).length){
-    DB.settings.tests[isDate(R0.test5kDate)?R0.test5kDate:TESTS[0].d]=R0.test5k;
+    if(isDate(R0.test5kDate))DB.settings.tests[R0.test5kDate]=R0.test5k;
     delete R0.test5k;delete R0.test5kDate;
   }
   if(!Array.isArray(DB.imports))DB.imports=[];
@@ -515,6 +546,13 @@ function normalize(){
   if(!Array.isArray(DB.doctrineHistory))DB.doctrineHistory=[];
   if(typeof DB.etat!=="string")DB.etat="";
   if(!Array.isArray(DB.reviews))DB.reviews=[];
+  /* Jalons : la forme est ici, les valeurs viennent de l'appareil. */
+  if(!DB.milestones)DB.milestones={};
+  ["poids","taille","vol","sommeil","prot","vo2"].forEach(x=>{
+    if(!DB.milestones[x])DB.milestones[x]={};
+  });
+  if(!Array.isArray(DB.milestones.tests))DB.milestones.tests=[];
+  if(!Array.isArray(DB.milestones.allures))DB.milestones.allures=[];
   if(!DB.settings.api)DB.settings.api={model:MODELE_DEFAUT};
   if(!DB.settings.api.model)DB.settings.api.model=MODELE_DEFAUT;
   /* Une clé rangée dans DB par une version antérieure ou par une
@@ -1482,6 +1520,13 @@ function rangerRevue(r){
            indicateurs:r.indicateurs||[],alertes:r.alertes||[],apport:r.apport||null,
            modele:modele(),digestRef:d?d.du+"→"+d.au:null};
   if(!Array.isArray(DB.reviews))DB.reviews=[];
+  /* Jalons : la forme est ici, les valeurs viennent de l'appareil. */
+  if(!DB.milestones)DB.milestones={};
+  ["poids","taille","vol","sommeil","prot","vo2"].forEach(x=>{
+    if(!DB.milestones[x])DB.milestones[x]={};
+  });
+  if(!Array.isArray(DB.milestones.tests))DB.milestones.tests=[];
+  if(!Array.isArray(DB.milestones.allures))DB.milestones.allures=[];
   const i=DB.reviews.findIndex(x=>x.semaine===sem);
   if(i>=0)DB.reviews[i]=e;else DB.reviews.push(e);
   DB.reviews.sort((a,b)=>String(a.semaine).localeCompare(String(b.semaine)));
@@ -1508,7 +1553,11 @@ function defaultWeek(mon){
   for(let i=0;i<7;i++){
     const ss=[];
     if(i===0)ss.push(SALLE);
-    if(i===5)ss.push({rank:"P1",kind:"course",label:"Sortie longue",detail:"Endurance 6:20–7:15/km, "+cap+" km au plus — plafond de la dernière semaine connue.",fallback:"Moitié de la distance, allure libre."});
+    /* L'allure vient des jalons quand elle y est : une fourchette écrite
+       dans le code serait une donnée de forme physique dans un dépôt
+       public, et elle serait fausse dans six mois. */
+    if(i===5){const al=paceAt(TODAY);
+      ss.push({rank:"P1",kind:"course",label:"Sortie longue",detail:"Endurance"+(al?" "+al:"")+", "+cap+" km au plus — plafond de la dernière semaine connue.",fallback:"Moitié de la distance, allure libre."});}
     days.push({d:addDays(mon,i),fascia:i%2===0,sessions:ss});
   }
   return {start:mon,regime:"normale",runCapKm:cap,days:days,fallbackWeek:true};
@@ -1622,15 +1671,22 @@ const MOISKEY=k=>String(k).slice(0,7);
 const HORIZON="2027-07";
 function monthEnd(m){const a=m.split("-").map(Number);return iso(new Date(a[0],a[1],0));}
 function monthStart(m){return m+"-01";}
-function monthAt(m){for(const x of MONTHS)if(x.m===m)return x;return null;}
+function monthAt(m){for(const x of monthsTable())if(x.m===m)return x;return null;}
 /* Cible en vigueur : le mois courant, ou le dernier connu une fois la
    période terminée. */
 function currentMonth(){
   const m=MOISKEY(TODAY),f=monthAt(m);
   if(f)return f;
-  return TODAY<MONTHS[0].m?MONTHS[0]:MONTHS[MONTHS.length-1];
+  const T=monthsTable();
+  return TODAY<T[0].m?T[0]:T[T.length-1];
 }
-function paceAt(k){for(const p of PACES)if(k<=p.until)return p.txt;return PACES[PACES.length-1].txt;}
+/* Allure d'endurance de référence. Indication, jamais évaluée — et vide
+   tant qu'aucune n'est renseignée. */
+function paceAt(k){
+  const A=((DB.milestones||{}).allures||[]).slice().sort((x,y)=>String(x.until).localeCompare(String(y.until)));
+  for(const p of A)if(k<=p.until)return p.txt;
+  return A.length?A[A.length-1].txt:null;
+}
 
 /* --- Médiane de volume sur 4 semaines pleines ---
    Une cible de volume ne se juge pas sur un total hebdomadaire : une
@@ -1828,32 +1884,43 @@ function renderHeader(){
   document.getElementById("eyebrow").textContent="";
 
   /* Les quatre jauges visent la cible DU MOIS, pas une échéance
-     trimestrielle : c'est l'écart du moment qui se pilote. */
-  /* 1 · poids moyen hebdo — origine : première moyenne connue. */
-  const wFrac=(wk===null||w0===null||w0<=wT)?0:(w0-wk)/(w0-wT);
-  /* 2 · tour de taille — origine : mesure de référence. */
-  const wtFrac=(wa===null||wb===null||waT===null||wb<=waT)?0:(wb-wa)/(wb-waT);
-  /* 3 · sommeil moyen 7 j — vide à 5 h, plein à la cible du mois. */
-  const bFrac=(sl7===null||slT<=SLEEP_LOW)?0:(sl7-SLEEP_LOW)/(slT-SLEEP_LOW);
-  /* 4 · VO2max maxi hebdo — origine : premier relevé enregistré. */
-  const vFrac=(vo===null||v0===null||v0>=voT)?0:(vo-v0)/(voT-v0);
+     trimestrielle : c'est l'écart du moment qui se pilote.
+     Une cible non paramétrée n'est pas une cible à zéro : la jauge montre
+     alors la mesure seule, sans anneau et sans écart. Écrire « /0 » ou
+     diviser par une cible absente donnait un « NaN » ou une exception. */
+  const frac=(v,o,c,sens)=>{
+    if(v===null||o===null||c===null)return 0;
+    if(sens<0)return o<=c?0:(o-v)/(o-c);
+    return o>=c?0:(v-o)/(c-o);
+  };
+  const wFrac=frac(wk,w0,wT,-1);
+  const wtFrac=frac(wa,wb,waT,-1);
+  const bFrac=(sl7===null||slT===null||slT<=SLEEP_LOW)?0:(sl7-SLEEP_LOW)/(slT-SLEEP_LOW);
+  const vFrac=frac(vo,v0,voT,1);
 
   const wkN=weekWeight(mon)!==null?weekWeightN(mon):lastWeeklyN();
   const MOISC=MOIS[+f.m.slice(5,7)-1];
+  /* Suffixe « /cible » et mention de la cible : présents seulement si la
+     cible existe. Sinon la jauge dit ce qui est mesuré, point. */
+  const sufNum=(c,d)=>c===null?"":"/"+(d===undefined?String(c):c.toFixed(d));
+  const cibleTxt=(c,d)=>c===null?", aucune cible paramétrée"
+    :", cible "+MOISC+" "+(d===undefined?String(c):c.toFixed(d));
 
   document.getElementById("prog").innerHTML=
-    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":"/"+wT.toFixed(1),
+    gauge(wFrac,wk===null?dash:wk.toFixed(1),wk===null?"":sufNum(wT,1),
       wk===null?"1re pesée "+fmt(MEASURE_START).num+"/08":(wkN===2?"poids moy. partiel":"poids moy."),"var(--depth)",
-      wk===null?"Première pesée prévue le "+MEASURE_START:"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées, cible "+MOISC+" "+wT.toFixed(1))+
-    gauge(wtFrac,wa===null?dash:wa.toFixed(1),(wa===null||waT===null)?"":"/"+waT.toFixed(1),
+      wk===null?"Première pesée prévue le "+MEASURE_START
+        :"Moyenne hebdomadaire "+wk.toFixed(1)+" kg sur "+wkN+" pesées"+cibleTxt(wT,1))+
+    gauge(wtFrac,wa===null?dash:wa.toFixed(1),wa===null?"":sufNum(waT,1),
       wa===null?"1re mesure "+fmt(MEASURE_START).num+"/08":"taille moy.","var(--k-swim)",
       wa===null?"Premier tour de taille prévu le "+MEASURE_START
-        :(waT===null?"Mesure de référence manquante dans Références"
-          :"Moyenne hebdomadaire "+wa.toFixed(1)+" cm, cible "+MOISC+" "+waT.toFixed(1)))+
-    gauge(bFrac,sl7===null?dash:fmtDur(sl7),sl7===null?"":"/"+fmtDur(slT),"sommeil moy.","var(--brass)",
-      sl7===null?"Aucune durée de sommeil saisie":"Moyenne sur 7 jours "+fmtDur(sl7)+", cible "+MOISC+" "+fmtDur(slT))+
-    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":"/"+voT,"vo2max hebdo","var(--k-run)",
-      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+", cible "+MOISC+" "+voT);
+        :(waT===null?"Mesure de référence ou cible manquante dans Références"
+          :"Moyenne hebdomadaire "+wa.toFixed(1)+" cm"+cibleTxt(waT,1)))+
+    gauge(bFrac,sl7===null?dash:fmtDur(sl7),(sl7===null||slT===null)?"":"/"+fmtDur(slT),"sommeil moy.","var(--brass)",
+      sl7===null?"Aucune durée de sommeil saisie"
+        :"Moyenne sur 7 jours "+fmtDur(sl7)+(slT===null?", aucune cible paramétrée":", cible "+MOISC+" "+fmtDur(slT)))+
+    gauge(vFrac,vo===null?dash:vo.toFixed(1),vo===null?"":sufNum(voT),"vo2max hebdo","var(--k-run)",
+      vo===null?"Aucun relevé VO2max":"Meilleur relevé de la semaine "+vo.toFixed(1)+cibleTxt(voT));
 
   const B=[];
   if(stale)B.push(["warn",stale]);
@@ -2497,16 +2564,17 @@ function st(ok,mileD){
 let allMonths=false;
 function monthIdx(){
   const c=MOISKEY(TODAY);
-  const i=MONTHS.findIndex(x=>x.m===c);
-  return i>=0?i:(TODAY<MONTHS[0].m?0:MONTHS.length-1);
+  const T=monthsTable(),i=T.findIndex(x=>x.m===c);
+  return i>=0?i:(TODAY<T[0].m?0:T.length-1);
 }
 function monthWindow(){
-  if(allMonths)return MONTHS;
+  const T=monthsTable();
+  if(allMonths)return T;
   const i=monthIdx();
   /* Du mois précédent jusqu'à l'horizon. Le tableau défile
      horizontalement : mieux vaut voir toute la pente que quatre mois. */
-  const end=Math.max(i+1,MONTHS.findIndex(x=>x.m===HORIZON)+1);
-  return MONTHS.slice(Math.max(0,i-1),end);
+  const end=Math.max(i+1,T.findIndex(x=>x.m===HORIZON)+1);
+  return T.slice(Math.max(0,i-1),end);
 }
 /* Réel HEBDOMADAIRE, cible MENSUELLE, sur le même axe de dates.
    Le réel garde sa finesse — une courbe mensuelle n'aurait qu'un point
@@ -2517,13 +2585,13 @@ function monthWindow(){
    semaine pour la VO2max. */
 function progWeeks(){
   const a=[],end=mondayOf(TODAY);
-  let m=mondayOf(monthStart(MONTHS[0].m));
+  let m=mondayOf(monthStart(BASE_MOIS));
   for(let i=0;i<80&&m<=end;i++){a.push(m);m=addDays(m,7);}
   return a;
 }
 function monthSeries(t){
   const pts=[],goal=[];
-  MONTHS.forEach(x=>{
+  monthsTable().forEach(x=>{
     if(!allMonths&&x.m>HORIZON)return;
     const tv=tgtValue(x,t);
     if(tv!==null)goal.push({k:monthStart(x.m),lab:mois3(x.m),v:tv});
@@ -2543,7 +2611,8 @@ function moisLab(m){return MOIS[+m.slice(5,7)-1].slice(0,4)+" "+m.slice(2,4);}
 function testAt(){
   const done=DB.settings.tests||{};
   let next=null,last=null,late=null;
-  TESTS.forEach(t=>{
+  ((DB.milestones||{}).tests||[]).slice()
+    .sort((a,b)=>String(a.d).localeCompare(String(b.d))).forEach(t=>{
     const r=done[t.d];
     if(t.d>=TODAY){if(!next)next=t;return;}
     if(parseMMSS(r)!==null)last={t:t,r:r};
@@ -2844,9 +2913,51 @@ function renderRefs(){
   if(todo.length)h+='<p class="todo">Attendu : '+todo.join("<br>")+'.<br>Le bilan sanguin reste ouvert, sans date.</p>';
   h+='<div class="refs-grid">';
   h+=f(R,"waistBase","Tour de taille de référence","cm");
+  /* --- Paramètres des cibles ---
+     Ils vivent ici parce qu'ils ne peuvent pas vivre dans le code : ce
+     sont des données de santé, et le dépôt est public. Ils se relisent à
+     chaque revue trimestrielle. */
+  h+='<div class="refs-h">Trajectoire de poids</div>';
+  const mp=(o,k,lab,unit,hint,step)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+
+    (hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</span>'+
+    '<input type="'+(k==="date"?"date":"number")+'" '+(k==="date"?"":'step="'+(step||"0.05")+'" inputmode="decimal"')+
+    ' placeholder="—" value="'+esc(o[k]===undefined||o[k]===null?"":o[k])+'" data-ms="poids|'+k+'"><span class="unit">'+esc(unit)+'</span></div>';
+  const P=DB.milestones.poids;
+  h+=mp(P,"base","Poids de départ","kg","La mesure de référence d'où part la trajectoire.","0.1");
+  h+=mp(P,"date","Date de ce poids","","");
+  h+=mp(P,"r1","Rythme initial","kg/sem","Perte visée par semaine tant que le seuil n'est pas franchi.","0.05");
+  h+=mp(P,"seuil","Seuil de resserrement","kg","Sous ce poids, le rythme passe au second.","0.5");
+  h+=mp(P,"r2","Rythme resserré","kg/sem","","0.05");
+  h+=mp(P,"forme","Poids de forme","kg","Plancher : en dessous, la trajectoire est plate. C'est une stabilisation, pas un déficit qui continue.","0.5");
+  if(ciblesParametrees()){
+    const T0=monthsTable();
+    const at=v=>{const x=T0.filter(y=>y.w!==null&&y.w<=v)[0];return x?moisLab(x.m):"jamais";};
+    h+='<p class="pace">Trajectoire : '+esc(num(P.seuil)!==null?num(P.seuil)+" kg vers "+at(num(P.seuil))+" · ":"")+
+       esc(num(P.forme)!==null?num(P.forme)+" kg vers "+at(num(P.forme)):"")+'.</p>';
+  }else h+='<p class="todo">Cibles non paramétrées : le tableau et les jauges resteront vides tant que le poids de départ, sa date et le rythme ne sont pas renseignés.</p>';
+
+  h+='<div class="refs-h">Autres cibles — départ et horizon '+esc(moisLab(DERNIER_MOIS))+'</div>';
+  const mb=(grp,lab,unit,step,hint)=>{
+    const o=DB.milestones[grp]||{};
+    return'<div class="log-row pair"><span class="log-lab">'+esc(lab)+(hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</span>'+
+      '<input type="number" step="'+step+'" inputmode="decimal" placeholder="départ" value="'+esc(o.base===undefined||o.base===null?"":o.base)+'" data-ms="'+grp+'|base">'+
+      '<input type="number" step="'+step+'" inputmode="decimal" placeholder="horizon" value="'+esc(o.cible===undefined||o.cible===null?"":o.cible)+'" data-ms="'+grp+'|cible">'+
+      '<span class="unit">'+esc(unit)+'</span></div>';
+  };
+  h+='<div class="log-row pair pair-h"><span></span><span>Départ</span><span>Horizon</span><span></span></div>';
+  h+=mb("taille","Tour de taille","cm","0.5","Écart en cm sous la mesure de référence, pas une valeur absolue.");
+  h+=mb("vol","Volume course","km","1");
+  h+=mb("sommeil","Sommeil","h","0.05","Heures décimales : 6,75 vaut 6 h 45.");
+  h+=mb("prot","Protéines","j/7","1");
+  h+=mb("vo2","VO2max","","0.5");
+  h+='<div class="log-row"><span class="log-lab">Affûtage du dernier mois<span class="hint">Volume de course voulu le mois de la course, en baisse. Vide = pas d\'affûtage.</span></span>'+
+     '<input type="number" step="1" inputmode="numeric" placeholder="—" value="'+esc((DB.milestones.vol||{}).affutage||"")+'" data-ms="vol|affutage"><span class="unit">km</span></div>';
+
   h+='<div class="refs-h">Tests chronométrés</div>';
   const done=DB.settings.tests||{};
-  TESTS.forEach(t=>{
+  const TL=(DB.milestones.tests||[]).slice().sort((a,b)=>String(a.d).localeCompare(String(b.d)));
+  if(!TL.length)h+='<p class="empty">Aucun test daté. Ils s\'ajoutent à la revue trimestrielle.</p>';
+  TL.forEach(t=>{
     const v=done[t.d]||"",bad=v&&parseMMSS(v)===null;
     h+='<div class="log-row"><span class="log-lab">'+esc(t.dist)+' — '+esc(dm(t.d))+
        '<span class="hint">'+(t.cible?"Cible "+esc(t.cible)+".":"Test de référence, sans cible.")+' Format mm:ss'+(t.dist==="semi"?" ou h:mm:ss":"")+'.</span></span>'+
@@ -3222,6 +3333,15 @@ document.addEventListener("change",async ev=>{
     return;
   }
   if(ev.target.dataset.etat){DB.etat=ev.target.value;save();return;}
+  /* Paramètres des cibles : un champ vidé redevient « non renseigné », pas
+     zéro — une cible à zéro serait pire qu'une cible absente. */
+  if(ev.target.dataset.ms){
+    const a=ev.target.dataset.ms.split("|"),v=String(ev.target.value||"").trim();
+    if(!DB.milestones[a[0]])DB.milestones[a[0]]={};
+    if(v==="")delete DB.milestones[a[0]][a[1]];
+    else DB.milestones[a[0]][a[1]]=(a[1]==="date")?v:num(v);
+    save();renderTargets();renderRefs();return;
+  }
   const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n,hm=ev.target.dataset.hm;
   if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
   /* Champ numérique dont le type compte : drinksIn() n'additionne que les
