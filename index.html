@@ -333,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.2", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.3", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -2047,13 +2047,21 @@ function viewRevueCorps(d){
     r.erreurs.forEach(x=>{h+='<div class="banner warn">'+esc(x)+'</div>';});
   }
 
-  /* Date de la dernière revue, alerte au-delà de dix jours. */
+  /* Dernier import ET dernière revue : ce sont deux gestes distincts, et
+     c'est la revue qui peut manquer alors que les données sont fraîches.
+     Alerte au-delà de dix jours sur l'une comme sur l'autre. */
   const age=d?daysSince(d.importe):null;
+  const R=DB.reviews||[],rv=R.length?R[R.length-1]:null;
+  const rAge=rv?daysSince(rv.date):null;
+  const ilya=n=>n===0?"aujourd'hui":n===1?"hier":"il y a "+n+" jours";
   if(d)h+='<div class="meta">Dernier import : '+esc(dm(d.importe))+
-     (age===null?"":age===0?" · aujourd'hui":age===1?" · hier":" · il y a "+age+" jours")+'</div>';
+     (age===null?"":" · "+ilya(age))+
+     (rv?' &nbsp;·&nbsp; Dernière revue : '+esc(dm(rv.date))+' · '+ilya(rAge):' &nbsp;·&nbsp; Aucune revue')+'</div>';
   if(age!==null&&age>REVUE_MAX)
     h+='<div class="banner warn">Dernier import il y a '+age+' jours — au-delà de '+REVUE_MAX+
        ', la revue porte sur des données périmées.</div>';
+  if(rAge!==null&&rAge>REVUE_MAX)
+    h+='<div class="banner warn">Dernière revue il y a '+rAge+' jours — le plan en cours a été écrit sur d\'autres chiffres que ceux d\'aujourd\'hui.</div>';
   if(!d)h+='<p class="empty">Aucun import. Les mesures affichées ailleurs dans l\'app resteront vides.</p>';
   h+='</section>';
 
