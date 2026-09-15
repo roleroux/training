@@ -217,6 +217,24 @@ textarea.menu:focus{outline:none;border-color:var(--brass)}
 .log-row.seance .ro{flex:1;text-align:left;font-size:12.5px;line-height:1.5}
 .srow:last-child{border-bottom:none}
 .imp .big{margin-top:6px}
+/* Un champ de clé se saisit et disparaît : il n'est jamais relu. */
+input.keyin{width:100%;background:none;border:1px solid var(--edge);border-radius:9px;color:var(--ink);
+  font-family:var(--mono);font-size:16px;padding:10px;letter-spacing:.02em}
+input.keyin:focus{outline:none;border-color:var(--brass)}
+input.mdl{font-family:var(--mono);font-size:16px;width:150px;text-align:right;background:none;
+  border:none;border-bottom:1px solid var(--edge);color:var(--ink);padding:4px}
+textarea.etat{font-family:var(--mono);font-size:13px;min-height:150px}
+/* La barre dit que ça avance, elle ne prétend pas savoir où ça en est. */
+.bar{height:4px;background:var(--edge);border-radius:99px;overflow:hidden;margin:12px 0 4px}
+.bar-in{height:100%;background:var(--brass);transition:width .35s ease}
+.analyse{font-size:13.5px;line-height:1.6;color:var(--ink);margin:0 0 14px}
+ul.lst{margin:0 0 12px;padding-left:18px}
+ul.lst li{font-size:12.5px;line-height:1.55;color:var(--fog);margin-bottom:4px}
+.repas{margin-top:12px;padding:11px 12px 6px;background:var(--tint);border-radius:10px}
+.repas-t{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);margin-bottom:4px}
+.repas-t b{color:var(--depth);font-weight:500}
+.cre-h{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--fog)}
+.subi{color:var(--buoy)}
 .pivot{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--buoy);border-left:3px solid var(--buoy);background:var(--tint);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:12px}
 .todo{font-size:11.5px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
 
@@ -315,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-14.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -491,6 +509,17 @@ function normalize(){
   /* Charge professionnelle, une note par semaine, demandée au dépôt du
      zip. Absente = inconnue, jamais 3. */
   if(!DB.charge)DB.charge={};
+  /* Lot 2 : doctrine, bloc ÉTAT, revues, réglages d'appel. La clé API
+     n'est pas ici — elle vit sous sa propre clé de stockage. */
+  if(!DB.doctrine)DB.doctrine=null;
+  if(!Array.isArray(DB.doctrineHistory))DB.doctrineHistory=[];
+  if(typeof DB.etat!=="string")DB.etat="";
+  if(!Array.isArray(DB.reviews))DB.reviews=[];
+  if(!DB.settings.api)DB.settings.api={model:MODELE_DEFAUT};
+  if(!DB.settings.api.model)DB.settings.api.model=MODELE_DEFAUT;
+  /* Une clé rangée dans DB par une version antérieure ou par une
+     sauvegarde restaurée est déplacée hors de DB, puis effacée. */
+  if(DB.settings.api.key){setApiKey(DB.settings.api.key);delete DB.settings.api.key;}
   if(!DB.settings.zones)DB.settings.zones={bas:128,haut:141};
   if(!DB.plan||!Array.isArray(DB.plan.weeks))DB.plan=SEED_PLAN;
   return false;
@@ -1135,6 +1164,339 @@ function seancesAt(k){
   return out.sort((a,b)=>String(a.debut).localeCompare(String(b.debut)));
 }
 
+/* ================= Doctrine, bloc ÉTAT, clé API =================
+   Trois choses qui ne vivent que sur cet appareil.
+
+   La doctrine contient un dossier médical nominatif et des éléments
+   professionnels. Le bloc ÉTAT porte les valeurs du moment. La clé API
+   ouvre un compte facturable. Aucun des trois n'entre dans le dépôt, qui
+   est public.
+
+   La clé est rangée sous sa PROPRE clé de stockage, hors de DB. C'est
+   volontaire : tout export sérialise DB, et une exclusion qu'il faut
+   penser à écrire est une exclusion qu'on oublie un jour. Là, aucun
+   export ne peut la porter, même par accident. */
+const AKEY="pimperel-key";
+function apiKey(){try{return localStorage.getItem(AKEY)||"";}catch(e){return "";}}
+function setApiKey(v){
+  try{ v?localStorage.setItem(AKEY,v):localStorage.removeItem(AKEY); }catch(e){}
+}
+/* Une clé ne s'affiche jamais en entier : on montre de quoi la
+   reconnaître, pas de quoi la recopier. */
+function keyMask(k){
+  if(!k)return "";
+  return k.length<=14?"clé enregistrée":k.slice(0,11)+"…"+k.slice(-4);
+}
+const MODELE_DEFAUT="claude-opus-5";
+function modele(){return (DB.settings.api||{}).model||MODELE_DEFAUT;}
+
+/* Empreinte courte, pour savoir d'un coup d'œil si le fichier importé est
+   bien celui qu'on croit. SHA-256 tronqué — il s'agit d'identifier une
+   révision, pas de résister à une attaque. */
+async function sha12(txt){
+  try{
+    const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(b)).slice(0,6).map(x=>x.toString(16).padStart(2,"0")).join("");
+  }catch(e){
+    /* Pas de crypto.subtle hors HTTPS : une empreinte dégradée vaut mieux
+       que pas d'empreinte, elle sert juste à comparer deux imports. */
+    let h=2166136261;
+    for(let i=0;i<txt.length;i++){h^=txt.charCodeAt(i);h=Math.imul(h,16777619);}
+    return "x"+(h>>>0).toString(16).padStart(8,"0");
+  }
+}
+/* « *Révision du 1er septembre 2026. Prochaine revue : …* » */
+function doctrineRevision(txt){
+  const m=/R[ée]vision\s+du\s+([^.*\n]{3,40})/i.exec(txt||"");
+  return m?m[1].trim():null;
+}
+const DOCTRINE_MIN=2000;   /* en dessous, ce n'est pas la doctrine */
+async function importDoctrine(file){
+  const txt=await file.text();
+  if(txt.length<DOCTRINE_MIN)
+    throw new Error("Ce fichier fait "+txt.length+" caractères : ce n'est pas la doctrine.");
+  if(!/^#\s/m.test(txt))
+    throw new Error("Ce fichier n'a aucun titre markdown : vérifie que c'est bien le bon.");
+  const d={texte:txt,revision:doctrineRevision(txt),hash:await sha12(txt),
+           importe:TODAY,nom:file.name,taille:txt.length};
+  /* L'ancienne version est gardée : une revue trimestrielle qui se
+     trompe de fichier doit pouvoir revenir en arrière. Deux, pas plus. */
+  if(DB.doctrine&&DB.doctrine.texte){
+    if(!Array.isArray(DB.doctrineHistory))DB.doctrineHistory=[];
+    DB.doctrineHistory.push(DB.doctrine);
+    while(DB.doctrineHistory.length>2)DB.doctrineHistory.shift();
+  }
+  DB.doctrine=d;
+  save();
+  return d;
+}
+function aDoctrine(){return !!(DB.doctrine&&DB.doctrine.texte);}
+/* Ce qui manque pour lancer une revue. Nommé, jamais deviné. */
+function revuePrete(){
+  const m=[];
+  if(!aDoctrine())m.push("la doctrine");
+  if(!apiKey())m.push("la clé API");
+  if(!(DB.imports||[]).length)m.push("un import de données");
+  return m;
+}
+
+/* ================= Appels à l'API (§5) =================
+   Deux appels, jamais un. L'analyse est lisible tout de suite pendant que
+   le plan se fabrique, et deux sorties moyennes sont plus fiables qu'une
+   sortie unique de vingt mille jetons.
+
+   Les deux forcent un outil : on ne parse jamais du markdown. Le résultat
+   se lit dans le bloc de type "tool_use", trouvé PAR TYPE et jamais par
+   index — l'ordre des blocs n'est pas garanti. */
+const API_URL="https://api.anthropic.com/v1/messages";
+const API_VER="2023-06-01";
+/* Sans cet en-tête, le navigateur reçoit un 401 CORS et rien d'autre. */
+const API_BROWSER="anthropic-dangerous-direct-browser-access";
+
+/* Erreur d'appel portant de quoi décider : réessayer ou non. */
+function ApiErr(msg,statut,rejouable){
+  const e=new Error(msg);e.statut=statut;e.rejouable=!!rejouable;return e;
+}
+function messageStatut(st,corps){
+  if(st===401)return "Clé API refusée (401). Vérifie-la dans Cibles › Doctrine & ÉTAT.";
+  if(st===403)return "Clé sans droit d'accès (403).";
+  if(st===429)return "Quota atteint (429). Réessaie dans quelques minutes.";
+  if(st===400)return "Requête refusée (400) : "+(corps||"").slice(0,200);
+  if(st>=500) return "Panne côté serveur ("+st+").";
+  return "Réponse inattendue ("+st+").";
+}
+/* Deux tentatives, 2 s puis 8 s, et seulement sur ce qui peut passer :
+   réseau et 5xx. Un 401 ne devient pas vrai en insistant. */
+const RETRIES=[2000,8000];
+async function apiFetch(body,onStream){
+  const key=apiKey();
+  if(!key)throw ApiErr("Aucune clé API enregistrée.",0,false);
+  let derniere=null;
+  for(let essai=0;essai<=RETRIES.length;essai++){
+    if(essai)await new Promise(r=>setTimeout(r,RETRIES[essai-1]));
+    let rep;
+    try{
+      rep=await fetch(API_URL,{method:"POST",headers:{
+        "content-type":"application/json","x-api-key":key,
+        "anthropic-version":API_VER,[API_BROWSER]:"true"
+      },body:JSON.stringify(body)});
+    }catch(e){
+      /* Panne réseau, ou Safari qui suspend la requête en arrière-plan. */
+      derniere=ApiErr("Réseau indisponible pendant l'appel.",0,true);
+      continue;
+    }
+    if(rep.ok)return onStream?await lireSSE(rep,onStream):await rep.json();
+    const corps=await rep.text().catch(()=>"");
+    const err=ApiErr(messageStatut(rep.status,corps),rep.status,rep.status>=500);
+    if(!err.rejouable)throw err;
+    derniere=err;
+  }
+  throw derniere||ApiErr("Appel impossible.",0,false);
+}
+/* SSE : découper sur les lignes vides, ne lire que les lignes data:, et
+   accumuler les fragments d'arguments d'outil. Le JSON n'est parsé qu'au
+   content_block_stop — un input_json_delta seul n'est jamais du JSON
+   valide, c'est un morceau de chaîne. */
+async function lireSSE(rep,onStream){
+  const lect=rep.body.getReader(),dec=new TextDecoder();
+  let tampon="",json="",fini=null,texte="";
+  for(;;){
+    const {done,value}=await lect.read();
+    if(done)break;
+    tampon+=dec.decode(value,{stream:true});
+    let i;
+    while((i=tampon.indexOf("\n\n"))>=0){
+      const bloc=tampon.slice(0,i);tampon=tampon.slice(i+2);
+      bloc.split("\n").forEach(ligne=>{
+        if(ligne.indexOf("data:")!==0)return;
+        let ev;
+        try{ev=JSON.parse(ligne.slice(5).trim());}catch(e){return;}
+        if(ev.type==="content_block_delta"&&ev.delta){
+          if(ev.delta.type==="input_json_delta"){json+=ev.delta.partial_json||"";}
+          else if(ev.delta.type==="text_delta"){texte+=ev.delta.text||"";}
+          if(onStream)onStream(json.length+texte.length);
+        }else if(ev.type==="content_block_stop"&&json){
+          try{fini=JSON.parse(json);}catch(e){fini=null;}
+        }else if(ev.type==="error"){
+          throw ApiErr("Erreur de flux : "+((ev.error||{}).message||"inconnue"),0,false);
+        }
+      });
+    }
+  }
+  if(fini===null&&json){try{fini=JSON.parse(json);}catch(e){}}
+  if(fini===null)throw ApiErr("Le flux s'est terminé sans sortie exploitable.",0,true);
+  return{outil:fini,texte:texte};
+}
+/* Sortie d'outil d'une réponse non streamée : par type, jamais par index. */
+function sortieOutil(data){
+  const blocs=(data&&data.content)||[];
+  for(let i=0;i<blocs.length;i++)if(blocs[i].type==="tool_use")return blocs[i].input;
+  return null;
+}
+
+/* --- Les deux schémas (§7) --- */
+const SCHEMA_REVUE={
+  type:"object",
+  properties:{
+    registre:{type:"integer",enum:[1,2,3,4]},
+    registreMotif:{type:"string"},
+    registreExpire:{type:["string","null"],description:"date ISO, obligatoire si registre vaut 4"},
+    analyse:{type:"string",description:"texte court, chiffré, sans préambule"},
+    actionsFaites:{type:"array",items:{type:"string"}},
+    actionsManquees:{type:"array",items:{type:"string"}},
+    indicateurs:{type:"array",items:{type:"object",properties:{
+      nom:{type:"string"},valeur:{type:["number","null"]},tendance:{type:["number","null"]},
+      cible:{type:["number","null"]},statut:{type:"string",enum:["ok","derive","alerte"]}
+    },required:["nom","statut"]}},
+    alertes:{type:"array",items:{type:"object",properties:{
+      code:{type:"string"},texte:{type:"string"}},required:["code","texte"]}},
+    apport:{type:"object",properties:{
+      joursRenseignes:{type:"integer"},kcalMoyEstime:{type:["number","null"]},
+      protMoyEstime:{type:["number","null"]},ecartHypothese:{type:["number","null"]},
+      incertitude:{type:"string"},lecture:{type:"string"}
+    },required:["joursRenseignes","lecture"]},
+    etat:{type:"string",description:"bloc ÉTAT régénéré, texte complet, prêt à être rechargé"}
+  },
+  required:["registre","registreMotif","analyse","actionsFaites","actionsManquees",
+            "indicateurs","alertes","apport","etat"]
+};
+const SCHEMA_SEANCE={type:"object",properties:{
+  rank:{type:"string",enum:["P1","P2","P3"]},
+  kind:{type:"string",enum:["salle","course","vtt","rando","natation","mobilite","qualite","autre"]},
+  label:{type:"string"},detail:{type:"string"},fallback:{type:"string"},
+  bonus:{type:"boolean"}},required:["rank","kind","label"]};
+const SCHEMA_PLAN={
+  type:"object",
+  properties:{
+    genere:{type:"string"},
+    semaines:{type:"array",items:{type:"object",properties:{
+      start:{type:"string"},
+      regime:{type:"string",enum:["calme","normale","chargee","vacances"]},
+      runCapKm:{type:"number"},
+      jours:{type:"array",items:{type:"object",properties:{
+        d:{type:"string"},fascia:{type:"boolean"},
+        seances:{type:"array",items:SCHEMA_SEANCE},
+        nutrition:{type:"object",properties:{
+          feculentDiner:{type:"boolean"},feculentG:{type:["number","null"]},
+          creneaux:{type:"array",items:{type:"object",properties:{
+            h:{type:"string"},contenu:{type:"string"},prot:{type:["number","null"]},
+            subi:{type:"boolean"}},required:["h","contenu"]}},
+          kcal:{type:"number"},prot:{type:"number"},alcool:{type:["number","null"]}
+        },required:["feculentDiner","creneaux","kcal","prot"]},
+        note:{type:"string"}
+      },required:["d","fascia","seances","nutrition"]}}
+    },required:["start","regime","runCapKm","jours"]}},
+    courses:{type:"array",items:{type:"string"}},
+    prepDimanche:{type:"array",items:{type:"string"}},
+    backfill:{type:"object",additionalProperties:true}
+  },
+  required:["genere","semaines"]
+};
+
+/* --- Le contexte envoyé, dans l'ordre imposé par la doctrine §13 :
+   agenda de la session > bloc ÉTAT > doctrine. La doctrine part en system
+   prompt, telle quelle, sans reformulation. --- */
+function blocAgenda(){
+  const mon=mondayOf(TODAY),s1=addDays(mon,7),s2=addDays(mon,14);
+  const a=DB.agenda||{};
+  return{
+    semaines:[s1,s2].map(m=>({start:m,regime:regimeOf(m),note:a[m]||null})),
+    chargePro:DB.charge[(lastDigest()||{}).semaineDu]||null
+  };
+}
+function contexteRevue(){
+  const d=lastDigest();
+  return{
+    aujourdhui:TODAY,
+    agenda:blocAgenda(),
+    etat:DB.etat||null,
+    digest:d?{du:d.du,au:d.au,semaineDu:d.semaineDu,semaine:d.semaine,
+              manquant:d.manquant,jours:d.jours,seances:d.seances,
+              methodeHorsZone:d.methodeHorsZone}:null,
+    historique:(DB.imports||[]).map(x=>Object.assign({semaine:x.semaineDu},x.semaine)),
+    journal:contextBlock().journal14,
+    cibles:ciblesPourModele(),
+    references:DB.settings.refs||{},
+    /* Premier appel : l'ÉTAT n'existe pas, il faut le produire en entier. */
+    etatAProduire:!DB.etat
+  };
+}
+const CONSIGNE_A=
+ "Tu reçois les données mesurées de la semaine écoulée et le journal déclaratif. "+
+ "Produis la revue du dimanche en appelant l'outil rendre_revue, et rien d'autre. "+
+ "Le champ analyse est court et chiffré, sans préambule ni formule d'ouverture. "+
+ "Le champ etat contient le bloc ÉTAT régénéré en entier, prêt à être rechargé tel quel la semaine suivante. "+
+ "Si aucun bloc ÉTAT ne t'est fourni, produis-le intégralement à partir des données reçues, "+
+ "compteurs de registre initialisés à zéro — un compteur qu'on ne peut pas reconstituer se réamorce, il ne se devine pas. "+
+ "Pour l'apport, estime sur les menus en clair du journal, en un seul lot sur la semaine, "+
+ "et dis sur combien de jours renseignés tu as estimé. N'invente pas de journée manquante.";
+const CONSIGNE_B=
+ "Tu reçois la revue que tu viens de produire. Établis maintenant le plan des quatorze prochains jours "+
+ "en appelant l'outil rendre_plan, et rien d'autre. Deux semaines, chacune commençant un lundi. "+
+ "Respecte les régimes de l'agenda et le plafond de course. "+
+ "Le champ backfill reste vide : l'app le remplit elle-même depuis les mesures importées.";
+
+function corpsA(){
+  return{
+    model:modele(),max_tokens:4000,
+    system:[{type:"text",text:DB.doctrine.texte,cache_control:{type:"ephemeral"}}],
+    tools:[{name:"rendre_revue",description:"Revue hebdomadaire structurée.",input_schema:SCHEMA_REVUE}],
+    tool_choice:{type:"tool",name:"rendre_revue"},
+    messages:[{role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())}]
+  };
+}
+function corpsB(revue){
+  return{
+    model:modele(),max_tokens:16000,stream:true,
+    system:[{type:"text",text:DB.doctrine.texte,cache_control:{type:"ephemeral"}}],
+    tools:[{name:"rendre_plan",description:"Plan structuré de quatorze jours.",input_schema:SCHEMA_PLAN}],
+    tool_choice:{type:"tool",name:"rendre_plan"},
+    messages:[
+      {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())},
+      {role:"assistant",content:[{type:"text",text:JSON.stringify(revue)}]},
+      {role:"user",content:CONSIGNE_B}
+    ]
+  };
+}
+
+/* --- Appel A. Son résultat est écrit en base AVANT tout appel B :
+   sur iOS, une requête en cours est suspendue dès que Safari passe en
+   arrière-plan, et quatre-vingt-dix secondes suffisent à ce que ça
+   arrive. Un plan qui échoue laisse alors une revue exploitable. --- */
+async function appelA(){
+  const manque=revuePrete();
+  if(manque.length)throw ApiErr("Revue impossible : il manque "+manque.join(", ")+".",0,false);
+  const data=await apiFetch(corpsA());
+  const r=sortieOutil(data);
+  if(!r||typeof r.analyse!=="string")throw ApiErr("Réponse sans revue exploitable.",0,true);
+  rangerRevue(r);
+  return r;
+}
+/* Une revue est identifiée par sa semaine : relancer sur la même semaine
+   remplace l'entrée, n'en empile pas une seconde. */
+function rangerRevue(r){
+  const d=lastDigest(),sem=(d&&d.semaineDu)||mondayOf(TODAY);
+  const e={date:TODAY,semaine:sem,registre:r.registre,registreMotif:r.registreMotif,
+           registreExpire:r.registreExpire||null,analyse:r.analyse,
+           actionsFaites:r.actionsFaites||[],actionsManquees:r.actionsManquees||[],
+           indicateurs:r.indicateurs||[],alertes:r.alertes||[],apport:r.apport||null,
+           modele:modele(),digestRef:d?d.du+"→"+d.au:null};
+  if(!Array.isArray(DB.reviews))DB.reviews=[];
+  const i=DB.reviews.findIndex(x=>x.semaine===sem);
+  if(i>=0)DB.reviews[i]=e;else DB.reviews.push(e);
+  DB.reviews.sort((a,b)=>String(a.semaine).localeCompare(String(b.semaine)));
+  while(DB.reviews.length>12)DB.reviews.shift();
+  if(typeof r.etat==="string"&&r.etat.trim())DB.etat=r.etat;
+  save();
+}
+async function appelB(revue,onStream){
+  const res=await apiFetch(corpsB(revue),onStream||function(){});
+  const p=res.outil;
+  if(!p||!Array.isArray(p.semaines)||!p.semaines.length)
+    throw ApiErr("Réponse sans plan exploitable.",0,true);
+  return p;
+}
+
 /* ================= Plan actif ================= */
 function lastCap(){
   const ws=DB.plan&&DB.plan.weeks||[];
@@ -1526,8 +1888,9 @@ function renderView(){
   else if(tab==="plan")v.innerHTML=viewPlan();
   else if(tab==="log")v.innerHTML=viewLog();
   else if(tab==="revue")v.innerHTML=viewRevue();
-  else v.innerHTML='<section class="panel" id="targets"></section><section class="panel" id="refs"></section><section class="panel" id="tools"></section>';
-  if(tab==="goals"){renderTargets();renderRefs();renderTools();}
+  else v.innerHTML='<section class="panel" id="targets"></section><section class="panel" id="refs"></section>'+
+    '<section class="panel" id="etat"></section><section class="panel" id="tools"></section>';
+  if(tab==="goals"){renderTargets();renderRefs();renderEtat();renderTools();}
 }
 
 /* --- Onglet Aujourd'hui : la journée en cours, dépliée, puis la revue. --- */
@@ -1554,6 +1917,10 @@ function viewToday(){
    plusieurs zips d'un coup : deux boutons auraient créé deux modes, et
    l'un des deux aurait été le mauvais un dimanche sur deux. */
 let impRes=null,impBusy=false;
+/* État du rituel en cours. Volontairement hors de DB : une revue
+   interrompue ne doit rien laisser derrière elle, hors ce que l'appel A a
+   déjà écrit en base. */
+let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null;
 function lastDigest(){const L=DB.imports||[];return L.length?L[L.length-1]:null;}
 function daysSince(k){return isDate(k)?Math.round((parseD(TODAY)-parseD(k))/86400000):null;}
 /* Dernière date portant une mesure, tous imports confondus. Sert aux
@@ -1566,6 +1933,34 @@ function lastDateWith(f){
 const CHARGE=["très calme","calme","normale","dense","très dense"];
 function viewRevue(){
   const d=lastDigest();
+  /* Écran d'accueil : il n'apparaît qu'à vide et disparaît pour de bon.
+     Deux champs, rien d'autre — c'est la seule configuration de l'app. */
+  if(!aDoctrine()||!apiKey())return viewSetup()+viewRevueCorps(d);
+  return viewRevueCorps(d);
+}
+function viewSetup(){
+  const k=apiKey();
+  let h='<section class="panel"><h2>Configuration</h2>'+
+    '<p class="panel-sub">Deux choses, une seule fois. Elles restent sur cet appareil : '+
+    'ni la doctrine ni la clé n\'entrent dans le dépôt, qui est public.</p>';
+  h+='<div class="log">';
+  h+='<div class="log-row col"><span class="log-lab">Doctrine<span class="hint">'+
+     (aDoctrine()?esc("Révision "+(DB.doctrine.revision||"inconnue")+" · "+DB.doctrine.hash)
+                 :"Fichier .md. Sans elle, la revue n\'a aucune règle et ne se lance pas.")+
+     '</span></span>'+
+     '<button class="'+(aDoctrine()?"tool":"big")+'" id="docBtn">'+(aDoctrine()?"Remplacer":"Choisir le fichier")+'</button>'+
+     '<input type="file" id="docFile" accept=".md,.txt,text/markdown,text/plain" hidden></div>';
+  h+='<div class="log-row col"><span class="log-lab">Clé API<span class="hint">'+
+     (k?esc(keyMask(k)):"Console Anthropic. Elle n\'est jamais exportée ni affichée en entier.")+
+     '</span></span>'+
+     (k?'<button class="tool" id="keyDel">Effacer la clé</button>'
+       :'<input type="password" class="keyin" placeholder="sk-ant-…" autocomplete="off" '+
+        'autocapitalize="off" autocorrect="off" spellcheck="false" data-key="1">')+
+     '</div>';
+  h+='</div></section>';
+  return h;
+}
+function viewRevueCorps(d){
   let h='<section class="panel imp"><h2>Revue</h2>'+
     '<p class="panel-sub">Le zip Health Auto Export est la seule source des mesures. '+
     'Dépose celui de la semaine, ou plusieurs d\'un coup pour rattraper l\'historique.</p>';
@@ -1643,13 +2038,86 @@ function viewRevue(){
     }
   }
 
-  h+='<section class="review">'+
-    '<div class="review-t">Revue dominicale</div>'+
-    '<div class="review-d">'+(reviewDue()
-      ? "À faire : importer le zip ci-dessus, exporter, coller dans la session coach, puis importer le plan de 2 semaines qu'elle produit."
-      : "Chaque dimanche soir. L'export est la seule source de données de la revue — l'app ne lit aucun service de santé.")+'</div>'+
-    '<button class="big" id="rev">Exporter la revue</button></section>';
+  h+=blocRevue();
   return h;
+}
+/* --- Le rituel : déposer le zip, puis appliquer. Deux taps, zéro collage.
+   L'analyse s'affiche dès qu'elle arrive, pendant que le plan se
+   fabrique — c'est tout l'intérêt des deux appels. --- */
+function blocRevue(){
+  const manque=revuePrete(),R=(DB.reviews||[]);
+  const derniere=R.length?R[R.length-1]:null;
+  let h='<section class="review"><div class="review-t">Revue dominicale</div>';
+  if(manque.length){
+    h+='<div class="review-d">Il manque '+esc(manque.join(", "))+
+       '. Sans doctrine, le modèle n\'a aucune règle : la revue ne se lance pas.</div>';
+    h+='<button class="big" id="rev">Exporter la revue</button></section>';
+    return h;
+  }
+  h+='<div class="review-d">'+(revBusy
+      ? esc(revEtape)
+      : "Un tap. L'analyse s'affiche d'abord, le plan se fabrique derrière.")+'</div>';
+  if(revBusy){
+    h+='<div class="bar"><div class="bar-in" style="width:'+Math.min(98,revPct)+'%"></div></div>';
+  }else{
+    h+='<button class="big" id="go"'+(revBusy?" disabled":"")+'>'+
+       (derniere&&derniere.semaine===((lastDigest()||{}).semaineDu)?"Relancer la revue":"Lancer la revue")+'</button>';
+  }
+  if(revErr)h+='<div class="banner warn">'+esc(revErr)+'</div>';
+  h+='</section>';
+
+  if(derniere)h+=blocAnalyse(derniere);
+  if(planPropose)h+=blocPlan(planPropose);
+  /* L'échappatoire reste : si l'appel ne passe pas, la boucle par
+     copier-coller dans une session de chat fonctionne toujours. */
+  h+='<div class="tools" style="margin-top:14px"><button class="tool" id="rev">Exporter la revue</button></div>';
+  return h;
+}
+function blocAnalyse(r){
+  let h='<section class="panel"><div class="meta">Analyse · '+esc(dm(r.date))+
+    ' · registre '+esc(String(r.registre))+'</div>';
+  if(r.registreMotif)h+='<p class="pace">'+esc(r.registreMotif)+
+    (r.registreExpire?' · péremption '+esc(dm(r.registreExpire)):'')+'</p>';
+  h+='<p class="analyse">'+esc(r.analyse).replace(/\n/g,"<br>")+'</p>';
+  (r.alertes||[]).forEach(a=>{h+='<div class="banner warn">'+esc(a.texte)+'</div>';});
+  if((r.indicateurs||[]).length){
+    h+='<div class="mtgt">';
+    r.indicateurs.forEach(i=>{
+      h+='<div class="mrow"><span class="mlab">'+esc(i.nom)+'</span>'+
+         '<span class="t-st '+(i.statut==="ok"?"ok":i.statut==="alerte"?"warn":"dim")+'">'+
+         (i.statut==="ok"?"✓":i.statut==="alerte"?"✗":"→")+'</span>'+
+         '<span class="mline">'+(i.valeur===null||i.valeur===undefined?'<span class="dim">—</span>':'<b>'+esc(String(i.valeur))+'</b>')+
+         (i.cible!==null&&i.cible!==undefined?' · cible '+esc(String(i.cible)):'')+
+         (i.tendance!==null&&i.tendance!==undefined?' · '+(i.tendance>0?"+":"")+esc(String(i.tendance)):'')+
+         '</span></div>';
+    });
+    h+='</div>';
+  }
+  const li=(t,a)=>a&&a.length?'<div class="refs-h">'+t+'</div><ul class="lst">'+a.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>':'';
+  h+=li("Fait",r.actionsFaites)+li("Manqué",r.actionsManquees);
+  /* Apport : hebdomadaire et unique. Aucun compteur par journée, jamais. */
+  const ap=r.apport;
+  if(ap)h+='<div class="refs-h">Apport estimé</div><p class="pace">'+
+    esc(ap.joursRenseignes+" jour"+(ap.joursRenseignes>1?"s":"")+" de menus renseignés")+
+    (ap.kcalMoyEstime?' · <b>'+esc(String(ap.kcalMoyEstime))+' kcal/j</b>':'')+
+    (ap.protMoyEstime?' · '+esc(String(ap.protMoyEstime))+' g de protéines':'')+
+    (ap.incertitude?' · '+esc(ap.incertitude):'')+
+    '</p><p class="pace">'+esc(ap.lecture||"")+'</p>';
+  return h+'</section>';
+}
+function blocPlan(p){
+  const j=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).length,0);
+  const s=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).reduce((m,d)=>m+(d.seances||[]).length,0),0);
+  let h='<section class="panel"><div class="meta">Plan proposé</div>'+
+    '<p class="pace">'+(p.semaines||[]).map(w=>esc(dm(w.start)+" · "+(REGIME[w.regime]||w.regime)+" · plafond "+w.runCapKm+" km")).join("<br>")+'</p>'+
+    '<p class="pace">'+j+' jours · '+s+' séances</p>';
+  if((p.courses||[]).length)h+='<div class="refs-h">Courses</div><ul class="lst">'+
+    p.courses.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
+  if((p.prepDimanche||[]).length)h+='<div class="refs-h">Préparation du dimanche</div><ul class="lst">'+
+    p.prepDimanche.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
+  /* L'application n'est jamais automatique : c'est le second tap. */
+  h+='<button class="big" id="applyPlan">Appliquer le plan</button>';
+  return h+'</section>';
 }
 const MANQ={tension:"tension",tourDeTaille:"tour de taille",poids:"poids"};
 const REVUE_MAX=10, TENSION_MAX=30, WAIST_MAX=21;
@@ -1670,6 +2138,73 @@ const KINDLAB={course:"Course",vtt:"Vélo",salle:"Salle",rando:"Randonnée",marc
 function fmtHMS(sec){
   const H=Math.floor(sec/3600),M=Math.floor(sec%3600/60),S=Math.round(sec%60);
   return (H?H+" h "+pad(M):M+" min ")+(H?":"+pad(S):pad(S)+" s");
+}
+
+/* Enchaînement des deux appels. L'appel A est persisté avant que l'appel
+   B parte : sur iOS, passer en arrière-plan suspend la requête en cours,
+   et un plan perdu ne doit pas emporter l'analyse avec lui. */
+async function lancerRevue(){
+  if(revBusy)return;
+  revBusy=true;revErr="";revPct=0;planPropose=null;
+  revEtape="Analyse de la semaine…";render();
+  let revue;
+  try{
+    revue=await appelA();
+  }catch(e){
+    revBusy=false;revErr=(e&&e.message)||String(e);render();return;
+  }
+  /* L'analyse est en base et à l'écran ; le plan peut échouer sans elle. */
+  revEtape="Analyse prête. Plan des 14 jours…";revPct=8;render();
+  try{
+    planPropose=await appelB(revue,n=>{
+      /* Aucune longueur totale connue : la barre dit que ça avance, pas
+         où ça en est. Prétendre un pourcentage exact serait faux. */
+      revPct=Math.min(95,8+Math.round(n/220));
+      const b=document.querySelector(".bar-in");
+      if(b)b.style.width=revPct+"%";
+    });
+  }catch(e){
+    revBusy=false;revErr="Analyse enregistrée, plan non produit : "+((e&&e.message)||e)+
+      " — le bouton relance le plan seul.";render();return;
+  }
+  revBusy=false;render();
+}
+/* Application : le plan remplace DB.plan, le rattrapage passe par les
+   règles existantes. Jamais automatique — c'est le second tap. */
+function appliquerPlan(p){
+  const w=(p.semaines||[]).map(x=>({
+    start:x.start,regime:x.regime,runCapKm:x.runCapKm,
+    days:(x.jours||[]).map(d=>({
+      d:d.d,fascia:!!d.fascia,
+      sessions:(d.seances||[]).map(z=>({rank:z.rank,kind:z.kind,label:z.label,
+        detail:z.detail||"",fallback:z.fallback||"",bonus:!!z.bonus})),
+      nutrition:d.nutrition||null,note:d.note||""
+    }))
+  }));
+  if(!w.length)return{err:"Plan vide."};
+  DB.plan={weeks:w,genere:p.genere||TODAY};
+  /* Un plan importé annule les bascules de régime manuelles des semaines
+     qu'il couvre : comportement d'origine, conservé. */
+  w.forEach(x=>{if(DB.settings.regime)delete DB.settings.regime[x.start];});
+  const bf=appliquerBackfill(p.backfill||{});
+  save();
+  return{ok:true,jours:w.reduce((n,x)=>n+x.days.length,0),backfill:bf};
+}
+/* Rattrapage : jours passés uniquement, champs restés vides uniquement,
+   champs déclaratifs exclus — ils ne se devinent pas. */
+const BACKFILL_INTERDIT={menu:1,talon:1,seanceNote:1,bedTime:1,alcohol:1,fasciaFait:1,done:1,d:1};
+function appliquerBackfill(bf){
+  let n=0;
+  Object.keys(bf||{}).forEach(k=>{
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)||k>=TODAY)return;
+    const src=bf[k],e=entry(k);
+    Object.keys(src||{}).forEach(f=>{
+      if(BACKFILL_INTERDIT[f])return;
+      if(e[f]!==undefined&&e[f]!=="")return;
+      e[f]=String(src[f]);n++;
+    });
+  });
+  return n;
 }
 
 /* --- Onglet Plan : les semaines chargées, comme avant. --- */
@@ -1806,6 +2341,7 @@ function dayDetail(d,extra){
       '<div style="flex:1;min-width:0"><div class="tags"><span class="rank">FASCIA</span></div>'+
       '<div class="sess-lab '+(fo?"off":"")+'">Bloc fascia</div><div class="cue">'+esc(FASCIA)+'</div></div></div></div>';
   }
+  h+=blocRepas(d);
   const nCut=cut(d);
   if(nCut)h+='<p class="empty">'+nCut+' séance'+(nCut>1?"s":"")+' écartée'+(nCut>1?"s":"")+' — semaine chargée, seules les P1 tiennent.</p>';
   /* « Rien de prévu » ne se dit que si rien n'a été fait non plus : le
@@ -1869,6 +2405,28 @@ function dayDetail(d,extra){
   h+=mesureBlock(k);
   h+='</div>';        /* .detail */
   return h;
+}
+/* Repas du jour, tels que le plan les a posés : des aliments et des
+   portions, jamais un total. Ni kilocalories, ni grammes de protéines, ni
+   jauge, ni couleur — les champs kcal et prot du plan existent pour la
+   validation et restent internes. L'estimation d'apport est hebdomadaire
+   et n'apparaît qu'à la revue. */
+function blocRepas(d){
+  const n=d.nutrition;
+  if(!n||!Array.isArray(n.creneaux)||!n.creneaux.length)return "";
+  const k=d.d,e=rd(k);
+  let h='<div class="repas"><div class="repas-t">Repas'+
+    (n.feculentDiner?' · <b>féculent au dîner</b>'+(n.feculentG?" ("+n.feculentG+" g)":""):' · sans féculent au dîner')+
+    '</div>';
+  n.creneaux.forEach((c,i)=>{
+    const on=!!e.done["n"+i];
+    h+='<div class="sess-head" style="padding:7px 0">'+
+      '<button class="box sm" data-t="'+k+'|n'+i+'" data-on="'+(on?1:0)+'">'+(on?chk(13):"")+'</button>'+
+      '<div style="flex:1;min-width:0"><div class="cre-h">'+esc(c.h||"")+(c.subi?' · <span class="subi">subi</span>':'')+'</div>'+
+      '<div class="sess-lab '+(on?"off":"")+'" style="font-size:13px">'+esc(c.contenu||"")+'</div></div></div>';
+  });
+  if(d.note)h+='<div class="cue">'+esc(d.note)+'</div>';
+  return h+'</div>';
 }
 /* Les jours de salle portent le commentaire d'exception. Le type de
    séance vient du plan ; à défaut, une séance de salle importée. */
@@ -2345,16 +2903,7 @@ function contextBlock(){
        l'export Apple ne contient jamais. Les jours vides sont omis — une
        journée non renseignée n'est pas une faute, et la session coach doit
        pouvoir dire sur combien de menus elle a estimé. */
-    journal14:lastN(TODAY,14).map(k=>{
-      const e=rd(k),o={date:k};
-      if(typeof e.alcohol==="number")o.alcool=e.alcohol;
-      if(e.menu)o.menu=e.menu;
-      if(e.fasciaFait)o.fasciaFait=true;
-      if(e.bedTime)o.coucher=e.bedTime;
-      if(e.talon)o.talon=e.talon;
-      if(e.seanceNote)o.seanceNote=e.seanceNote;
-      return o;
-    }).filter(o=>Object.keys(o).length>1),
+    journal14:journal14(),
     chargePro:DB.charge[(lastDigest()||{}).semaineDu]||null,
     /* Historique : les résumés hebdomadaires des huit derniers imports.
        Sans tendance, ni la règle d'arrêt du déficit ni le plafond de
@@ -2380,6 +2929,37 @@ function contextBlock(){
       return o;
     })()
   };
+}
+/* Journal déclaratif des quatorze derniers jours, réduit à ce que l'export
+   Apple ne contient jamais. Les jours vides sont omis : une journée non
+   renseignée n'est pas une faute, et le modèle doit pouvoir dire sur
+   combien de menus il a estimé. */
+function journal14(){
+  return lastN(TODAY,14).map(k=>{
+    const e=rd(k),o={date:k};
+    if(typeof e.alcohol==="number")o.alcool=e.alcohol;
+    if(e.menu)o.menu=e.menu;
+    if(e.fasciaFait)o.fasciaFait=true;
+    if(e.bedTime)o.coucher=e.bedTime;
+    if(e.talon)o.talon=e.talon;
+    if(e.seanceNote)o.seanceNote=e.seanceNote;
+    return o;
+  }).filter(o=>Object.keys(o).length>1);
+}
+/* Cibles transmises au modèle : la cible du mois, les jalons datés encore
+   à venir, et l'allure de référence. */
+function ciblesPourModele(){
+  const f=currentMonth(),cur=snapAt(TODAY),T=testAt();
+  const lignes={};
+  TGT.forEach(t=>{
+    const tv=tgtValue(f,t),cv=cur[t.k];
+    lignes[t.k]={libelle:t.l,cible:tv,actuel:cv===null?null:r1(cv),
+                 ecart:(cv===null||tv===null)?null:r1(cv-tv)};
+  });
+  return{mois:f.m,base:!!f.base,lignes:lignes,
+         prochainTest:T.next?{date:T.next.d,dist:T.next.dist,cible:T.next.cible}:null,
+         testEnRetard:T.late?T.late.d:null,
+         allure:paceAt(TODAY)};
 }
 /* Les n dernières semaines terminées, ordre chronologique. */
 function lastFullWeeks(n){
@@ -2462,6 +3042,55 @@ function importPlan(txt){
   save();open=null;render();
   return{filled:bf.n,days:bf.days};
 }
+/* ================= Panneau Doctrine & ÉTAT (§9.5) ================= */
+function renderEtat(){
+  const D=DB.doctrine,k=apiKey();
+  let h='<h2>Doctrine &amp; ÉTAT</h2>'+
+    '<p class="panel-sub">Les règles stables d\'un côté, les valeurs du moment de l\'autre. '+
+    'Rien de tout cela n\'est dans le dépôt : ni la doctrine, ni l\'ÉTAT, ni la clé.</p>';
+
+  h+='<div class="refs-h">Doctrine</div><div class="log">';
+  if(D)h+='<div class="log-row"><span class="log-lab">'+esc(D.nom||"doctrine.md")+
+    '<span class="hint">Révision '+esc(D.revision||"non datée")+' · importée le '+esc(dm(D.importe))+
+    ' · '+milliers(D.taille)+' caractères</span></span><span class="ro">'+esc(D.hash)+'</span></div>';
+  else h+='<p class="empty">Aucune doctrine. La revue ne peut pas se lancer : sans elle, le modèle n\'a aucune règle.</p>';
+  h+='<div class="tools"><button class="tool" id="docBtn">'+(D?"Remplacer le fichier":"Choisir le fichier")+'</button>'+
+     ((DB.doctrineHistory||[]).length?'<button class="tool" id="docBack">Revenir à la précédente</button>':'')+
+     '</div><input type="file" id="docFile" accept=".md,.txt,text/markdown,text/plain" hidden></div>';
+
+  h+='<div class="refs-h">Clé API</div><div class="log">';
+  h+='<div class="log-row col"><span class="log-lab">Anthropic<span class="hint">'+
+     (k?esc(keyMask(k))+" — jamais exportée, jamais affichée en entier."
+       :"Absente : aucun appel ne partira.")+'</span></span>'+
+     (k?'<button class="tool" id="keyDel">Effacer la clé</button>'
+       :'<input type="password" class="keyin" placeholder="sk-ant-…" autocomplete="off" '+
+        'autocapitalize="off" autocorrect="off" spellcheck="false" data-key="1">')+'</div>';
+  h+='<div class="log-row"><span class="log-lab">Modèle</span>'+
+     '<input type="text" class="mdl" value="'+esc(modele())+'" data-s="api|model"><span class="unit"></span></div>';
+  h+='</div>';
+
+  h+='<div class="refs-h">Bloc ÉTAT</div><div class="log">';
+  if(DB.etat)h+='<div class="log-row col"><span class="log-lab">Régénéré à la dernière revue'+
+    '<span class="hint">Modifiable à la main — échappatoire, pas une étape du rituel.</span></span>'+
+    '<textarea class="menu etat" rows="8" data-etat="1">'+esc(DB.etat)+'</textarea>'+
+    '<button class="tool" id="etatCopy">Copier l\'ÉTAT</button></div>';
+  else h+='<p class="empty">Vide. La première revue le produira intégralement, compteurs de registre à zéro.</p>';
+  h+='</div>';
+
+  const R=DB.reviews||[];
+  if(R.length){
+    h+='<div class="refs-h">Revues</div><div class="jbox">';
+    R.slice().reverse().forEach(r=>{
+      h+='<div class="srow"><span class="jd"><b>'+esc(dm(r.date))+'</b></span>'+
+         '<span class="js">Registre '+esc(String(r.registre||"—"))+
+         (r.alertes&&r.alertes.length?' · '+r.alertes.length+' alerte'+(r.alertes.length>1?"s":""):"")+
+         '</span></div>';
+    });
+    h+='</div>';
+  }
+  document.getElementById("etat").innerHTML=h;
+}
+
 function renderTools(){
   document.getElementById("tools").innerHTML=
     '<h2>Données</h2><p class="panel-sub">Tout est stocké sur cet appareil. L\'import d\'un plan ne touche ni les cases cochées ni les saisies, indexées par date. Un plan peut porter un rattrapage de mesures : il ne remplit que les champs restés vides sur les jours passés.</p>'+
@@ -2474,11 +3103,29 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
   if(t.id==="impBtn"){const f=document.getElementById("impFile");if(f){f.value="";f.click();}return;}
+  if(t.id==="docBtn"){const f=document.getElementById("docFile");if(f){f.value="";f.click();}return;}
+  if(t.id==="keyDel"){
+    if(confirm("Effacer la clé API de cet appareil ?")){setApiKey("");render();}
+    return;}
+  if(t.id==="docBack"){
+    const H=DB.doctrineHistory||[];
+    if(!H.length)return;
+    if(!confirm("Revenir à la doctrine importée le "+dm(H[H.length-1].importe)+" ?"))return;
+    DB.doctrine=H.pop();save();render();return;}
+  if(t.id==="etatCopy"){copyOut(DB.etat,"Bloc ÉTAT copié.");return;}
+  if(t.id==="go"){lancerRevue();return;}
+  if(t.id==="applyPlan"){
+    if(!planPropose)return;
+    const r=appliquerPlan(planPropose);
+    if(r.err){alert(r.err);return;}
+    planPropose=null;tab="plan";ses("set",tab,TKEY);render();scrollTo(0,0);
+    alert("Plan appliqué : "+r.jours+" jours."+(r.backfill?"\n"+r.backfill+" mesure"+(r.backfill>1?"s":"")+" complétée"+(r.backfill>1?"s":"")+" sur les jours passés.":""));
+    return;}
   if(t.id==="allm"){allMonths=!allMonths;renderTargets();return;}
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
   if(t.id==="exp"){
@@ -2558,6 +3205,23 @@ document.addEventListener("change",async ev=>{
     impBusy=false;render();
     return;
   }
+  if(ev.target.id==="docFile"){
+    const file=(ev.target.files||[])[0];
+    if(!file)return;
+    try{ await importDoctrine(file); render(); }
+    catch(e){ alert("Doctrine non importée.\n"+(e&&e.message||e)); }
+    return;
+  }
+  /* La clé ne passe jamais par DB : elle va droit à son propre stockage,
+     et le champ est vidé aussitôt pour ne pas rester lisible à l'écran. */
+  if(ev.target.dataset.key){
+    const v=String(ev.target.value||"").trim();
+    ev.target.value="";
+    if(v)setApiKey(v);
+    render();
+    return;
+  }
+  if(ev.target.dataset.etat){DB.etat=ev.target.value;save();return;}
   const f=ev.target.dataset.f,s=ev.target.dataset.s,n=ev.target.dataset.n,hm=ev.target.dataset.hm;
   if(f){const a=f.split("|");entry(a[0])[a[1]]=ev.target.value;save();refreshLive();return;}
   /* Champ numérique dont le type compte : drinksIn() n'additionne que les
