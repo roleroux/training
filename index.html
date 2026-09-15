@@ -93,6 +93,7 @@ header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:1
 .bact{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
   background:var(--surface);border:1px solid currentColor;color:inherit;border-radius:8px;padding:8px 10px;cursor:pointer}
 .plan-dates{font-size:14px;margin:0 0 4px;color:var(--ink)}
+.plan-src{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fog);margin:18px 0 -6px}
 .plan-dates b{font-weight:600}
 .valid-row{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
 .valid{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;background:none;
@@ -378,7 +379,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.11", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.12", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -2567,6 +2568,8 @@ let impRes=null,impBusy=false;
    interrompue ne doit rien laisser derrière elle, hors ce que l'appel A a
    déjà écrit en base. */
 let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null,planViol=[];
+/* Message ponctuel, affiché au prochain rendu puis oublié. */
+let flash="";
 /* Un chrono pendant l'attente : une barre qui n'avance pas ne dit pas si
    ça travaille ou si c'est mort. Les secondes, si. */
 let revT0=0,revTick=null,revEssai="";
@@ -2970,7 +2973,7 @@ function appliquerPlan(p){
     }))
   }));
   if(!w.length)return{err:"Plan vide."};
-  DB.plan={weeks:w,genere:p.genere||TODAY};
+  DB.plan={weeks:w,genere:p.genere||TODAY,applique:TODAY,repli:!!p.repli};
   /* Un plan importé annule les bascules de régime manuelles des semaines
      qu'il couvre : comportement d'origine, conservé. */
   w.forEach(x=>{if(DB.settings.regime)delete DB.settings.regime[x.start];});
@@ -2999,6 +3002,14 @@ function appliquerBackfill(bf){
 function viewPlan(){
   const ap=activePlan();
   let html="";
+  if(flash){html+='<div class="banner info">'+esc(flash)+'</div>';flash="";}
+  /* D'où vient ce plan : sa date d'application et sa couverture. Quand
+     « il commence encore le 21 », c'est la ligne qui dit si c'est un plan
+     d'avant qui n'a pas été remplacé, ou un plan neuf qui a tort. */
+  const P=DB.plan||{},tous=(P.weeks||[]).reduce((a,w)=>a.concat((w.days||[]).map(d=>d.d)),[]).filter(isDate).sort();
+  if(tous.length&&!ap.expired)html+='<div class="plan-src">'+
+    (P.repli?"Plan de repli":"Plan")+(isDate(P.applique)?" appliqué le "+esc(dm(P.applique)):"")+
+    ' · du '+esc(dm(tous[0]))+' au '+esc(dm(tous[tous.length-1]))+'</div>';
   if(ap.pending)html+='<div class="banner info">Ce plan commence le '+
     esc(fmt(ap.pending).dow+" "+fmt(ap.pending).num)+'.</div>';
   ap.weeks.forEach(w=>{
@@ -4044,8 +4055,11 @@ document.addEventListener("click",ev=>{
     if(!planPropose)return;
     const r=appliquerPlan(planPropose);
     if(r.err){alert(r.err);return;}
-    planPropose=null;planViol=[];tab="plan";ses("set",tab,TKEY);render();scrollTo(0,0);
-    alert("Plan appliqué : "+r.jours+" jours."+(r.backfill?"\n"+r.backfill+" mesure"+(r.backfill>1?"s":"")+" complétée"+(r.backfill>1?"s":"")+" sur les jours passés.":""));
+    planPropose=null;planViol=[];tab="plan";ses("set",tab,TKEY);
+    /* Pas d'alert : il bloque le fil et masque l'onglet qu'on vient
+       d'ouvrir. Le résultat s'affiche en tête du plan, une fois. */
+    flash="Plan appliqué : "+r.jours+" jours."+(r.backfill?" "+r.backfill+" mesure"+(r.backfill>1?"s":"")+" complétée"+(r.backfill>1?"s":"")+" sur les jours passés.":"");
+    render();scrollTo(0,0);
     return;}
   if(t.id==="allm"){allMonths=!allMonths;renderTargets();return;}
   if(t.id==="rev"){copyOut(reviewJSON(),"Revue copiée. Colle-la dans la session coach.");return;}
