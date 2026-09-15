@@ -333,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.4", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.5", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -2676,6 +2676,16 @@ function renderTargets(){
 
   /* --- A · la cible du mois, ce qui se lit tous les jours --- */
   let h='<h2>Cibles</h2><p class="panel-sub">Une cible par mois, d\'août 2026 à août 2027. Août est la ligne de base : elle s\'affiche et ne s\'évalue pas. Une ligne sans donnée de référence reste une estimation.</p>';
+  /* Sans jalons, il n'y a rien à lire ici : le moyen d'en charger passe
+     devant le tableau vide, pas trois écrans plus bas dans Références. */
+  if(!ciblesParametrees()){
+    h+='<div class="todo">Aucune cible paramétrée. Charge-les depuis un fichier, ou renseigne la trajectoire de poids dans <b>Références</b>, juste en dessous.</div>'+
+       '<div class="tools" style="margin-top:0"><button class="tool" id="msBtn">Importer des cibles</button>'+
+       '<button class="tool" id="msPaste">Coller des cibles</button></div>'+
+       '<input type="file" id="msFile" accept=".json,application/json,text/plain" hidden>';
+    document.getElementById("targets").innerHTML=h;
+    return;
+  }
   h+='<div class="meta">Cible du mois — '+esc(MOIS[+f.m.slice(5,7)-1])+' '+f.m.slice(0,4)+'</div>';
   h+='<div class="mtgt">';
   TGT.forEach(t=>{
@@ -3265,6 +3275,9 @@ function renderTools(){
     '<div class="tools"><button class="tool" id="exp">Exporter les données</button><button class="tool" id="imp">Importer les données</button></div>'+
     '<div class="backup'+((exportAge()===null||exportAge()>EXPORT_MAX)?" warn":"")+'">Dernière sauvegarde : '+exportTxt()+
       ' · '+Object.keys(DB.days).length+' journée'+(Object.keys(DB.days).length>1?"s":"")+' en base</div>'+
+    /* La version en clair : sans elle, « est-ce que la mise à jour est
+       passée ? » n'a aucune réponse depuis le téléphone. */
+    '<div class="save">Version '+esc(VERSION)+'</div>'+
     '<div class="save" id="save"></div>';
 }
 
