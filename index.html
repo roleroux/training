@@ -80,7 +80,13 @@ header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:1
 .compact .prog{margin-top:10px;gap:9px 22px}
 .compact .ring{width:31px;height:31px;flex-basis:31px}
 .compact .g-val{font-size:14px}
-.hdr-top{display:block}
+.hdr-top{display:block;position:relative}
+/* Engrenage : un réglage, pas une destination quotidienne — il vit dans
+   l'en-tête et laisse les cinq onglets à la navigation. */
+.gear{position:absolute;top:0;right:0;background:none;border:none;color:var(--fog);
+  padding:10px;cursor:pointer;line-height:0;border-radius:10px}
+.gear:active{background:var(--tint)}
+.gear[data-on="1"]{color:var(--ink);background:var(--tint)}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
@@ -198,11 +204,15 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
    par sa teinte, pour qu'on ne cherche pas à y taper. */
 .mes{margin-top:16px;padding:12px 13px 4px;background:var(--tint);border-radius:10px}
 .mes-t{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog)}
-.mes .log{margin-top:9px;padding-top:9px;border-top:1px solid var(--edge);gap:9px}
+.mes .log{margin-top:9px;padding-top:9px;border-top:1px solid var(--edge);gap:11px}
+.mes .log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);font-weight:400}
 /* Champs de texte libre : le menu doit tenir vingt secondes, pas être
    un formulaire. Il s'étend, il ne défile pas. */
-textarea.menu{width:100%;min-height:52px;background:none;border:1px solid var(--edge);border-radius:9px;
-  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.45;padding:9px 10px;resize:vertical}
+/* Le champ grandit avec le texte : à rows=2 fixes, la troisième ligne du
+   menu était coupée en deux, ce qui donnait l'impression d'un bug. */
+textarea.menu{width:100%;min-height:76px;background:none;border:1px solid var(--edge);border-radius:11px;
+  color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;padding:11px 12px;resize:vertical;
+  field-sizing:content}
 textarea.menu:focus{outline:none;border-color:var(--brass)}
 /* Lien d'exception : discret, mais de taille tapable. */
 .lnk{background:none;border:none;color:var(--fog);font-family:var(--sans);font-size:12.5px;
@@ -217,6 +227,20 @@ textarea.menu:focus{outline:none;border-color:var(--brass)}
 .log-row.seance .ro{flex:1;text-align:left;font-size:12.5px;line-height:1.5}
 .srow:last-child{border-bottom:none}
 .imp .big{margin-top:6px}
+/* Bloc repliable : le titre porte son résumé, pour qu'on sache ce qu'on
+   déplie sans avoir à le déplier. */
+.panel.fold{padding:0;overflow:hidden}
+.fold-h{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;background:none;
+  border:none;color:inherit;padding:16px 18px;cursor:pointer;font:inherit}
+.fold-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.fold-s{flex:1;font-family:var(--mono);font-size:10.5px;color:var(--fog);min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fold-c{font-family:var(--mono);font-size:15px;color:var(--fog);line-height:1}
+.fold-b{padding:0 18px 18px}
+/* Le rituel est une suite de gestes, pas trois cartes : un filet les relie. */
+.rite{margin-top:18px;padding-top:16px;border-top:1px solid var(--edge)}
+.dates{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--fog);margin-top:10px}
+.dates b{font-weight:400;letter-spacing:.12em;text-transform:uppercase;font-size:9px;display:block;margin-bottom:2px}
 /* Un champ de clé se saisit et disparaît : il n'est jamais relu. */
 input.keyin{width:100%;background:none;border:1px solid var(--edge);border-radius:9px;color:var(--ink);
   font-family:var(--mono);font-size:16px;padding:10px;letter-spacing:.02em}
@@ -238,12 +262,15 @@ ul.lst li{font-size:12.5px;line-height:1.55;color:var(--fog);margin-bottom:4px}
 .pivot{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--buoy);border-left:3px solid var(--buoy);background:var(--tint);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:12px}
 .todo{font-size:11.5px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
 
-.log{margin-top:14px;padding-top:13px;border-top:1px solid var(--edge);display:grid;gap:13px}
+.log{margin-top:16px;padding-top:16px;border-top:1px solid var(--edge);display:grid;gap:20px}
 .log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .log-row.col{align-items:flex-start;flex-direction:column;gap:8px}
 .log-row.col .pills{width:100%}
-.log-lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);flex:1;min-width:120px}
-.log-lab .hint{text-transform:none;letter-spacing:0;display:block;font-family:var(--sans);font-size:11px;margin-top:3px;line-height:1.4}
+/* Les libellés de saisie étaient en capitales mono 9,5 px : illisibles de
+   près, et criés. Ce sont des questions posées à quelqu'un, pas des
+   en-têtes de tableau. */
+.log-lab{font-family:var(--sans);font-size:13.5px;letter-spacing:0;text-transform:none;color:var(--ink);flex:1;min-width:120px;font-weight:500}
+.log-lab .hint{display:block;font-family:var(--sans);font-size:11.5px;color:var(--fog);margin-top:2px;line-height:1.45;font-weight:400}
 .log-lab .hint.warn{color:var(--buoy)}
 /* 16 px partout : en dessous, iOS zoome la page à la prise de focus et
    ne la dézoome jamais. Les champs date et heure en héritaient pas. */
@@ -251,8 +278,8 @@ input[type=number],input[type=text]{background:none;border:none;border-bottom:1p
 input[type=date],input[type=time]{font-family:var(--mono);font-size:16px;color:var(--ink);background:none;border:none;border-bottom:1px solid var(--edge);padding:4px;border-radius:0}
 input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color:var(--brass)}
 .unit{font-family:var(--mono);font-size:9.5px;color:var(--fog);width:34px}
-.pills{display:flex;gap:6px;flex-wrap:wrap}
-.pill{min-width:40px;height:38px;border:1px solid var(--edge);background:none;border-radius:9px;color:var(--fog);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0 9px}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{min-width:46px;height:44px;border:1px solid var(--edge);background:none;border-radius:9px;color:var(--fog);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0 9px}
 .pill[data-on="1"]{border-color:var(--depth);color:var(--depth)}
 .pill[data-on="1"][data-over="1"]{border-color:var(--buoy);color:var(--buoy)}
 /* Les deux créneaux qui font la journée sont marqués même décochés. */
@@ -287,7 +314,11 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 .ok{color:var(--depth)}.warn{color:var(--buoy)}.dim{color:var(--fog)}
 
 .meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-bottom:9px}
-.graph{margin-top:22px}
+.vtitle{font-family:var(--serif,Georgia,serif);font-size:22px;margin:22px 0 -2px;color:var(--ink)}
+.graph{margin-top:26px}
+.gtitle{font-size:13.5px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.gsub{font-size:11.5px;color:var(--fog);line-height:1.45;margin-bottom:8px}
+svg+.gsub{margin:2px 0 0}
 .gl-ref{stroke:var(--depth)}.gt-ref{fill:var(--depth)}.gl-start{stroke:var(--chart-grid)}
 .g-txt{fill:var(--fog)}.g-line{stroke:var(--brass)}.g-dot{fill:var(--brass)}
 .g-trend{stroke:var(--depth);fill:none}
@@ -319,7 +350,7 @@ table.tgt th.base,table.tgt td.base{color:var(--fog)}
 <body>
 <svg class="bg" viewBox="0 0 660 760" preserveAspectRatio="xMidYMin slice" aria-hidden="true" id="bg"></svg>
 <div class="wrap">
-  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" class="mark-bg"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
+  <header><div class="hdr-top"><div class="brand"><svg class="mark" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="94" class="mark-bg"/><g stroke="#E06A42" stroke-width="3.2" stroke-linecap="round"><path d="M100 4v9"/><path d="M100 187v9"/><path d="M4 100h9"/><path d="M187 100h9"/></g><g transform="translate(32.74,33.22) scale(0.1900)"><g transform="translate(0,724) scale(0.1,-0.1)"><path d="M3393 7225 c-18 -8 -38 -25 -44 -38 -13 -29 -48 -40 -136 -41 -73 -1 -137 -38 -166 -97 -14 -29 -30 -42 -78 -63 -48 -21 -63 -33 -74 -61 -12 -27 -23 -36 -54 -45 -52 -14 -81 -51 -81 -103 0 -28 -8 -51 -26 -74 -33 -43 -70 -125 -95 -210 -20 -66 -39 -293 -26 -293 4 0 24 35 46 78 64 128 159 261 251 352 443 441 1107 324 1376 -244 35 -74 92 -281 80 -293 -3 -4 -22 1 -41 10 -20 9 -43 17 -52 17 -9 0 -37 17 -62 38 -73 61 -126 88 -274 136 -177 59 -171 59 -163 -5 16 -117 80 -225 173 -290 52 -36 52 -36 -21 -86 -129 -90 -251 -198 -551 -491 -347 -337 -419 -402 -540 -483 -104 -70 -416 -227 -760 -383 -281 -127 -379 -188 -492 -303 -87 -89 -160 -133 -278 -169 -92 -28 -259 -26 -348 5 -38 13 -70 21 -73 18 -3 -2 5 -31 17 -63 31 -82 131 -182 212 -212 79 -30 151 -36 215 -19 53 14 54 14 47 -7 -19 -65 -46 -206 -59 -311 -41 -316 -135 -473 -384 -644 -100 -68 -109 -82 -162 -260 -52 -172 -127 -370 -166 -437 -13 -23 -40 -56 -61 -74 -51 -45 -57 -56 -63 -124 -5 -58 -6 -60 -50 -86 -67 -39 -83 -74 -88 -196 -6 -134 -1 -157 34 -144 73 28 261 114 273 125 7 7 24 51 38 97 13 45 34 99 48 118 13 19 35 64 50 100 45 108 190 394 238 467 90 140 149 185 445 342 445 236 553 333 712 636 64 122 63 122 55 60 -25 -186 -84 -344 -160 -431 -23 -27 -47 -66 -54 -86 -7 -21 -36 -72 -64 -114 -29 -43 -60 -89 -69 -103 -46 -68 -6 -128 109 -159 223 -61 473 -147 473 -162 0 -5 13 -22 29 -39 24 -25 33 -29 62 -25 34 6 34 6 45 -51 12 -67 33 -52 -191 -140 -93 -37 -388 -154 -655 -260 -487 -193 -601 -239 -1045 -412 -132 -51 -262 -103 -290 -116 -204 -92 -354 -269 -409 -483 -21 -80 -21 -267 -1 -353 46 -193 191 -374 371 -464 102 -52 173 -68 320 -74 189 -8 235 4 669 172 203 78 467 180 585 225 118 45 253 97 300 115 47 18 258 99 470 180 212 81 455 174 540 207 85 33 367 138 625 235 259 96 567 211 685 255 118 44 335 125 483 179 147 54 309 114 360 133 50 19 254 94 452 166 755 275 792 291 901 378 127 103 236 271 281 432 25 92 25 339 0 430 -105 382 -477 617 -880 557 -125 -19 -163 -33 -567 -212 -157 -70 -528 -223 -825 -342 -297 -118 -709 -283 -915 -365 -206 -83 -391 -157 -410 -164 -19 -7 -147 -58 -284 -113 l-248 -100 -64 63 c-35 35 -64 68 -64 74 0 32 -54 72 -123 92 -217 63 -339 111 -366 144 -27 32 -4 61 123 155 158 117 259 222 308 321 35 72 74 197 65 207 -3 2 -33 -1 -66 -8 -72 -14 -93 -6 -30 11 77 20 311 102 394 137 178 76 480 252 555 324 13 13 40 32 59 43 19 10 54 33 77 51 46 34 45 34 469 106 206 35 229 36 249 8 13 -19 12 -28 -4 -87 -40 -143 -92 -273 -117 -290 -46 -32 -63 -52 -63 -76 0 -27 -16 -36 -64 -36 -91 0 -129 -128 -90 -303 22 -98 32 -107 81 -75 60 40 147 123 167 160 12 22 37 44 72 62 65 34 76 51 124 185 56 155 115 300 177 435 46 99 55 129 56 177 1 108 -55 159 -173 159 -174 1 -490 36 -490 55 0 7 12 39 26 71 34 77 64 220 64 314 1 200 78 495 142 548 27 22 197 -21 288 -73 115 -66 199 -92 239 -76 17 8 39 26 48 41 8 15 28 34 42 43 35 20 101 117 101 147 0 25 -76 150 -178 295 -35 50 -73 108 -84 130 -11 22 -40 65 -64 97 -41 52 -44 60 -44 118 0 82 -26 205 -55 263 -21 40 -23 57 -19 110 7 74 -17 120 -78 149 -49 23 -68 53 -68 106 0 76 -54 141 -130 157 -55 11 -100 50 -100 87 0 65 -127 144 -194 120 -46 -17 -124 13 -141 55 -16 39 -71 64 -152 71 -56 4 -67 2 -87 -17 -21 -20 -30 -22 -87 -15 -35 4 -73 13 -84 20 -26 18 -140 17 -182 -1z m3025 -3850 c232 -55 376 -240 375 -485 0 -194 -105 -372 -269 -462 -27 -14 -173 -71 -324 -126 -151 -55 -356 -130 -455 -167 -99 -37 -407 -150 -685 -252 -1079 -394 -1640 -605 -2580 -968 -118 -46 -339 -130 -490 -188 -151 -58 -450 -174 -665 -257 -440 -171 -470 -180 -575 -180 -235 0 -412 143 -450 363 -27 154 49 324 187 420 21 14 430 182 908 372 479 190 1023 407 1210 482 187 75 417 166 510 203 94 38 496 199 895 358 399 159 838 333 975 387 294 115 402 160 828 347 389 171 457 188 605 153z M6213 3202 c-150 -54 -234 -180 -220 -332 19 -216 253 -346 452 -251 202 95 243 360 80 510 -88 81 -209 110 -312 73z M663 993 c-52 -18 -121 -83 -148 -138 -23 -50 -31 -152 -16 -208 72 -256 463 -255 538 2 65 226 -149 424 -374 344z" fill="#FFFFFF" stroke="none"/></g></g></svg><div class="brand-txt"><h1 id="title">Pimperel</h1><div class="eyebrow" id="eyebrow"></div></div><button class="gear" id="gear" data-tab="reglages" aria-label="Réglages"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div><div class="prog" id="prog"></div><div class="banners" id="banners"></div></div></header>
   <nav class="tabs" id="tabs"></nav>
   <div id="view"></div>
 </div>
@@ -333,7 +364,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.7", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.8", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -1338,7 +1369,7 @@ function ApiErr(msg,statut,rejouable){
   const e=new Error(msg);e.statut=statut;e.rejouable=!!rejouable;return e;
 }
 function messageStatut(st,corps){
-  if(st===401)return "Clé API refusée (401). Vérifie-la dans Cibles › Doctrine & ÉTAT.";
+  if(st===401)return "Clé API refusée (401). Vérifie-la dans Réglages, l'engrenage en haut à droite.";
   if(st===403)return "Clé sans droit d'accès (403).";
   if(st===429)return "Quota atteint (429). Réessaie dans quelques minutes.";
   if(st===400)return "Requête refusée (400) : "+(corps||"").slice(0,200);
@@ -2317,7 +2348,8 @@ function renderHeader(){
   if(stale)B.push(["warn",stale]);
   const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
   if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
-  if(ap.pending)B.push(["info","Le plan chargé commence le "+fmt(ap.pending).dow+" "+fmt(ap.pending).num+"."]);
+  /* Un plan qui commence lundi n'est pas une alerte : l'information vit
+     dans l'onglet Plan, elle n'a pas à occuper l'en-tête tous les jours. */
   /* Un relèvement du plafond dur ne doit jamais être silencieux : le
      bandeau nomme la valeur en vigueur, pas une constante supposée. */
   if(cap.clamped)B.push(["warn","Plan à "+cap.planned+" km — ramené au plafond dur de "+cap.max+" km."]);
@@ -2328,13 +2360,15 @@ function renderHeader(){
   if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
   const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
   const xa=exportAge();
-  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur. Cibles › Exporter les données."]);
+  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur. Réglages › Exporter les données."]);
   else if(xa!==null&&xa>EXPORT_MAX)B.push(["warn","Dernière sauvegarde "+exportTxt()+" — au-delà de "+EXPORT_MAX+" jours, un effacement coûterait tout ce qui a suivi."]);
   document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+'">'+esc(b[1])+'</div>').join("");
 }
 
 function reviewDue(){const d=parseD(TODAY).getDay();return d===6||d===0;}
 function renderTabs(){
+  const g=document.getElementById("gear");
+  if(g)g.dataset.on=(tab==="reglages")?1:0;
   document.getElementById("tabs").innerHTML=TABS.map(t=>
     '<button class="tab '+(tab===t[0]?"on":"")+'" data-tab="'+t[0]+'">'+esc(t[1])+
     (t[0]==="today"&&reviewDue()?'<span class="dot"></span>':"")+'</button>').join("");
@@ -2346,9 +2380,12 @@ function renderView(){
   else if(tab==="plan")v.innerHTML=viewPlan();
   else if(tab==="log")v.innerHTML=viewLog();
   else if(tab==="revue")v.innerHTML=viewRevue();
-  else v.innerHTML='<section class="panel" id="targets"></section><section class="panel" id="refs"></section>'+
+  else if(tab==="reglages")v.innerHTML='<div class="vtitle">Réglages</div>'+
+    '<section class="panel" id="refs"></section>'+
     '<section class="panel" id="etat"></section><section class="panel" id="tools"></section>';
-  if(tab==="goals"){renderTargets();renderRefs();renderEtat();renderTools();}
+  else v.innerHTML='<section class="panel" id="targets"></section>';
+  if(tab==="goals")renderTargets();
+  if(tab==="reglages"){renderRefs();renderEtat();renderTools();}
 }
 
 /* --- Onglet Aujourd'hui : la journée en cours, dépliée, puis la revue. --- */
@@ -2379,6 +2416,16 @@ let impRes=null,impBusy=false;
    interrompue ne doit rien laisser derrière elle, hors ce que l'appel A a
    déjà écrit en base. */
 let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null,planViol=[];
+/* Replis : la matière brute existe, elle ne s'impose pas. */
+const plie={semaine:true,seances:true};
+function fold(id,titre,sous,corps){
+  const f=plie[id];
+  return'<section class="panel fold"><button class="fold-h" data-fold="'+id+'">'+
+    '<span class="fold-t">'+esc(titre)+'</span>'+
+    '<span class="fold-s">'+esc(sous||"")+'</span>'+
+    '<span class="fold-c">'+(f?"+":"−")+'</span></button>'+
+    (f?"":'<div class="fold-b">'+corps+'</div>')+'</section>';
+}
 function lastDigest(){const L=DB.imports||[];return L.length?L[L.length-1]:null;}
 function daysSince(k){return isDate(k)?Math.round((parseD(TODAY)-parseD(k))/86400000):null;}
 /* Dernière date portant une mesure, tous imports confondus. Sert aux
@@ -2445,65 +2492,73 @@ function viewRevueCorps(d){
   const R=DB.reviews||[],rv=R.length?R[R.length-1]:null;
   const rAge=rv?daysSince(rv.date):null;
   const ilya=n=>n===0?"aujourd'hui":n===1?"hier":"il y a "+n+" jours";
-  if(d)h+='<div class="meta">Dernier import : '+esc(dm(d.importe))+
-     (age===null?"":" · "+ilya(age))+
-     (rv?' &nbsp;·&nbsp; Dernière revue : '+esc(dm(rv.date))+' · '+ilya(rAge):' &nbsp;·&nbsp; Aucune revue')+'</div>';
+  if(d)h+='<div class="dates"><div><b>Import</b> '+esc(dm(d.importe))+
+     (age===null?"":" · "+ilya(age))+'</div><div><b>Revue</b> '+
+     (rv?esc(dm(rv.date))+' · '+ilya(rAge):'aucune')+'</div></div>';
   if(age!==null&&age>REVUE_MAX)
     h+='<div class="banner warn">Dernier import il y a '+age+' jours — au-delà de '+REVUE_MAX+
        ', la revue porte sur des données périmées.</div>';
   if(rAge!==null&&rAge>REVUE_MAX)
     h+='<div class="banner warn">Dernière revue il y a '+rAge+' jours — le plan en cours a été écrit sur d\'autres chiffres que ceux d\'aujourd\'hui.</div>';
   if(!d)h+='<p class="empty">Aucun import. Les mesures affichées ailleurs dans l\'app resteront vides.</p>';
-  h+='</section>';
+  if(!d)h+='</section>';
 
   if(d){
     const s=d.semaine||{},du=d.semaineDu;
-    h+='<section class="panel"><div class="meta">Semaine mesurée · '+esc(dm(du))+' → '+esc(dm(d.au))+'</div>';
-    h+='<div class="mtgt">';
+    let corpsSem='';
+    corpsSem+='<div class="mtgt">';
     const row=(lab,v,unit)=>'<div class="mrow"><span class="mlab">'+esc(lab)+'</span>'+
       '<span class="mline">'+(v===null||v===undefined?'<span class="dim">—</span>':'<b>'+esc(String(v))+'</b>'+(unit?' '+esc(unit):''))+'</span></div>';
-    h+=row("Poids moyen",s.poidsMoy,"kg");
-    h+=row("Masse grasse",s.mgKgMoy===null||s.mgKgMoy===undefined?null:s.mgKgMoy+" kg ("+s.mgPctMoy+" %)","");
-    h+=row("FC repos",s.fcReposMoy,"bpm");
-    h+=row("VFC",s.vfcMoy,"ms");
-    h+=row("Sommeil",s.sommeilMoyH===null||s.sommeilMoyH===undefined?null:fmtDur(s.sommeilMoyH)+" · "+s.nuits7h+" nuit"+(s.nuits7h>1?"s":"")+" d'au moins 7 h","");
-    h+=row("Pas",s.pasMoy===null||s.pasMoy===undefined?null:milliers(s.pasMoy),"par jour");
-    h+=row("Séances",s.nbSeances===null?null:s.nbSeances+" · "+s.minTotal+" min","");
-    h+=row("Course",s.kmCourse,"km");
-    h+=row("Vélo",s.kmVelo,"km");
-    h+=row("VO2max",s.vo2Max,"ml/kg/min");
-    h+='</div>';
+    corpsSem+=row("Poids moyen",s.poidsMoy,"kg");
+    corpsSem+=row("Masse grasse",s.mgKgMoy===null||s.mgKgMoy===undefined?null:s.mgKgMoy+" kg ("+s.mgPctMoy+" %)","");
+    corpsSem+=row("FC repos",s.fcReposMoy,"bpm");
+    corpsSem+=row("VFC",s.vfcMoy,"ms");
+    corpsSem+=row("Sommeil",s.sommeilMoyH===null||s.sommeilMoyH===undefined?null:fmtDur(s.sommeilMoyH)+" · "+s.nuits7h+" nuit"+(s.nuits7h>1?"s":"")+" d'au moins 7 h","");
+    corpsSem+=row("Pas",s.pasMoy===null||s.pasMoy===undefined?null:milliers(s.pasMoy),"par jour");
+    corpsSem+=row("Séances",s.nbSeances===null?null:s.nbSeances+" · "+s.minTotal+" min","");
+    corpsSem+=row("Course",s.kmCourse,"km");
+    corpsSem+=row("Vélo",s.kmVelo,"km");
+    corpsSem+=row("VO2max",s.vo2Max,"ml/kg/min");
+    corpsSem+='</div>';
     /* Le manquant se dit en clair : une colonne vide est une mesure non
        prise, jamais une panne. */
     if((d.manquant||[]).length)
-      h+='<div class="banner info">Non mesuré cette semaine : '+esc((d.manquant||[]).map(x=>MANQ[x]||x).join(", "))+'.</div>';
+      corpsSem+='<div class="banner info">Non mesuré cette semaine : '+esc((d.manquant||[]).map(x=>MANQ[x]||x).join(", "))+'.</div>';
     const tS=lastDateWith("sys"),tW=lastDateWith("waist");
     const aS=tS?daysSince(tS):null,aW=tW?daysSince(tW):null;
     if(aS===null||aS>TENSION_MAX)
-      h+='<div class="banner warn">Tension : '+(tS?"dernière mesure le "+dm(tS)+", il y a "+aS+" jours":"aucune mesure enregistrée")+
+      corpsSem+='<div class="banner warn">Tension : '+(tS?"dernière mesure le "+dm(tS)+", il y a "+aS+" jours":"aucune mesure enregistrée")+
          '. Une prise au BPM Core la fera remonter dans le prochain zip.</div>';
     if(aW===null||aW>WAIST_MAX)
-      h+='<div class="banner warn">Tour de taille : '+(tW?"dernière mesure le "+dm(tW)+", il y a "+aW+" jours":"aucune mesure enregistrée")+
+      corpsSem+='<div class="banner warn">Tour de taille : '+(tW?"dernière mesure le "+dm(tW)+", il y a "+aW+" jours":"aucune mesure enregistrée")+
          '. Il se saisit à la main dans l\'app Santé, hors de Pimperel.</div>';
-    /* Charge professionnelle : un tap, non bloquant. Ignorée, elle reste
-       inconnue — pas « normale ». */
+    /* Charge professionnelle : un tap, non bloquant, et sur le chemin —
+       repliée, elle ne serait jamais renseignée. */
     const cv=DB.charge[du];
-    h+='<div class="log-row col"><span class="log-lab">Charge professionnelle de la semaine'+
+    h+='<div class="log" style="gap:14px"><div class="log-row col"><span class="log-lab">Charge professionnelle de la semaine'+
        '<span class="hint">'+(cv?esc(CHARGE[cv-1]):"non renseignée — facultatif")+'</span></span><div class="pills">';
     for(let i=1;i<=5;i++)h+='<button class="pill" data-ch="'+esc(du)+'|'+i+'" data-on="'+(cv===i?1:0)+'">'+i+'</button>';
-    h+='</div></div>';
-    h+='</section>';
+    h+='</div></div></div>';
+    /* L'action et ce qu'elle produit passent AVANT la matière brute :
+       on vient ici pour lancer la revue et lire le plan, pas pour relire
+       des moyennes qu'on a déjà. Le tout dans une seule carte : déposer,
+       noter la semaine et lancer sont un seul geste. */
+    h+=blocRevue();
 
-    /* Les séances de la semaine, telles que la montre les a vues. */
+    /* Les mesures et les séances restent accessibles, repliées. */
     const S=weekSeances(d);
+    h+=fold("semaine","Semaine mesurée",dm(du)+" → "+dm(d.au),corpsSem);
+    /* L'échappatoire : si l'appel ne passe pas, la boucle par copier-coller
+       dans une session de chat fonctionne toujours. Discrète, en bas. */
     if(S.length){
-      h+='<section class="panel"><div class="meta">Séances</div><div class="jbox">';
-      S.forEach(x=>{h+='<div class="srow"><span class="jd">'+esc(fmt(x.date).dow+" ")+'<b>'+esc(fmt(x.date).num)+'</b></span>'+
+      let c='<div class="jbox">';
+      S.forEach(x=>{c+='<div class="srow"><span class="jd">'+esc(fmt(x.date).dow+" ")+'<b>'+esc(fmt(x.date).num)+'</b></span>'+
         '<span class="js">'+esc(seanceTxt(x))+'</span></div>';});
-      h+='</div></section>';
+      h+=fold("seances","Séances",S.length+" · "+(s.minTotal||0)+" min",c+'</div>');
     }
+    h+='<div class="tools"><button class="tool" id="rev">Exporter la revue pour une session de chat</button></div>';
+    return h;
   }
-
   h+=blocRevue();
   return h;
 }
@@ -2513,11 +2568,11 @@ function viewRevueCorps(d){
 function blocRevue(){
   const manque=revuePrete(),R=(DB.reviews||[]);
   const derniere=R.length?R[R.length-1]:null;
-  let h='<section class="review"><div class="review-t">Revue dominicale</div>';
+  let h='<div class="rite">';
   if(manque.length){
     h+='<div class="review-d">Il manque '+esc(manque.join(", "))+
        '. Sans doctrine, le modèle n\'a aucune règle : la revue ne se lance pas.</div>';
-    h+='<button class="big" id="rev">Exporter la revue</button></section>';
+    h+='</div></section>';
     return h;
   }
   h+='<div class="review-d">'+(revBusy
@@ -2534,13 +2589,12 @@ function blocRevue(){
   if(!revBusy&&derniere&&!planPropose)
     h+='<div class="tools"><button class="tool" id="goPlan">Générer le plan seul</button>'+
        '<button class="tool" id="repli">Plan de repli</button></div>';
-  h+='</section>';
+  h+='</div></section>';
 
   if(derniere)h+=blocAnalyse(derniere);
   if(planPropose)h+=blocPlan(planPropose);
   /* L'échappatoire reste : si l'appel ne passe pas, la boucle par
      copier-coller dans une session de chat fonctionne toujours. */
-  h+='<div class="tools" style="margin-top:14px"><button class="tool" id="rev">Exporter la revue</button></div>';
   return h;
 }
 function blocAnalyse(r){
@@ -2748,6 +2802,8 @@ function appliquerBackfill(bf){
 function viewPlan(){
   const ap=activePlan();
   let html="";
+  if(ap.pending)html+='<div class="banner info">Ce plan commence le '+
+    esc(fmt(ap.pending).dow+" "+fmt(ap.pending).num)+'.</div>';
   ap.weeks.forEach(w=>{
     const c=capFor(w.start),ks=weekDays(w.start);
     const vol=[["runKm","couru"],["hikeKm","rando"],["swimKm","nagé"],["bikeKm","vélo"],["kayakKm","kayak"]]
@@ -2883,8 +2939,14 @@ function dayDetail(d,extra){
   if(nCut)h+='<p class="empty">'+nCut+' séance'+(nCut>1?"s":"")+' écartée'+(nCut>1?"s":"")+' — semaine chargée, seules les P1 tiennent.</p>';
   /* « Rien de prévu » ne se dit que si rien n'a été fait non plus : le
      jour où la montre a vu deux séances, la phrase était un contresens. */
-  if(!kept(d).length&&!d.fascia&&!nCut&&!seancesAt(k).length)
-    h+='<p class="empty">Rien de prévu. Une séance manquée ne se rattrape pas.</p>';
+  if(!kept(d).length&&!d.fascia&&!nCut&&!seancesAt(k).length){
+    /* Avant le début du plan, « rien de prévu » n'est pas un reproche :
+       il n'y a simplement pas encore de plan pour ce jour-là. */
+    const ap=activePlan();
+    h+='<p class="empty">'+(ap.pending&&k<ap.pending
+      ?"Le plan commence le "+esc(fmt(ap.pending).dow+" "+fmt(ap.pending).num)+"."
+      :"Rien de prévu. Une séance manquée ne se rattrape pas.")+'</p>';
+  }
 
   /* --- saisie quotidienne (§9.3) ---
      Cinq éléments, et rien d'autre : tout ce que le zip mesure a été
@@ -2904,7 +2966,7 @@ function dayDetail(d,extra){
      ce champ répond à une seule question, posée une fois par semaine —
      l'apport est-il à 2 000 kcal ou au-dessus. */
   h+='<div class="log-row col"><span class="log-lab">Menu du jour<span class="hint">En clair, sans peser. Estimé une fois par semaine, jamais compté ici.</span></span>'+
-     '<textarea class="menu" rows="2" placeholder="skyr + whey, salade de bœuf, amandes, poulet + légumes…" data-f="'+k+'|menu">'+esc(e.menu||"")+'</textarea></div>';
+     '<textarea class="menu" rows="3" placeholder="skyr + whey, salade de bœuf, amandes, poulet + légumes…" data-f="'+k+'|menu">'+esc(e.menu||"")+'</textarea></div>';
   /* 3 · protocole tendineux réellement fait. « fasciaFait » et non
      « fascia » : le second dit ce que le plan prescrit ce jour-là, et
      cocher la prescription à la place de la réalisation ferait mentir les
@@ -3099,7 +3161,7 @@ function renderTargets(){
   /* Sans jalons, il n'y a rien à lire ici : le moyen d'en charger passe
      devant le tableau vide, pas trois écrans plus bas dans Références. */
   if(!ciblesParametrees()){
-    h+='<div class="todo">Aucune cible paramétrée. Charge-les depuis un fichier, ou renseigne la trajectoire de poids dans <b>Références</b>, juste en dessous.</div>'+
+    h+='<div class="todo">Aucune cible paramétrée. Charge-les depuis un fichier, ou renseigne la trajectoire de poids dans <b>Réglages</b>.</div>'+
        '<div class="tools" style="margin-top:0"><button class="tool" id="msBtn">Importer des cibles</button>'+
        '<button class="tool" id="msPaste">Coller des cibles</button></div>'+
        '<input type="file" id="msFile" accept=".json,application/json,text/plain" hidden>';
@@ -3138,7 +3200,7 @@ function renderTargets(){
        (T.next?' · prochain '+esc(T.next.dist+" le "+dm(T.next.d)+(T.next.cible?", cible "+T.next.cible:"")):'')+
      '</span></div>';
   h+='</div>';
-  if(T.late)h+='<p class="todo">Test du <b>'+esc(dm(T.late.d))+'</b> ('+esc(T.late.dist)+') passé sans résultat saisi. Panneau Références.</p>';
+  if(T.late)h+='<p class="todo">Test du <b>'+esc(dm(T.late.d))+'</b> ('+esc(T.late.dist)+') passé sans résultat saisi. Réglages › Tests chronométrés.</p>';
   h+='<p class="pace">Allure d\'endurance de référence : <b>'+esc(paceAt(TODAY))+'</b>. Indication, jamais évaluée.</p>';
 
   /* --- B · le tableau mensuel --- */
@@ -3171,9 +3233,9 @@ function renderTargets(){
      l'indicateur, le poids n'en est que la somme avec la masse maigre. */
   h+='<div class="graph">'+mgChart()+'</div>';
   h+='<div class="graph">'+weightChart()+'</div>';
-  h+='<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
+  h+='<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
   h+='<div class="graph">'+volumeChart()+'</div>';
-  h+='<div class="graph">'+tgtChart("vo2","VO2max (ml/kg/min) — réel plein, cible pointillé",1)+'</div>';
+  h+='<div class="graph">'+tgtChart("vo2","VO2max — en trait plein, la cible en pointillé",1)+'</div>';
   h+='<div class="graph">'+horsZoneChart()+'</div>';
   h+='<p class="foot">Une semaine allégée n\'est pas une semaine perdue. Une séance manquée ne se rattrape pas.</p>';
   document.getElementById("targets").innerHTML=h;
@@ -3181,7 +3243,7 @@ function renderTargets(){
 /* Les graphes qui ne dépendent d'aucune cible. */
 function graphesMesure(){
   return '<div class="graph">'+mgChart()+'</div>'+
-         '<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>'+
+         '<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>'+
          '<div class="graph">'+horsZoneChart()+'</div>';
 }
 function lastVal(f){
@@ -3232,7 +3294,7 @@ function weightChart(){
   /* La trajectoire se trace même sans mesure : avant la première pesée,
      la pente attendue est la seule chose à montrer, et une ligne la dit
      mieux que trois repères horizontaux qui se chevauchent. */
-  const h=tgtChart("w","Poids (kg) — réel plein, cible pointillé",1);
+  const h=tgtChart("w","Poids — en trait plein, la cible en pointillé",1);
   return monthSeries(TGT[0]).pts.length?h
     :h+'<p class="empty">Première pesée le '+MEASURE_START+'. La trajectoire est tracée, rien d\'autre n\'est mesuré.</p>';
 }
@@ -3262,7 +3324,7 @@ function volumeChart(){
   /* Le réel est la médiane 4 semaines, celle que la cible juge — pas le
      total d'une semaine, qu'un pic isolé gonflerait. Le plafond dur en
      vigueur reste dans le titre. */
-  return tgtChart("vol","Volume course (km) — médiane 4 sem., cible pointillé · plafond dur "+runAbsMax(),1);
+  return tgtChart("vol","Volume de course — médiane sur 4 semaines, cible en pointillé. Plafond dur "+runAbsMax()+" km",1);
 }
 /* Masse grasse absolue, en kilogrammes : c'est elle qu'on veut voir
    descendre, pas le poids total, qui mêle la masse maigre. Droite de
@@ -3286,8 +3348,8 @@ function trendOf(pts){
 }
 function mgChart(){
   const pts=mgSeries(),T=trendOf(pts);
-  const t="Masse grasse (kg) — indicateur primaire"+
-    (T?", tendance "+(T.parSemaine>=0?"+":"−")+Math.abs(T.parSemaine).toFixed(1)+" kg/sem.":"");
+  const t="Masse grasse — en kilogrammes, l'indicateur qui compte"+
+    (T?". Tendance "+(T.parSemaine>=0?"+":"−")+Math.abs(T.parSemaine).toFixed(1)+" kg par semaine":"");
   return seriesChart(t,pts,[],1,null,T?T.pts:null)+
     (pts.length?"":'<p class="empty">Aucun import : la masse grasse vient du zip, elle ne se saisit pas.</p>');
 }
@@ -3307,13 +3369,13 @@ function allSeances(){
 function horsZoneChart(){
   const S=allSeances().filter(s=>s.kind==="course"&&s.pctHorsZoneHaut!==null&&s.pctHorsZoneHaut!==undefined).slice(-14);
   const z=DB.settings.zones||{bas:128,haut:141};
-  const title="% de temps au-dessus de "+z.haut+" bpm, par sortie";
-  if(!S.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune sortie de course avec série de fréquence cardiaque importée.</p>';
+  const title="Hors zone — part de chaque sortie au-dessus de "+z.haut+" bpm";
+  if(!S.length)return gTitre(title)+'<p class="empty">Aucune sortie de course avec série de fréquence cardiaque importée.</p>';
   const W=600,H=150,n=S.length;
   const hi=Math.max(40,Math.max.apply(null,S.map(s=>s.pctHorsZoneHaut)));
   const y=v=>18+((hi-v)/hi)*(H-48);
   const bw=Math.min(34,(W-70)/n*0.62);
-  let s='<div class="meta">'+esc(title)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  let s=gTitre(title)+'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
   S.forEach((x,i)=>{
     const cx=34+(n===1?(W-70)/2:(i*(W-70))/(n-1)),v=x.pctHorsZoneHaut;
     s+='<rect x="'+(cx-bw/2)+'" y="'+y(v)+'" width="'+bw+'" height="'+Math.max(1,(H-30)-y(v))+
@@ -3326,13 +3388,21 @@ function horsZoneChart(){
      c'est-à-dire précisément quand il fallait le voir. */
   s+='<line x1="26" y1="'+y(HZ_REF)+'" x2="'+(W-20)+'" y2="'+y(HZ_REF)+'" class="gl-ref" stroke-dasharray="4 5"/>';
   s+='<text x="'+(W-20)+'" y="'+(y(HZ_REF)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+HZ_REF+' % · seuil</text>';
-  s+='</svg><div class="meta" style="margin-top:2px">Dernière sortie '+S[n-1].pctHorsZoneHaut+' %</div>';
+  s+='</svg><div class="gsub">Dernière sortie '+S[n-1].pctHorsZoneHaut+' %</div>';
   return s;
 }
 const HZ_REF=20;
+/* Un graphe porte un nom, pas une phrase en capitales. Ce qui suit le
+   tiret cadratin est son mode d'emploi : il passe en sous-titre, plus
+   léger, et n'entre pas en concurrence avec la courbe. */
+function gTitre(t){
+  const i=String(t).indexOf(" — ");
+  const nom=i<0?t:t.slice(0,i),sous=i<0?"":t.slice(i+3);
+  return'<div class="gtitle">'+esc(nom)+'</div>'+(sous?'<div class="gsub">'+esc(sous)+'</div>':'');
+}
 function seriesChart(title,pts,refs,dec,goal,trend){
   const G=goal||[],TR=trend||[];
-  if(!pts.length&&!G.length)return'<div class="meta">'+esc(title)+'</div><p class="empty">Aucune donnée saisie.</p>';
+  if(!pts.length&&!G.length)return gTitre(title)+'<p class="empty">Aucune donnée saisie.</p>';
   const W=600,H=150;
   const all=pts.concat(G).concat(TR);
   let lo=Math.min.apply(null,all.map(p=>p.v)),hi=Math.max.apply(null,all.map(p=>p.v));
@@ -3353,7 +3423,7 @@ function seriesChart(title,pts,refs,dec,goal,trend){
   }
   const X=(p,i)=>dated?34+((parseD(p.k).getTime()-t0)/(t1-t0))*(W-70)
                       :34+(i*(W-70))/Math.max(pts.length-1,1);
-  let s='<div class="meta">'+esc(title)+'</div><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
+  let s=gTitre(title)+'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto">';
   refs.forEach(r=>{
     s+='<line x1="26" y1="'+y(r.v)+'" x2="'+(W-20)+'" y2="'+y(r.v)+'" class="gl-ref" stroke-dasharray="4 5"/>';
     s+='<text x="'+(W-20)+'" y="'+(y(r.v)-6)+'" text-anchor="end" class="gt-ref" font-size="10" font-family="monospace">'+esc(r.txt)+'</text>';
@@ -3373,7 +3443,7 @@ function seriesChart(title,pts,refs,dec,goal,trend){
   const axe=G.length>=pts.length?G:pts;
   const pas=Math.ceil(axe.length/12);
   axe.forEach((p,i)=>{if(i%pas===0)s+='<text x="'+X(p,i)+'" y="'+(H-6)+'" text-anchor="middle" class="g-txt" font-size="10" font-family="monospace">'+esc(p.lab)+'</text>';});
-  s+='</svg><div class="meta" style="margin-top:2px">'+
+  s+='</svg><div class="gsub">'+
      (pts.length?'Dernier point '+pts[pts.length-1].v.toFixed(dec):'Aucune mesure encore')+'</div>';
   return s;
 }
@@ -3713,7 +3783,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],[data-fold],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -3738,6 +3808,7 @@ document.addEventListener("click",ev=>{
   if(t.id==="go"){lancerRevue();return;}
   if(t.id==="repli"){proposerRepli();return;}
   if(t.id==="goPlan"){relancerPlan();return;}
+  if(t.dataset.fold!==undefined){plie[t.dataset.fold]=!plie[t.dataset.fold];render();return;}
   if(t.id==="applyPlan"){
     if(!planPropose)return;
     const r=appliquerPlan(planPropose);
