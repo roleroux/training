@@ -87,6 +87,19 @@ header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:1
   padding:10px;cursor:pointer;line-height:0;border-radius:10px}
 .gear:active{background:var(--tint)}
 .gear[data-on="1"]{color:var(--ink);background:var(--tint)}
+/* Bandeau avec action : le texte à gauche, le geste à droite. */
+.banner.act{display:flex;align-items:center;gap:10px}
+.banner.act span{flex:1}
+.bact{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  background:var(--surface);border:1px solid currentColor;color:inherit;border-radius:8px;padding:8px 10px;cursor:pointer}
+.plan-dates{font-size:14px;margin:0 0 4px;color:var(--ink)}
+.plan-dates b{font-weight:600}
+.valid-row{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+.valid{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;background:none;
+  border:1px solid var(--depth);color:var(--depth);border-radius:9px;padding:10px 14px;cursor:pointer}
+.apport{font-size:13px;color:var(--fog)}
+.apport b{color:var(--ink);font-weight:500}
+.apport.warn{color:var(--buoy)}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
@@ -108,7 +121,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .tabs{margin:0 -18px;padding:0 18px;display:flex;gap:0;border-bottom:1px solid var(--edge);
   background:var(--veil);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px)}
 .tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;color:var(--fog);cursor:pointer;
-  font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;padding:13px 4px}
+  font-family:var(--mono);font-size:11px;letter-spacing:.11em;text-transform:uppercase;padding:13px 4px}
 .tab.on{color:var(--ink);border-bottom-color:var(--buoy)}
 .tab .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--buoy);margin-left:5px;vertical-align:middle}
 .mo{margin:26px 0 10px;display:flex;align-items:baseline;gap:10px}
@@ -125,19 +138,19 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .jdet{border-bottom:1px solid var(--edge)}
 .jbox>.jdet:last-child{border-bottom:none}
 .jbox{border:1px solid var(--edge);border-radius:9px;background:var(--surface);box-shadow:var(--shadow);overflow:hidden}
-.jd{font-family:var(--mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;min-width:52px;color:var(--fog)}
+.jd{font-family:var(--mono);font-size:13px;letter-spacing:.04em;text-transform:uppercase;min-width:52px;color:var(--fog)}
 .jd b{color:var(--ink);font-weight:600}
-.js{font-size:12px;color:var(--fog);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.js{font-size:13.5px;color:var(--fog);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .jm{font-family:var(--mono);font-size:10px;color:var(--fog)}
 .jm.full{color:var(--depth)}
 .banners{margin-top:12px;display:grid;gap:6px}
-.banner{font-size:11.5px;line-height:1.45;padding:8px 10px;border-radius:7px;border-left:3px solid var(--fog);background:var(--tint);color:var(--ink)}
+.banner{font-size:13px;line-height:1.45;padding:8px 10px;border-radius:7px;border-left:3px solid var(--fog);background:var(--tint);color:var(--ink)}
 .banner.warn{border-left-color:var(--buoy)}
 .banner.info{border-left-color:var(--depth)}
 
 .review{margin-top:20px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);box-shadow:var(--shadow);padding:15px}
 .review-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog)}
-.review-d{font-size:12px;color:var(--fog);line-height:1.5;margin-top:6px}
+.review-d{font-size:13.5px;color:var(--fog);line-height:1.5;margin-top:6px}
 .big{display:block;width:100%;margin-top:11px;padding:13px;border-radius:9px;border:none;background:var(--depth);color:var(--on-accent);font-family:var(--mono);font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer}
 .big.sec{background:none;border:1px solid var(--edge);color:var(--fog)}
 
@@ -145,7 +158,7 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
    les volumes passent dessous plutôt que de casser le nom en deux. */
 .week{display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;flex-wrap:wrap}
 .week-name{font-family:var(--serif);font-style:italic;font-size:19px;flex:0 0 auto}
-.week-sub{font-size:11.5px;color:var(--fog);flex:0 0 100%;order:9}
+.week-sub{font-size:12.5px;color:var(--fog);flex:0 0 100%;order:9}
 .reg{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--fog);
   background:none;border:1px solid var(--edge);border-radius:99px;padding:4px 10px;cursor:pointer;white-space:nowrap}
 .reg.hot{color:var(--buoy);border-color:var(--buoy)}
@@ -167,9 +180,9 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .card-head{width:100%;text-align:left;background:none;border:none;color:inherit;font:inherit;padding:14px 15px;display:block;cursor:pointer;transition:background-color .15s ease}
 .card-head:active{background:var(--press)}
 .card-top{display:flex;align-items:center;gap:10px}
-.date{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;min-width:60px}
+.date{font-family:var(--mono);font-size:13.5px;letter-spacing:.05em;text-transform:uppercase;min-width:60px}
 .date b{font-weight:600}
-.sum{font-size:12.5px;color:var(--fog);flex:1}
+.sum{font-size:14px;color:var(--fog);flex:1}
 .count{font-family:var(--mono);font-size:10.5px;color:var(--fog);background:var(--tint);border:1px solid var(--edge);border-radius:99px;padding:3px 9px}
 .count.full{color:var(--on-accent);background:var(--depth);border-color:var(--depth)}
 
@@ -191,15 +204,15 @@ h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.02;marg
 .tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase}
 .rank{font-family:var(--mono);font-size:9px;letter-spacing:.1em;border:1px solid var(--edge);border-radius:99px;padding:2px 7px;color:var(--fog)}
 .rank.p1{color:var(--buoy);border-color:var(--buoy)}
-.sess-lab{font-size:14px;margin-top:4px;line-height:1.35;font-weight:500}
+.sess-lab{font-size:15.5px;margin-top:4px;line-height:1.35;font-weight:500}
 .sess-lab.off{color:var(--fog);text-decoration:line-through}
-.cue{font-size:12px;color:var(--fog);line-height:1.5;margin-top:5px}
+.cue{font-size:13px;color:var(--fog);line-height:1.5;margin-top:5px}
 .alt{margin-top:8px;background:none;border:1px solid var(--edge);border-radius:7px;color:var(--fog);font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 9px;cursor:pointer;position:relative}
 .alt::after{width:100%;height:40px}
 .fallback{margin-top:9px;padding:10px 11px;background:var(--tint);border-left:2px solid var(--brass);border-radius:0 8px 8px 0;display:flex;gap:10px;align-items:flex-start}
-.fallback .fb-t{font-size:12.5px;line-height:1.45;flex:1}
+.fallback .fb-t{font-size:13.5px;line-height:1.45;flex:1}
 .conv{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--buoy);margin-top:6px}
-.ro{font-family:var(--mono);font-size:14px;color:var(--ink);text-align:right}
+.ro{font-family:var(--mono);font-size:15px;color:var(--ink);text-align:right}
 /* Bloc des mesures : lecture seule, et il le dit. Séparé du formulaire
    par sa teinte, pour qu'on ne cherche pas à y taper. */
 .mes{margin-top:16px;padding:12px 13px 4px;background:var(--tint);border-radius:10px}
@@ -215,7 +228,7 @@ textarea.menu{width:100%;min-height:76px;background:none;border:1px solid var(--
   field-sizing:content}
 textarea.menu:focus{outline:none;border-color:var(--brass)}
 /* Lien d'exception : discret, mais de taille tapable. */
-.lnk{background:none;border:none;color:var(--fog);font-family:var(--sans);font-size:12.5px;
+.lnk{background:none;border:none;color:var(--fog);font-family:var(--sans);font-size:14px;
   text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:9px 0;text-align:left}
 /* Les séances s'enroulent : tronquer la ligne coupait le % hors zone,
    qui est précisément ce qu'on vient y lire. */
@@ -232,14 +245,14 @@ textarea.menu:focus{outline:none;border-color:var(--brass)}
 .panel.fold{padding:0;overflow:hidden}
 .fold-h{display:flex;align-items:baseline;gap:10px;width:100%;text-align:left;background:none;
   border:none;color:inherit;padding:16px 18px;cursor:pointer;font:inherit}
-.fold-t{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
-.fold-s{flex:1;font-family:var(--mono);font-size:10.5px;color:var(--fog);min-width:0;
+.fold-t{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.fold-s{flex:1;font-family:var(--mono);font-size:11.5px;color:var(--fog);min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fold-c{font-family:var(--mono);font-size:15px;color:var(--fog);line-height:1}
 .fold-b{padding:0 18px 18px}
 /* Le rituel est une suite de gestes, pas trois cartes : un filet les relie. */
 .rite{margin-top:18px;padding-top:16px;border-top:1px solid var(--edge)}
-.dates{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--fog);margin-top:10px}
+.dates{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--fog);margin-top:10px}
 .dates b{font-weight:400;letter-spacing:.12em;text-transform:uppercase;font-size:9px;display:block;margin-bottom:2px}
 /* Un champ de clé se saisit et disparaît : il n'est jamais relu. */
 input.keyin{width:100%;background:none;border:1px solid var(--edge);border-radius:9px;color:var(--ink);
@@ -251,16 +264,16 @@ textarea.etat{font-family:var(--mono);font-size:13px;min-height:150px}
 /* La barre dit que ça avance, elle ne prétend pas savoir où ça en est. */
 .bar{height:4px;background:var(--edge);border-radius:99px;overflow:hidden;margin:12px 0 4px}
 .bar-in{height:100%;background:var(--brass);transition:width .35s ease}
-.analyse{font-size:13.5px;line-height:1.6;color:var(--ink);margin:0 0 14px}
+.analyse{font-size:15.5px;line-height:1.6;color:var(--ink);margin:0 0 14px}
 ul.lst{margin:0 0 12px;padding-left:18px}
-ul.lst li{font-size:12.5px;line-height:1.55;color:var(--fog);margin-bottom:4px}
+ul.lst li{font-size:14px;line-height:1.55;color:var(--fog);margin-bottom:4px}
 .repas{margin-top:12px;padding:11px 12px 6px;background:var(--tint);border-radius:10px}
 .repas-t{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);margin-bottom:4px}
 .repas-t b{color:var(--depth);font-weight:500}
 .cre-h{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--fog)}
 .subi{color:var(--buoy)}
 .pivot{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--buoy);border-left:3px solid var(--buoy);background:var(--tint);border-radius:0 7px 7px 0;padding:8px 10px;margin-bottom:12px}
-.todo{font-size:11.5px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
+.todo{font-size:13px;line-height:1.5;color:var(--ink);border-left:3px solid var(--brass);background:var(--tint);border-radius:0 7px 7px 0;padding:9px 11px;margin:0 0 14px}
 
 .log{margin-top:16px;padding-top:16px;border-top:1px solid var(--edge);display:grid;gap:20px}
 .log-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -269,8 +282,8 @@ ul.lst li{font-size:12.5px;line-height:1.55;color:var(--fog);margin-bottom:4px}
 /* Les libellés de saisie étaient en capitales mono 9,5 px : illisibles de
    près, et criés. Ce sont des questions posées à quelqu'un, pas des
    en-têtes de tableau. */
-.log-lab{font-family:var(--sans);font-size:13.5px;letter-spacing:0;text-transform:none;color:var(--ink);flex:1;min-width:120px;font-weight:500}
-.log-lab .hint{display:block;font-family:var(--sans);font-size:11.5px;color:var(--fog);margin-top:2px;line-height:1.45;font-weight:400}
+.log-lab{font-family:var(--sans);font-size:15px;letter-spacing:0;text-transform:none;color:var(--ink);flex:1;min-width:120px;font-weight:500}
+.log-lab .hint{display:block;font-family:var(--sans);font-size:12.5px;color:var(--fog);margin-top:2px;line-height:1.45;font-weight:400}
 .log-lab .hint.warn{color:var(--buoy)}
 /* 16 px partout : en dessous, iOS zoome la page à la prise de focus et
    ne la dézoome jamais. Les champs date et heure en héritaient pas. */
@@ -279,7 +292,7 @@ input[type=date],input[type=time]{font-family:var(--mono);font-size:16px;color:v
 input[type=number]:focus,input[type=text]:focus{outline:none;border-bottom-color:var(--brass)}
 .unit{font-family:var(--mono);font-size:9.5px;color:var(--fog);width:34px}
 .pills{display:flex;gap:8px;flex-wrap:wrap}
-.pill{min-width:46px;height:44px;border:1px solid var(--edge);background:none;border-radius:9px;color:var(--fog);font-family:var(--mono);font-size:12px;cursor:pointer;padding:0 9px}
+.pill{min-width:48px;height:46px;border:1px solid var(--edge);background:none;border-radius:10px;color:var(--fog);font-family:var(--mono);font-size:14px;cursor:pointer;padding:0 9px}
 .pill[data-on="1"]{border-color:var(--depth);color:var(--depth)}
 .pill[data-on="1"][data-over="1"]{border-color:var(--buoy);color:var(--buoy)}
 /* Les deux créneaux qui font la journée sont marqués même décochés. */
@@ -299,7 +312,7 @@ input.bad{border-color:var(--buoy)}
 
 .panel{margin-top:34px;border:1px solid var(--edge);border-radius:12px;background:var(--surface);padding:20px 18px;box-shadow:var(--shadow)}
 .panel h2{font-family:var(--serif);font-style:italic;font-size:19px;margin:0 0 4px;font-weight:600}
-.panel-sub{font-size:11.5px;color:var(--fog);margin:0 0 16px;line-height:1.5}
+.panel-sub{font-size:13px;color:var(--fog);margin:0 0 16px;line-height:1.5}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table.tgt{border-collapse:collapse;width:100%;min-width:330px}
 table.tgt th,table.tgt td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--edge);vertical-align:top}
@@ -313,33 +326,33 @@ table.tgt th{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-t
 .t-st{font-family:var(--mono);font-size:11px;margin-right:4px}
 .ok{color:var(--depth)}.warn{color:var(--buoy)}.dim{color:var(--fog)}
 
-.meta{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-bottom:9px}
+.meta{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-bottom:9px}
 .vtitle{font-family:var(--serif,Georgia,serif);font-size:22px;margin:22px 0 -2px;color:var(--ink)}
 .graph{margin-top:26px}
-.gtitle{font-size:13.5px;font-weight:500;color:var(--ink);margin-bottom:2px}
-.gsub{font-size:11.5px;color:var(--fog);line-height:1.45;margin-bottom:8px}
+.gtitle{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.gsub{font-size:12.5px;color:var(--fog);line-height:1.45;margin-bottom:8px}
 svg+.gsub{margin:2px 0 0}
 .gl-ref{stroke:var(--depth)}.gt-ref{fill:var(--depth)}.gl-start{stroke:var(--chart-grid)}
 .g-txt{fill:var(--fog)}.g-line{stroke:var(--brass)}.g-dot{fill:var(--brass)}
 .g-trend{stroke:var(--depth);fill:none}
 .g-bar{fill:var(--depth)}.g-bar.hot{fill:var(--buoy)}
-.empty{font-size:12.5px;color:var(--fog);line-height:1.55;padding:10px 0;margin:0}
+.empty{font-size:14px;color:var(--fog);line-height:1.55;padding:10px 0;margin:0}
 .foot{font-size:11.5px;color:var(--fog);line-height:1.6;margin:22px 0 0;padding-top:16px;border-top:1px solid var(--edge)}
 .tools{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
-.tool{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);background:none;border:1px solid var(--edge);border-radius:8px;padding:10px 14px;cursor:pointer}
+.tool{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--fog);background:none;border:1px solid var(--edge);border-radius:8px;padding:10px 14px;cursor:pointer}
 .save{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--fog);margin-top:12px}
-.backup{font-size:11.5px;color:var(--fog);margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
+.backup{font-size:12.5px;color:var(--fog);margin-top:14px;padding-top:12px;border-top:1px solid var(--edge)}
 .backup.warn{color:var(--buoy)}
 .refs-grid{display:grid;gap:12px}
 .refs-h{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);margin-top:6px}
 .mtgt{display:grid;gap:1px;background:var(--edge);border:1px solid var(--edge);border-radius:9px;overflow:hidden;margin-bottom:12px}
 .mrow{display:grid;grid-template-columns:1fr auto;gap:3px 8px;background:var(--surface);padding:9px 11px;align-items:baseline}
-.mlab{font-size:12.5px}
-.mline{grid-column:1/-1;font-family:var(--mono);font-size:11.5px;color:var(--fog);line-height:1.5}
-.mline b{font-size:13.5px;color:var(--ink);font-weight:500}
+.mlab{font-size:14.5px}
+.mline{grid-column:1/-1;font-family:var(--mono);font-size:12.5px;color:var(--fog);line-height:1.5}
+.mline b{font-size:15px;color:var(--ink);font-weight:500}
 .mgap{font-family:var(--mono)}
 .mgap.ok{color:var(--depth)}.mgap.warn{color:var(--buoy)}
-.pace{font-size:11.5px;color:var(--fog);margin:0 0 4px;line-height:1.5}
+.pace{font-size:13px;color:var(--fog);margin:0 0 4px;line-height:1.5}
 table.tgt th.now,table.tgt td.now{background:var(--tint)}
 table.tgt th.base,table.tgt td.base{color:var(--fog)}
 .g-goal{stroke:var(--depth);fill:none}
@@ -364,7 +377,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.8", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.9", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -426,7 +439,10 @@ function monthsTable(){
       w:poidsCible(monthEnd(mk)),
       waist:linCible(M.taille,i,n),
       vol:linCible(M.vol,i,n),
-      sleep:linCible(M.sommeil,i,n),
+      /* Une cible de sommeil sous le seuil qui fait sauter les séances
+         d'intensité serait absurde : la jauge dirait « réussi » pendant
+         que le garde-fou retire la course. Le seuil est le plancher. */
+      sleep:(function(v){return v===null?null:Math.max(v,G_SOMMEIL_SEUIL);})(linCible(M.sommeil,i,n)),
       prot:linCible(M.prot,i,n),
       vo2:linCible(M.vo2,i,n)};
     const af=num((M.vol||{}).affutage);
@@ -440,7 +456,8 @@ function monthsTable(){
    journal. */
 const MS_GROUPES={poids:["base","date","r1","seuil","r2","forme"],
   taille:["base","cible"],vol:["base","cible","affutage"],
-  sommeil:["base","cible"],prot:["base","cible"],vo2:["base","cible"]};
+  sommeil:["base","cible"],prot:["base","cible"],vo2:["base","cible"],
+  fcRepos:["cible"],alcool:["semaine"]};
 function chargerCibles(txt){
   let o;
   try{o=JSON.parse(txt);}catch(e){throw new Error("Ce n'est pas du JSON valide.");}
@@ -487,8 +504,11 @@ function ciblesParametrees(){
    sont masqués et la jauge poids reste en veille. Aucune valeur de
    départ n'est supposée. */
 const MEASURE_START="2026-08-30";
-const RHR_TARGET=61, RHR_SPAN=10;   /* jauge vide à 71 bpm, pleine à 61 */
-const PROTEIN=160, DRINK_WEEK=5, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
+/* Ces deux seuils étaient en dur — 61 bpm, 5 verres — et contredisaient
+   la doctrine. Ils vivent dans les jalons, avec le reste des cibles. */
+function rhrCible(){return num(((DB.milestones||{}).fcRepos||{}).cible);}
+function drinkCap(){return num(((DB.milestones||{}).alcool||{}).semaine);}
+const PROTEIN=160, SLEEP_H=7, SLEEP_NIGHTS=5, BED_NIGHTS=4;
 /* Bas de la jauge sommeil : en dessous, l'anneau reste vide. */
 const SLEEP_LOW=5;
 /* Protéines : quatre prises, chacune sa valeur. La whey fait 30 g, un
@@ -621,7 +641,7 @@ function normalize(){
   if(!Array.isArray(DB.reviews))DB.reviews=[];
   /* Jalons : la forme est ici, les valeurs viennent de l'appareil. */
   if(!DB.milestones)DB.milestones={};
-  ["poids","taille","vol","sommeil","prot","vo2"].forEach(x=>{
+  ["poids","taille","vol","sommeil","prot","vo2","fcRepos","alcool"].forEach(x=>{
     if(!DB.milestones[x])DB.milestones[x]={};
   });
   if(!Array.isArray(DB.milestones.tests))DB.milestones.tests=[];
@@ -1570,11 +1590,15 @@ const CONSIGNE_A=
  "compteurs de registre initialisés à zéro — un compteur qu'on ne peut pas reconstituer se réamorce, il ne se devine pas. "+
  "Pour l'apport, estime sur les menus en clair du journal, en un seul lot sur la semaine, "+
  "et dis sur combien de jours renseignés tu as estimé. N'invente pas de journée manquante.";
-const CONSIGNE_B=
- "Tu reçois la revue que tu viens de produire. Établis maintenant le plan des quatorze prochains jours "+
- "en appelant l'outil rendre_plan, et rien d'autre. Deux semaines, chacune commençant un lundi. "+
- "Respecte les régimes de l'agenda et le plafond de course. "+
- "Le champ backfill reste vide : l'app le remplit elle-même depuis les mesures importées.";
+function consigneB(){
+  const F=planFenetre(),W=semainesFenetre();
+  return "Tu reçois la revue que tu viens de produire. Établis maintenant le plan en appelant l'outil rendre_plan, et rien d'autre. "+
+   "Il couvre EXACTEMENT du "+F.debut+" au "+F.fin+" inclus, jour par jour, sans trou. "+
+   "Semaines calendaires, champ start = date du lundi : "+W.map(w=>w.start+" (jours "+w.jours[0]+" → "+w.jours[w.jours.length-1]+")").join(" ; ")+". "+
+   "La première semaine peut être partielle : ne remplis que ses jours listés. "+
+   "Respecte les régimes de l'agenda et le plafond de course. "+
+   "Le champ backfill reste vide : l'app le remplit elle-même depuis les mesures importées.";
+}
 
 function corpsA(){
   return{
@@ -1589,7 +1613,7 @@ function corpsB(revue,violations){
   const msgs=[
     {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue(true))},
     {role:"assistant",content:[{type:"text",text:JSON.stringify(revue)}]},
-    {role:"user",content:CONSIGNE_B}
+    {role:"user",content:consigneB()}
   ];
   /* Relance : le plan refusé n'est pas renvoyé, seules les violations le
      sont. Rejouer une sortie fautive invite à la reproduire. */
@@ -1610,6 +1634,38 @@ function corpsB(revue,violations){
    sur iOS, une requête en cours est suspendue dès que Safari passe en
    arrière-plan, et quatre-vingt-dix secondes suffisent à ce que ça
    arrive. Un plan qui échoue laisse alors une revue exploitable. --- */
+/* Estimation quotidienne de l'apport, à la demande — sur Valider, jamais
+   d'elle-même. C'est un choix de l'utilisateur, pris en connaissance de
+   cause : la doctrine proscrit le compteur quotidien, il l'a demandé quand
+   même. Ce qui reste de l'esprit de la règle : une fourchette, pas un
+   solde ; un tap, pas une jauge ; et rien ne s'affiche en rouge ou en vert. */
+let estBusy=null;
+const SCHEMA_APPORT={type:"object",properties:{
+  kcal:{type:"integer"},prot:{type:"integer"},
+  incertitude:{type:"string",description:"ex. ±300 kcal"},
+  lecture:{type:"string",description:"une phrase courte, ou vide"}},
+  required:["kcal","prot","incertitude"]};
+async function estimerJour(k){
+  const e=entry(k),menu=String(e.menu||"").trim();
+  if(!menu){e.apport={err:"Écris d'abord le menu."};save();render();return;}
+  if(!apiKey()){e.apport={err:"Pas de clé API : aucune estimation."};save();render();return;}
+  estBusy=k;render();
+  try{
+    const data=await apiFetch({
+      model:modele(),max_tokens:200,
+      system:"Tu estimes l'apport d'une journée à partir d'un menu écrit en clair, sans quantités précises. "+
+        "Donne une fourchette honnête, en kilocalories et en grammes de protéines. Portions françaises usuelles. "+
+        "Réponds uniquement par l'outil.",
+      tools:[{name:"estimer_apport",description:"Estimation d'une journée.",input_schema:SCHEMA_APPORT}],
+      tool_choice:{type:"tool",name:"estimer_apport"},
+      messages:[{role:"user",content:"Menu du "+k+" : "+menu}]
+    });
+    const r=sortieOutil(data);
+    if(!r||typeof r.kcal!=="number")throw new Error("Réponse inexploitable.");
+    e.apport={kcal:Math.round(r.kcal),prot:Math.round(r.prot),inc:r.incertitude||"",quand:TODAY,menu:menu};
+  }catch(x){e.apport={err:(x&&x.message)||String(x)};}
+  estBusy=null;save();render();
+}
 async function appelA(){
   const manque=revuePrete();
   if(manque.length)throw ApiErr("Revue impossible : il manque "+manque.join(", ")+".",0,false);
@@ -1641,7 +1697,7 @@ function rangerRevue(r){
   if(!Array.isArray(DB.reviews))DB.reviews=[];
   /* Jalons : la forme est ici, les valeurs viennent de l'appareil. */
   if(!DB.milestones)DB.milestones={};
-  ["poids","taille","vol","sommeil","prot","vo2"].forEach(x=>{
+  ["poids","taille","vol","sommeil","prot","vo2","fcRepos","alcool"].forEach(x=>{
     if(!DB.milestones[x])DB.milestones[x]={};
   });
   if(!Array.isArray(DB.milestones.tests))DB.milestones.tests=[];
@@ -1774,6 +1830,9 @@ function verifierPlan(p,ctx){
   (p.semaines||[]).forEach(w=>{
     const lundi=(w.jours||[]).filter(d=>estLundi(d.d))[0];
     if(!lundi){
+      /* Le lundi de cette semaine est déjà passé : la semaine est partielle
+         par construction, il n'y a rien à exiger. */
+      if(w.start<planFenetre().debut)return;
       V.push(viol("G6","Semaine du "+w.start+" : aucun lundi dans les jours fournis.","rejet"));
       return;
     }
@@ -1949,18 +2008,38 @@ const REPLI=[
   {jour:0,rank:"P1",kind:"vtt",label:"VTT ~2 h",
    detail:"Dimanche.",fallback:"1 h, terrain roulant."}
 ];
-function planRepli(){
-  const lundi=mondayOf(addDays(TODAY,7)),semaines=[];
-  for(let w=0;w<2;w++){
-    const start=addDays(lundi,7*w),jours=[];
-    for(let i=0;i<7;i++){
-      const k=addDays(start,i),dow=parseD(k).getDay();
-      jours.push({d:k,fascia:true,
-        seances:REPLI.filter(x=>x.jour===dow).map(x=>({rank:x.rank,kind:x.kind,
-          label:x.label,detail:x.detail,fallback:x.fallback,bonus:false}))});
-    }
-    semaines.push({start:start,regime:"normale",runCapKm:lastCap(),jours:jours});
+/* La fenêtre d'un plan : de DEMAIN au dimanche qui suit le dimanche à
+   venir. Un plan qui « commence lundi prochain » laissait toute la semaine
+   en cours sans rien — c'est précisément la semaine qu'on vient de revoir.
+   Le dimanche soir, ça fait quatorze jours ; un mardi, douze. La première
+   semaine est alors partielle, et c'est normal. */
+function planFenetre(){
+  const debut=addDays(TODAY,1);
+  let dim=TODAY;
+  for(let i=0;i<7;i++){dim=addDays(dim,1);if(parseD(dim).getDay()===0)break;}
+  return{debut:debut,fin:addDays(dim,7)};
+}
+/* Les jours de la fenêtre, regroupés par semaine calendaire (lundi). */
+function semainesFenetre(){
+  const F=planFenetre(),out=[];
+  for(let k=F.debut;k<=F.fin;k=addDays(k,1)){
+    const m=mondayOf(k);
+    let w=out[out.length-1];
+    if(!w||w.start!==m){w={start:m,jours:[]};out.push(w);}
+    w.jours.push(k);
   }
+  return out;
+}
+function planRepli(){
+  const semaines=semainesFenetre().map(w=>({
+    start:w.start,regime:"normale",runCapKm:lastCap(),
+    jours:w.jours.map(k=>{
+      const dow=parseD(k).getDay();
+      return{d:k,fascia:true,
+        seances:REPLI.filter(x=>x.jour===dow).map(x=>({rank:x.rank,kind:x.kind,
+          label:x.label,detail:x.detail,fallback:x.fallback,bonus:false}))};
+    })
+  }));
   return{genere:TODAY,semaines:semaines,courses:[],prepDimanche:[],backfill:{},repli:true};
 }
 
@@ -2169,9 +2248,20 @@ function snapAt(k){
 }
 /* Tour de taille : la cible mensuelle est un écart, la mesure est
    absolue. Sans mesure de référence, la ligne reste une estimation. */
-function waistTarget(f){
+/* Référence de tour de taille : saisie dans Réglages si elle l'a été,
+   sinon la première mesure importée. Exiger une saisie manuelle d'une
+   valeur que le zip fournit déjà, c'est la jauge vide pour rien. */
+function waistBaseVal(){
   const b=num((DB.settings.refs||{}).waistBase);
-  return b===null?null:r1(b+f.waist);
+  if(b!==null)return b;
+  const d0=((DB.milestones||{}).poids||{}).date;
+  const ks=Object.keys(DB.days).sort();
+  for(const k of ks){if(isDate(d0)&&k<d0)continue;const v=num(DB.days[k].waist);if(v!==null)return v;}
+  return null;
+}
+function waistTarget(f){
+  const b=waistBaseVal();
+  return b===null||f.waist===null?null:r1(b+f.waist);
 }
 /* Les sept cibles d'un mois, confrontées aux valeurs d'une date.
    dir : -1 si l'on vise en dessous, +1 si l'on vise au-dessus. */
@@ -2300,7 +2390,7 @@ function renderHeader(){
   const wa=weekWaist(mon)!==null?weekWaist(mon):lastWeekly(weekWaist);
   const vo=weekVo2Max(mon)!==null?weekVo2Max(mon):lastWeekly(weekVo2Max);
   const sl7=avg(vals(lastN(TODAY,7),"sleep"));
-  const w0=firstWeekWeight(),wb=num((DB.settings.refs||{}).waistBase),v0=firstVo2();
+  const w0=firstWeekWeight(),wb=waistBaseVal(),v0=firstVo2();
   const wT=f.w,waT=waistTarget(f),slT=f.sleep,voT=f.vo2;
 
   document.getElementById("eyebrow").textContent="";
@@ -2347,7 +2437,10 @@ function renderHeader(){
   const B=[];
   if(stale)B.push(["warn",stale]);
   const ap=activePlan(),cap=capFor(mon),runKm=weekRun(mon),over=cap.cap!==null&&runKm>cap.cap;
-  if(ap.expired)B.push(["warn","Plan expiré — faire la revue du dimanche. Semaine par défaut affichée."]);
+  /* Un bandeau qui demande une action porte le bouton de cette action :
+     dire « faire la revue » sans y mener, c'est laisser chercher. */
+  if(ap.expired)B.push(["warn","Plan expiré — semaine par défaut affichée.",{tab:"revue",lab:"Revoir le plan"}]);
+  if(planPropose&&tab!=="revue")B.push(["info","Un plan est prêt, il n'est pas encore appliqué.",{tab:"revue",lab:"Voir le plan"}]);
   /* Un plan qui commence lundi n'est pas une alerte : l'information vit
      dans l'onglet Plan, elle n'a pas à occuper l'en-tête tous les jours. */
   /* Un relèvement du plafond dur ne doit jamais être silencieux : le
@@ -2357,12 +2450,14 @@ function renderHeader(){
   const rec=recovery(); if(rec)B.push(["warn",rec.text]);
   const wd=weightDrop(mon); if(wd!==null)B.push(["warn","Moyenne hebdomadaire en baisse de "+wd+" kg sur une semaine — au-delà de 0,7 kg, la perte est trop rapide."]);
   const dw=drinksIn(weekDays(mon));
-  if(dw>DRINK_WEEK)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+DRINK_WEEK+" dépassé."]);
+  const dcap=drinkCap();
+  if(dcap!==null&&dw>dcap)B.push(["warn",dw+" verres cette semaine — plafond hebdomadaire de "+dcap+" dépassé."]);
   const ds=dryStreak(); if(ds>=2)B.push(["info",ds+" jours consécutifs sans alcool."]);
   const xa=exportAge();
-  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur. Réglages › Exporter les données."]);
-  else if(xa!==null&&xa>EXPORT_MAX)B.push(["warn","Dernière sauvegarde "+exportTxt()+" — au-delà de "+EXPORT_MAX+" jours, un effacement coûterait tout ce qui a suivi."]);
-  document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+'">'+esc(b[1])+'</div>').join("");
+  if(xa===null&&Object.keys(DB.days).length)B.push(["warn","Aucune sauvegarde : le journal n'existe que dans ce navigateur.",{id:"exp",lab:"Exporter"}]);
+  else if(xa!==null&&xa>EXPORT_MAX)B.push(["warn","Dernière sauvegarde "+exportTxt()+" — au-delà de "+EXPORT_MAX+" jours, un effacement coûterait tout ce qui a suivi.",{id:"exp",lab:"Exporter"}]);
+  document.getElementById("banners").innerHTML=B.map(b=>'<div class="banner '+b[0]+(b[2]?" act":"")+'"><span>'+esc(b[1])+'</span>'+
+    (b[2]?'<button class="bact" '+(b[2].tab?'data-tab="'+b[2].tab+'"':'id="'+b[2].id+'"')+'>'+esc(b[2].lab)+'</button>':'')+'</div>').join("");
 }
 
 function reviewDue(){const d=parseD(TODAY).getDay();return d===6||d===0;}
@@ -2591,8 +2686,10 @@ function blocRevue(){
        '<button class="tool" id="repli">Plan de repli</button></div>';
   h+='</div></section>';
 
-  if(derniere)h+=blocAnalyse(derniere);
+  /* Le plan d'abord : c'est lui qui attend un geste. L'analyse se lit
+     ensuite, elle n'attend rien. */
   if(planPropose)h+=blocPlan(planPropose);
+  if(derniere)h+=blocAnalyse(derniere);
   /* L'échappatoire reste : si l'appel ne passe pas, la boucle par
      copier-coller dans une session de chat fonctionne toujours. */
   return h;
@@ -2642,15 +2739,20 @@ function blocPlan(p){
   if(A.length)ecarts+='<div class="banner info">'+A.map(v=>esc(v.code+" — "+v.texte)).join("<br>")+'</div>';
   const j=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).length,0);
   const s=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).reduce((m,d)=>m+(d.seances||[]).length,0),0);
-  let h='<section class="panel"><div class="meta">Plan proposé</div>'+
-    '<p class="pace">'+(p.semaines||[]).map(w=>esc(dm(w.start)+" · "+(REGIME[w.regime]||w.regime)+" · plafond "+w.runCapKm+" km")).join("<br>")+'</p>'+
-    '<p class="pace">'+j+' jours · '+s+' séances</p>'+ecarts;
+  const tous=(p.semaines||[]).reduce((a,w)=>a.concat((w.jours||[]).map(d=>d.d)),[]).sort();
+  let h='<section class="panel plan-pret"><div class="meta">Plan proposé'+(p.repli?" — repli":"")+'</div>'+
+    (tous.length?'<p class="plan-dates">Du <b>'+esc(fmt(tous[0]).dow+" "+fmt(tous[0]).num)+'</b> au <b>'+
+      esc(fmt(tous[tous.length-1]).dow+" "+fmt(tous[tous.length-1]).num)+'</b> · '+j+' jours · '+s+' séances</p>':'')+
+    /* Le bouton en tête : il était en bas, sous les courses, et il n'a
+       pas été vu. Ce qui attend un geste se présente en premier. */
+    '<button class="big" id="applyPlan">Appliquer le plan</button>'+
+    '<p class="pace">'+(p.semaines||[]).map(w=>esc("Semaine du "+dm(w.start)+" · "+(REGIME[w.regime]||w.regime)+" · plafond "+w.runCapKm+" km")).join("<br>")+'</p>'+
+    ecarts;
   if((p.courses||[]).length)h+='<div class="refs-h">Courses</div><ul class="lst">'+
     p.courses.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
   if((p.prepDimanche||[]).length)h+='<div class="refs-h">Préparation du dimanche</div><ul class="lst">'+
     p.prepDimanche.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
   /* L'application n'est jamais automatique : c'est le second tap. */
-  h+='<button class="big" id="applyPlan">Appliquer le plan</button>';
   return h+'</section>';
 }
 const MANQ={tension:"tension",tourDeTaille:"tour de taille",poids:"poids"};
@@ -2724,6 +2826,8 @@ async function lancerRevue(){
   }
   planPropose=plan;planViol=V;
   revBusy=false;render();
+  const el=document.querySelector(".plan-pret");
+  if(el)el.scrollIntoView({block:"start",behavior:"smooth"});
 }
 /* Relancer le PLAN seul, en repartant de l'analyse déjà enregistrée.
    Le message d'erreur le promettait ; il n'existait pas. Un second appel A
@@ -2965,8 +3069,12 @@ function dayDetail(d,extra){
   /* 2 · menu, en clair. Aucun gramme imposé, aucun compteur affiché :
      ce champ répond à une seule question, posée une fois par semaine —
      l'apport est-il à 2 000 kcal ou au-dessus. */
-  h+='<div class="log-row col"><span class="log-lab">Menu du jour<span class="hint">En clair, sans peser. Estimé une fois par semaine, jamais compté ici.</span></span>'+
-     '<textarea class="menu" rows="3" placeholder="skyr + whey, salade de bœuf, amandes, poulet + légumes…" data-f="'+k+'|menu">'+esc(e.menu||"")+'</textarea></div>';
+  h+='<div class="log-row col"><span class="log-lab">Menu du jour<span class="hint">En clair, sans peser. Valider donne une estimation du jour, en fourchette.</span></span>'+
+     '<textarea class="menu" rows="3" placeholder="skyr + whey, salade de bœuf, amandes, poulet + légumes…" data-f="'+k+'|menu">'+esc(e.menu||"")+'</textarea>'+
+     /* Valider : le champ se sauve déjà en quittant, mais sans bouton on ne
+        sait pas que c'est fait. Et c'est lui qui déclenche l'estimation. */
+     '<div class="valid-row"><button class="valid" data-val="'+k+'|menu">Valider</button>'+
+     blocApport(e)+'</div></div>';
   /* 3 · protocole tendineux réellement fait. « fasciaFait » et non
      « fascia » : le second dit ce que le plan prescrit ce jour-là, et
      cocher la prescription à la place de la réalisation ferait mentir les
@@ -2986,7 +3094,8 @@ function dayDetail(d,extra){
     const sn=e.seanceNote||"",snOpen=!!e.done["sn"]||!!sn;
     h+='<div class="log-row col"><span class="log-lab">Séance de salle'+
        '<span class="hint">Vide = tenue comme prévue.</span></span>';
-    if(snOpen)h+='<textarea class="menu" rows="2" placeholder="charges, douleur, séance écourtée…" data-f="'+k+'|seanceNote">'+esc(sn)+'</textarea>';
+    if(snOpen)h+='<textarea class="menu" rows="2" placeholder="charges, douleur, séance écourtée…" data-f="'+k+'|seanceNote">'+esc(sn)+'</textarea>'+
+       '<div class="valid-row"><button class="valid" data-val="'+k+'|seanceNote">Valider</button></div>';
     else h+='<button class="lnk" data-sn="'+k+'">ajouter un commentaire</button>';
     h+='</div>';
   }
@@ -2995,7 +3104,8 @@ function dayDetail(d,extra){
   const tl=e.talon||"",tlOpen=!!e.done["tl"]||!!tl;
   h+='<div class="log-row col">';
   if(tlOpen)h+='<span class="log-lab">Talon<span class="hint">Vide = pas de problème.</span></span>'+
-     '<textarea class="menu" rows="2" placeholder="gêne au réveil, douleur en fin de sortie…" data-f="'+k+'|talon">'+esc(tl)+'</textarea>';
+     '<textarea class="menu" rows="2" placeholder="gêne au réveil, douleur en fin de sortie…" data-f="'+k+'|talon">'+esc(tl)+'</textarea>'+
+     '<div class="valid-row"><button class="valid" data-val="'+k+'|talon">Valider</button></div>';
   /* Le lien se nomme : deux « signaler quelque chose » l'un sous l'autre
      ne disaient pas lequel parlait du talon. */
   else h+='<button class="lnk" data-tl="'+k+'">signaler une gêne au talon</button>';
@@ -3026,6 +3136,16 @@ function blocRepas(d){
   });
   if(d.note)h+='<div class="cue">'+esc(d.note)+'</div>';
   return h+'</div>';
+}
+/* Estimation du jour, telle qu'elle a été demandée à Valider. Une
+   fourchette et une date, jamais un compteur qui court. */
+function blocApport(e){
+  const a=e.apport;
+  if(estBusy===e.d)return '<span class="apport">Estimation…</span>';
+  if(!a)return "";
+  if(a.err)return '<span class="apport warn">'+esc(a.err)+'</span>';
+  return '<span class="apport">≈ <b>'+esc(String(a.kcal))+' kcal</b> · '+esc(String(a.prot))+' g prot.'+
+    (a.inc?' · '+esc(a.inc):'')+'</span>';
 }
 /* Les jours de salle portent le commentaire d'exception. Le type de
    séance vient du plan ; à défaut, une séance de salle importée. */
@@ -3233,7 +3353,7 @@ function renderTargets(){
      l'indicateur, le poids n'en est que la somme avec la masse maigre. */
   h+='<div class="graph">'+mgChart()+'</div>';
   h+='<div class="graph">'+weightChart()+'</div>';
-  h+='<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>';
+  h+='<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),rhrCible()===null?[]:[{v:rhrCible(),txt:rhrCible()+" · cible"}],1)+'</div>';
   h+='<div class="graph">'+volumeChart()+'</div>';
   h+='<div class="graph">'+tgtChart("vo2","VO2max — en trait plein, la cible en pointillé",1)+'</div>';
   h+='<div class="graph">'+horsZoneChart()+'</div>';
@@ -3243,7 +3363,7 @@ function renderTargets(){
 /* Les graphes qui ne dépendent d'aucune cible. */
 function graphesMesure(){
   return '<div class="graph">'+mgChart()+'</div>'+
-         '<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>'+
+         '<div class="graph">'+seriesChart("FC de repos — moyenne sur 7 jours",rhrSeries(),rhrCible()===null?[]:[{v:rhrCible(),txt:rhrCible()+" · cible"}],1)+'</div>'+
          '<div class="graph">'+horsZoneChart()+'</div>';
 }
 function lastVal(f){
@@ -3516,6 +3636,10 @@ function renderRefs(){
   h+=mb("sommeil","Sommeil","h","0.05","Heures décimales : 6,75 vaut 6 h 45.");
   h+=mb("prot","Protéines","j/7","1");
   h+=mb("vo2","VO2max","","0.5");
+  h+='<div class="log-row"><span class="log-lab">FC de repos cible<span class="hint">Trait de référence sur le graphe.</span></span>'+
+     '<input type="number" step="1" inputmode="numeric" placeholder="—" value="'+esc((DB.milestones.fcRepos||{}).cible||"")+'" data-ms="fcRepos|cible"><span class="unit">bpm</span></div>';
+  h+='<div class="log-row"><span class="log-lab">Verres par semaine, plafond</span>'+
+     '<input type="number" step="1" inputmode="numeric" placeholder="—" value="'+esc((DB.milestones.alcool||{}).semaine||"")+'" data-ms="alcool|semaine"><span class="unit"></span></div>';
   h+='<div class="log-row"><span class="log-lab">Affûtage du dernier mois<span class="hint">Volume de course voulu le mois de la course, en baisse. Vide = pas d\'affûtage.</span></span>'+
      '<input type="number" step="1" inputmode="numeric" placeholder="—" value="'+esc((DB.milestones.vol||{}).affutage||"")+'" data-ms="vol|affutage"><span class="unit">km</span></div>';
 
@@ -3616,6 +3740,7 @@ function journal14(){
     const e=rd(k),o={date:k};
     if(typeof e.alcohol==="number")o.alcool=e.alcohol;
     if(e.menu)o.menu=e.menu;
+    if(e.apport&&!e.apport.err)o.apportEstime={kcal:e.apport.kcal,prot:e.apport.prot};
     if(e.fasciaFait)o.fasciaFait=true;
     if(e.bedTime)o.coucher=e.bedTime;
     if(e.talon)o.talon=e.talon;
@@ -3783,7 +3908,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],[data-fold],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],[data-fold],[data-val],.bact,#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -3809,6 +3934,11 @@ document.addEventListener("click",ev=>{
   if(t.id==="repli"){proposerRepli();return;}
   if(t.id==="goPlan"){relancerPlan();return;}
   if(t.dataset.fold!==undefined){plie[t.dataset.fold]=!plie[t.dataset.fold];render();return;}
+  if(t.dataset.val!==undefined){
+    const a=t.dataset.val.split("|"),ta=document.querySelector('textarea[data-f="'+t.dataset.val+'"]');
+    if(ta){entry(a[0])[a[1]]=ta.value;save();}
+    if(a[1]==="menu")estimerJour(a[0]);else{t.textContent="Enregistré";setTimeout(render,700);}
+    return;}
   if(t.id==="applyPlan"){
     if(!planPropose)return;
     const r=appliquerPlan(planPropose);
