@@ -333,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.5", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.6", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -1525,17 +1525,24 @@ function corpsA(){
     messages:[{role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())}]
   };
 }
-function corpsB(revue){
+function corpsB(revue,violations){
+  const msgs=[
+    {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())},
+    {role:"assistant",content:[{type:"text",text:JSON.stringify(revue)}]},
+    {role:"user",content:CONSIGNE_B}
+  ];
+  /* Relance : le plan refusé n'est pas renvoyé, seules les violations le
+     sont. Rejouer une sortie fautive invite à la reproduire. */
+  if(violations&&violations.length)
+    msgs.push({role:"user",content:
+      "Le plan précédent viole des règles non négociables. Reprends-le en les corrigeant, "+
+      "sans rien changer d'autre :\n- "+violations.map(v=>v.code+" : "+v.texte).join("\n- ")});
   return{
     model:modele(),max_tokens:16000,stream:true,
     system:[{type:"text",text:DB.doctrine.texte,cache_control:{type:"ephemeral"}}],
     tools:[{name:"rendre_plan",description:"Plan structuré de quatorze jours.",input_schema:SCHEMA_PLAN}],
     tool_choice:{type:"tool",name:"rendre_plan"},
-    messages:[
-      {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())},
-      {role:"assistant",content:[{type:"text",text:JSON.stringify(revue)}]},
-      {role:"user",content:CONSIGNE_B}
-    ]
+    messages:msgs
   };
 }
 
@@ -1556,7 +1563,17 @@ async function appelA(){
    remplace l'entrée, n'en empile pas une seconde. */
 function rangerRevue(r){
   const d=lastDigest(),sem=(d&&d.semaineDu)||mondayOf(TODAY);
-  const e={date:TODAY,semaine:sem,registre:r.registre,registreMotif:r.registreMotif,
+  /* Les signaux du jour sont figés dans la revue : G11c compte deux revues
+     consécutives, et il lui faut celle d'avant telle qu'elle était. */
+  const sl=avg(vals(lastN(TODAY,7),"sleep"));
+  const bs=lastN(addDays(TODAY,-1),7),ej=DB.days[TODAY]||{};
+  const rj=num(ej.rhr),rb=avg(vals(bs,"rhr"));
+  const sg=[];
+  if(rj!==null&&rb!==null&&rj>rb+G_RHR_ECART)sg.push("FC de repos au-dessus de la moyenne 7 jours");
+  if(sl!==null&&sl<G_SOMMEIL_SEUIL)sg.push("sommeil moyen sous "+fmtDur(G_SOMMEIL_SEUIL));
+  if(lastN(TODAY,7).some(k=>{const x=rd(k);return x.seanceNote&&String(x.seanceNote).trim();}))
+    sg.push("commentaire sur une séance de salle");
+  const e={date:TODAY,semaine:sem,signaux:sg,registre:r.registre,registreMotif:r.registreMotif,
            registreExpire:r.registreExpire||null,analyse:r.analyse,
            actionsFaites:r.actionsFaites||[],actionsManquees:r.actionsManquees||[],
            indicateurs:r.indicateurs||[],alertes:r.alertes||[],apport:r.apport||null,
@@ -1576,12 +1593,315 @@ function rangerRevue(r){
   if(typeof r.etat==="string"&&r.etat.trim())DB.etat=r.etat;
   save();
 }
-async function appelB(revue,onStream){
-  const res=await apiFetch(corpsB(revue),onStream||function(){});
+async function appelB(revue,onStream,violations){
+  const res=await apiFetch(corpsB(revue,violations),onStream||function(){});
   const p=res.outil;
   if(!p||!Array.isArray(p.semaines)||!p.semaines.length)
     throw ApiErr("Réponse sans plan exploitable.",0,true);
   return p;
+}
+
+/* ================= Garde-fous déterministes (§6) =================
+   Le modèle propose, le code vérifie. Ces règles viennent de la doctrine
+   et ne sont pas négociables par le modèle : elles sont écrites ici, pas
+   dans un prompt, parce qu'un prompt se discute et pas un test.
+
+   Trois conduites, jamais mélangées :
+     rejet     — la sortie est refusée, l'appel est relancé une fois avec
+                 la liste des violations ;
+     correction— le plan est modifié sur place et le drapeau reste visible ;
+     ajout     — ce qui manquait est ajouté sans rien refuser.
+
+   Après une relance qui viole encore, le plan est appliqué avec un bandeau
+   rouge listant les écarts. Jamais appliqué en silence. */
+
+/* --- Vocabulaire des séances, tel qu'il circule dans le plan --- */
+function sTexte(s){
+  return [s.label,s.detail,s.fallback].filter(Boolean).join(" ").toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g,"");
+}
+function toutesSeances(p){
+  const out=[];
+  (p.semaines||[]).forEach(w=>(w.jours||[]).forEach(d=>
+    (d.seances||[]).forEach(s=>out.push({s:s,d:d,w:w}))));
+  return out;
+}
+function tousJours(p){
+  const out=[];
+  (p.semaines||[]).forEach(w=>(w.jours||[]).forEach(d=>out.push({d:d,w:w})));
+  return out;
+}
+/* Le lundi, au sens du calendrier : le plan dit des dates, pas des noms. */
+function estLundi(k){return isDate(k)&&parseD(k).getDay()===1;}
+
+/* --- Seuils portés par la doctrine, pas par le code d'affichage --- */
+const G_PRESSE_MAX=90;        /* kg, presse à cuisses bilatérale */
+const G_KCAL_NORMAL=2000, G_KCAL_MARGE=100, G_KCAL_VACANCES=2400;
+const G_PROT_MIN=150, G_PROT_MAX=170;
+const G_SOMMEIL_SEUIL=6.75;   /* 6 h 45 */
+const G_RHR_ECART=5;          /* bpm au-dessus de la moyenne 7 jours */
+const G_COMPLEMENTS=/whey|vitamine d|vitamin d/;
+
+/* Une violation nomme la règle, ce qui l'a déclenchée, et ce qui a été
+   fait. Le modèle la relit telle quelle à la relance. */
+function viol(code,texte,conduite){return{code:code,texte:texte,conduite:conduite};}
+
+function verifierPlan(p,ctx){
+  const V=[],C=ctx||{};
+  const S=toutesSeances(p),J=tousJours(p);
+
+  /* G1 · squat barre — proscrit, sans exception. */
+  S.forEach(x=>{
+    if(/squat.{0,12}barre|barre.{0,12}squat|back squat/.test(sTexte(x.s)))
+      V.push(viol("G1","Séance du "+x.d.d+" : squat barre proscrit — « "+x.s.label+" ».","rejet"));
+  });
+
+  /* G2 · presse à cuisses au-delà du plafond bilatéral. */
+  S.forEach(x=>{
+    const t=sTexte(x.s);
+    if(!/presse/.test(t))return;
+    const m=t.match(/(\d{2,3})\s*kg/g)||[];
+    m.forEach(z=>{
+      const kg=parseInt(z,10);
+      if(kg>G_PRESSE_MAX)
+        V.push(viol("G2","Séance du "+x.d.d+" : presse à "+kg+" kg, plafond "+G_PRESSE_MAX+" kg.","rejet"));
+    });
+  });
+
+  /* G3 · air fryer, et recettes longues en semaine. */
+  J.forEach(x=>{
+    const n=x.d.nutrition||{},jour=parseD(x.d.d).getDay();
+    (n.creneaux||[]).forEach(c=>{
+      const t=String(c.contenu||"").toLowerCase();
+      if(/air ?fryer|friteuse/.test(t))
+        V.push(viol("G3","Repas du "+x.d.d+" : air fryer.","rejet"));
+      const m=t.match(/(\d{2,3})\s*min/);
+      if(m&&jour>=1&&jour<=5&&+m[1]>10)
+        V.push(viol("G3","Repas du "+x.d.d+" : "+m[1]+" min de préparation un jour de semaine, plafond 10 min.","rejet"));
+    });
+  });
+
+  /* G4 · volume de course. Le plafond de période s'applique toujours ; la
+     règle des +10 % ne joue que si une semaine complète est close —
+     sinon il n'y a rien dont on puisse prendre 10 %. La logique de
+     plafond existante fait foi, elle n'est pas réécrite ici. */
+  (p.semaines||[]).forEach(w=>{
+    const km=(w.jours||[]).reduce((n,d)=>n+(d.seances||[])
+      .filter(s=>s.kind==="course").reduce((m,s)=>m+(num(s.km)||0),0),0);
+    const dur=runAbsMax();
+    let plafond=Math.min(num(w.runCapKm)===null?dur:num(w.runCapKm),dur);
+    if(C.semaineClose&&C.kmSemaineClose!==null&&C.kmSemaineClose!==undefined){
+      const dix=r1(C.kmSemaineClose*1.1);
+      if(dix<plafond)plafond=dix;
+    }
+    if(num(w.runCapKm)!==null&&num(w.runCapKm)>dur)
+      V.push(viol("G4","Semaine du "+w.start+" : plafond annoncé "+w.runCapKm+" km, ramené au plafond dur de "+dur+" km.","correction"));
+    if(km>plafond+0.05)
+      V.push(viol("G4","Semaine du "+w.start+" : "+r1(km)+" km de course prévus pour un plafond de "+plafond+" km.","correction"));
+  });
+
+  /* G5 · nombre de sorties. Le volume ne doit jamais supposer plus de
+     sorties que la structure hebdomadaire n'en garantit, plus une. */
+  (p.semaines||[]).forEach(w=>{
+    const n=(w.jours||[]).reduce((m,d)=>m+(d.seances||[]).filter(s=>s.kind==="course").length,0);
+    const garanties=1,max=garanties+1;
+    if(n>max)
+      V.push(viol("G5","Semaine du "+w.start+" : "+n+" sorties de course pour un maximum de "+max+".","rejet"));
+  });
+
+  /* G6 · le lundi soir porte toujours une séance de salle P1. C'est le
+     créneau non négociable de la structure hebdomadaire. */
+  (p.semaines||[]).forEach(w=>{
+    const lundi=(w.jours||[]).filter(d=>estLundi(d.d))[0];
+    if(!lundi){
+      V.push(viol("G6","Semaine du "+w.start+" : aucun lundi dans les jours fournis.","rejet"));
+      return;
+    }
+    const ok=(lundi.seances||[]).some(s=>s.kind==="salle"&&s.rank==="P1");
+    if(!ok)V.push(viol("G6","Lundi "+lundi.d+" : pas de séance de salle P1.","rejet"));
+  });
+
+  /* G7 · apport planifié. La fenêtre dépend du régime : un régime
+     vacances à 2 000 kcal ferait un déficit au-delà du plafond. */
+  J.forEach(x=>{
+    const n=x.d.nutrition;
+    if(!n)return;
+    const vac=x.w.regime==="vacances";
+    const cible=vac?G_KCAL_VACANCES:G_KCAL_NORMAL;
+    const kcal=num(n.kcal),prot=num(n.prot);
+    if(kcal!==null&&Math.abs(kcal-cible)>G_KCAL_MARGE)
+      V.push(viol("G7","Repas du "+x.d.d+" : "+kcal+" kcal pour une cible de "+cible+" ± "+G_KCAL_MARGE+
+        " en régime "+(x.w.regime||"normale")+".","rejet"));
+    if(prot!==null&&(prot<G_PROT_MIN||prot>G_PROT_MAX))
+      V.push(viol("G7","Repas du "+x.d.d+" : "+prot+" g de protéines, fenêtre "+G_PROT_MIN+"-"+G_PROT_MAX+" g.","rejet"));
+  });
+
+  /* G8 · féculent au dîner seulement les jours à séance, dimanche excepté. */
+  J.forEach(x=>{
+    const n=x.d.nutrition;
+    if(!n||!n.feculentDiner)return;
+    const aSeance=(x.d.seances||[]).length>0,dim=parseD(x.d.d).getDay()===0;
+    if(!aSeance&&!dim)
+      V.push(viol("G8","Repas du "+x.d.d+" : féculent au dîner sans séance ce jour-là.","rejet"));
+  });
+
+  /* G9 · protocole tendineux tous les jours. Un oubli s'ajoute, il ne se
+     refuse pas : la prescription est quotidienne et sans discussion. */
+  J.forEach(x=>{
+    if(!x.d.fascia){
+      x.d.fascia=true;
+      V.push(viol("G9","Jour du "+x.d.d+" : protocole tendineux absent, ajouté.","ajout"));
+    }
+  });
+
+  /* G10 · registre 4 sans date de péremption. */
+  if(C.registre===4&&!isDate(C.registreExpire))
+    V.push(viol("G10","Registre 4 invoqué sans date de péremption.","rejet"));
+
+  /* G11a · FC de repos au-dessus de la moyenne, ou VFC en chute : la
+     séance d'intensité devient facile. Elle n'est pas supprimée. */
+  if(C.signalRhr||C.signalVfc){
+    S.forEach(x=>{
+      if(x.s.kind!=="qualite")return;
+      x.s.kind="course";
+      x.s.label=String(x.s.label||"Séance")+" — convertie en facile";
+      x.s.detail="Allure basse, aucune intensité : "+(C.signalRhr?"FC de repos au-dessus de la moyenne 7 jours":"VFC en chute nette")+".";
+      V.push(viol("G11a","Séance d'intensité du "+x.d.d+" convertie en facile.","correction"));
+    });
+  }
+  /* G11b · sommeil moyen sous le seuil : la séance d'intensité SAUTE.
+     Elle n'est pas dégradée, elle disparaît — la distinction avec G11a
+     est explicite dans la doctrine. */
+  if(C.sommeil7!==null&&C.sommeil7!==undefined&&C.sommeil7<G_SOMMEIL_SEUIL){
+    (p.semaines||[]).forEach(w=>(w.jours||[]).forEach(d=>{
+      const avant=(d.seances||[]).length;
+      d.seances=(d.seances||[]).filter(s=>s.kind!=="qualite");
+      if(d.seances.length<avant)
+        V.push(viol("G11b","Séance d'intensité du "+d.d+" supprimée : sommeil moyen "+
+          fmtDur(C.sommeil7)+" sous "+fmtDur(G_SOMMEIL_SEUIL)+".","correction"));
+    }));
+  }
+  /* G11c · un signal d'arrêt présent deux revues consécutives : bascule
+     du rythme de perte, sans demander l'avis de l'utilisateur, en
+     nommant le signal. Le compteur vit dans DB, pas dans le plan. */
+  if(C.arretSignal)
+    V.push(viol("G11c","Signal d'arrêt du déficit sur deux revues consécutives — "+
+      C.arretSignal+". Rythme ramené à −0,5 kg/semaine.","correction"));
+
+  /* G12 · compléments hors whey et vitamine D. */
+  J.forEach(x=>{
+    const n=x.d.nutrition||{};
+    (n.creneaux||[]).forEach(c=>{
+      const t=String(c.contenu||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+      const m=t.match(/(creatine|bcaa|glutamine|beta.?alanine|omega ?3|magnesium|zinc|multivitamine|pre.?workout)/);
+      if(m&&!G_COMPLEMENTS.test(t))
+        V.push(viol("G12","Repas du "+x.d.d+" : complément hors whey et vitamine D — « "+m[1]+" ».","rejet"));
+    });
+  });
+
+  /* G13 · aucun jour passé modifié. Ignoré silencieusement, sans rejet :
+     un plan qui déborde sur hier n'est pas une faute, c'est un débord. */
+  (p.semaines||[]).forEach(w=>{
+    const avant=(w.jours||[]).length;
+    w.jours=(w.jours||[]).filter(d=>isDate(d.d)&&d.d>=TODAY);
+    if(w.jours.length<avant)
+      V.push(viol("G13",(avant-w.jours.length)+" jour(s) passé(s) écarté(s) de la semaine du "+w.start+".","ajout"));
+  });
+
+  /* G14 · aucun chiffre de calories ni de protéines à l'échelle d'une
+     journée. Les champs existent pour cette validation et restent
+     internes : le contrôle d'interface se fait au rendu, pas ici. Ce qui
+     se vérifie ici, c'est qu'aucun total ne s'est glissé dans un texte
+     destiné à être affiché. */
+  J.forEach(x=>{
+    const t=[x.d.note].concat(((x.d.nutrition||{}).creneaux||[]).map(c=>c.contenu)).join(" ").toLowerCase();
+    if(/\b\d{3,4}\s*(kcal|calories)\b/.test(t))
+      V.push(viol("G14","Jour du "+x.d.d+" : un total de calories apparaît dans un texte affiché.","rejet"));
+  });
+
+  /* G15 · aucun champ de saisie ne redemande une donnée du zip. Règle
+     d'interface, vérifiée par les tests sur le formulaire, pas sur le
+     plan : rien à contrôler ici, et l'affirmer serait mentir. */
+
+  /* G16 · aucune donnée personnelle dans les fichiers du dépôt. Même
+     nature : c'est une règle sur le dépôt, tenue par les tests et par
+     .gitignore, pas par une inspection de la sortie du modèle. */
+
+  return V;
+}
+function rejets(V){return V.filter(x=>x.conduite==="rejet");}
+
+/* --- Le contexte dont les garde-fous ont besoin, calculé une fois --- */
+function contexteGardes(revue){
+  const mon=mondayOf(TODAY);
+  const base=lastN(addDays(TODAY,-1),7);
+  const e=DB.days[TODAY]||{};
+  const rhr=num(e.rhr),rB=avg(vals(base,"rhr"));
+  const hrv=num(e.hrv),hB=avg(vals(base,"hrv"));
+  const sl=avg(vals(lastN(TODAY,7),"sleep"));
+  /* Une semaine est close si la précédente est entièrement derrière nous :
+     sans cela, prendre 10 % d'un volume partiel donnerait un plafond faux. */
+  const semPrec=addDays(mon,-7),close=addDays(semPrec,6)<TODAY;
+  return{
+    registre:revue?revue.registre:null,
+    registreExpire:revue?revue.registreExpire:null,
+    signalRhr:rhr!==null&&rB!==null&&rhr>rB+G_RHR_ECART,
+    signalVfc:hrv!==null&&hB!==null&&hrv<hB*0.85,
+    sommeil7:sl,
+    semaineClose:close,
+    kmSemaineClose:close?r1(total(vals(weekDays(semPrec),"runKm"))):null,
+    arretSignal:signalArret()
+  };
+}
+/* Compteur des signaux d'arrêt : deux revues consécutives portant le même
+   signal déclenchent la bascule. Le compteur est persistant, il ne se
+   recalcule pas à partir de rien à chaque revue. */
+function signalArret(){
+  const R=DB.reviews||[];
+  if(R.length<1)return null;
+  const sl=avg(vals(lastN(TODAY,7),"sleep"));
+  const base=lastN(addDays(TODAY,-1),7);
+  const e=DB.days[TODAY]||{};
+  const rhr=num(e.rhr),rB=avg(vals(base,"rhr"));
+  const notes=lastN(TODAY,7).some(k=>{const x=rd(k);return x.seanceNote&&String(x.seanceNote).trim();});
+  const actuels=[];
+  if(rhr!==null&&rB!==null&&rhr>rB+G_RHR_ECART)actuels.push("FC de repos au-dessus de la moyenne 7 jours");
+  if(sl!==null&&sl<G_SOMMEIL_SEUIL)actuels.push("sommeil moyen sous "+fmtDur(G_SOMMEIL_SEUIL));
+  if(notes)actuels.push("commentaire sur une séance de salle");
+  if(!actuels.length)return null;
+  const prec=(R[R.length-1]||{}).signaux||[];
+  const commun=actuels.filter(x=>prec.indexOf(x)>=0);
+  return commun.length?commun[0]:null;
+}
+
+/* --- Plan de repli (§8.4) ---
+   La structure hebdomadaire garantie de la doctrine, en dur. Elle ne
+   porte aucun chiffre personnel : ce sont des créneaux et des durées.
+   Elle n'est jamais vide, c'est tout son intérêt. */
+const REPLI=[
+  {jour:1,rank:"P1",kind:"salle",label:"Salle 1 h — full body",
+   detail:"Créneau non négociable. Les quatre mouvements de référence.",
+   fallback:"30 min : les quatre mouvements, deux séries."},
+  {jour:6,rank:"P1",kind:"salle",label:"Renforcement full body",
+   detail:"Samedi matin.",fallback:"20 min de gainage et mobilité."},
+  {jour:6,rank:"P1",kind:"course",label:"Course ≤ 40 min",
+   detail:"Samedi fin d'après-midi. Allure d'endurance.",fallback:"20 min, allure libre."},
+  {jour:0,rank:"P1",kind:"vtt",label:"VTT ~2 h",
+   detail:"Dimanche.",fallback:"1 h, terrain roulant."}
+];
+function planRepli(){
+  const lundi=mondayOf(addDays(TODAY,7)),semaines=[];
+  for(let w=0;w<2;w++){
+    const start=addDays(lundi,7*w),jours=[];
+    for(let i=0;i<7;i++){
+      const k=addDays(start,i),dow=parseD(k).getDay();
+      jours.push({d:k,fascia:true,
+        seances:REPLI.filter(x=>x.jour===dow).map(x=>({rank:x.rank,kind:x.kind,
+          label:x.label,detail:x.detail,fallback:x.fallback,bonus:false}))});
+    }
+    semaines.push({start:start,regime:"normale",runCapKm:lastCap(),jours:jours});
+  }
+  return{genere:TODAY,semaines:semaines,courses:[],prepDimanche:[],backfill:{},repli:true};
 }
 
 /* ================= Plan actif ================= */
@@ -2029,7 +2349,7 @@ let impRes=null,impBusy=false;
 /* État du rituel en cours. Volontairement hors de DB : une revue
    interrompue ne doit rien laisser derrière elle, hors ce que l'appel A a
    déjà écrit en base. */
-let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null;
+let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null,planViol=[];
 function lastDigest(){const L=DB.imports||[];return L.length?L[L.length-1]:null;}
 function daysSince(k){return isDate(k)?Math.round((parseD(TODAY)-parseD(k))/86400000):null;}
 /* Dernière date portant une mesure, tous imports confondus. Sert aux
@@ -2180,7 +2500,11 @@ function blocRevue(){
     h+='<button class="big" id="go"'+(revBusy?" disabled":"")+'>'+
        (derniere&&derniere.semaine===((lastDigest()||{}).semaineDu)?"Relancer la revue":"Lancer la revue")+'</button>';
   }
-  if(revErr)h+='<div class="banner warn">'+esc(revErr)+'</div>';
+  if(revErr){
+    h+='<div class="banner warn">'+esc(revErr)+'</div>';
+    /* Aucun plan valide : la structure garantie reste disponible d'un tap. */
+    if(!planPropose)h+='<button class="tool" id="repli">Afficher le plan de repli</button>';
+  }
   h+='</section>';
 
   if(derniere)h+=blocAnalyse(derniere);
@@ -2223,11 +2547,21 @@ function blocAnalyse(r){
   return h+'</section>';
 }
 function blocPlan(p){
+  /* Les écarts passent DEVANT le plan : un plan appliqué en silence
+     malgré une règle violée est exactement ce que les garde-fous
+     existent pour empêcher. */
+  let ecarts="";
+  const R=(planViol||[]).filter(v=>v.conduite==="rejet");
+  const A=(planViol||[]).filter(v=>v.conduite!=="rejet");
+  if(R.length)ecarts+='<div class="banner warn"><b>'+R.length+' règle'+(R.length>1?"s":"")+
+    ' encore violée'+(R.length>1?"s":"")+' après relance.</b><br>'+
+    R.map(v=>esc(v.code+" — "+v.texte)).join("<br>")+'</div>';
+  if(A.length)ecarts+='<div class="banner info">'+A.map(v=>esc(v.code+" — "+v.texte)).join("<br>")+'</div>';
   const j=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).length,0);
   const s=(p.semaines||[]).reduce((n,w)=>n+(w.jours||[]).reduce((m,d)=>m+(d.seances||[]).length,0),0);
   let h='<section class="panel"><div class="meta">Plan proposé</div>'+
     '<p class="pace">'+(p.semaines||[]).map(w=>esc(dm(w.start)+" · "+(REGIME[w.regime]||w.regime)+" · plafond "+w.runCapKm+" km")).join("<br>")+'</p>'+
-    '<p class="pace">'+j+' jours · '+s+' séances</p>';
+    '<p class="pace">'+j+' jours · '+s+' séances</p>'+ecarts;
   if((p.courses||[]).length)h+='<div class="refs-h">Courses</div><ul class="lst">'+
     p.courses.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>';
   if((p.prepDimanche||[]).length)h+='<div class="refs-h">Préparation du dimanche</div><ul class="lst">'+
@@ -2272,19 +2606,48 @@ async function lancerRevue(){
   }
   /* L'analyse est en base et à l'écran ; le plan peut échouer sans elle. */
   revEtape="Analyse prête. Plan des 14 jours…";revPct=8;render();
+  const suivre=n=>{
+    /* Aucune longueur totale connue : la barre dit que ça avance, pas où
+       ça en est. Prétendre un pourcentage exact serait faux. */
+    revPct=Math.min(95,8+Math.round(n/220));
+    const b=document.querySelector(".bar-in");
+    if(b)b.style.width=revPct+"%";
+  };
+  const ctx=contexteGardes(revue);
+  let plan=null;
   try{
-    planPropose=await appelB(revue,n=>{
-      /* Aucune longueur totale connue : la barre dit que ça avance, pas
-         où ça en est. Prétendre un pourcentage exact serait faux. */
-      revPct=Math.min(95,8+Math.round(n/220));
-      const b=document.querySelector(".bar-in");
-      if(b)b.style.width=revPct+"%";
-    });
+    plan=await appelB(revue,suivre);
   }catch(e){
     revBusy=false;revErr="Analyse enregistrée, plan non produit : "+((e&&e.message)||e)+
       " — le bouton relance le plan seul.";render();return;
   }
+  /* Le modèle propose, le code vérifie. Une seule relance : au-delà, on
+     s'acharne sur un modèle qui n'a pas compris, et le plan de repli est
+     meilleur qu'un troisième essai. */
+  let V=verifierPlan(plan,ctx);
+  if(rejets(V).length){
+    revEtape="Plan refusé sur "+rejets(V).length+" règle(s). Relance…";revPct=8;render();
+    try{
+      const plan2=await appelB(revue,suivre,rejets(V));
+      const V2=verifierPlan(plan2,ctx);
+      /* La seconde sortie est retenue même si elle viole encore : elle est
+         au pire aussi mauvaise, et le bandeau nommera les écarts. */
+      plan=plan2;V=V2;
+    }catch(e){
+      /* Relance impossible : on garde la première sortie corrigée, avec
+         ses écarts affichés. Elle vaut mieux que rien. */
+      V.push(viol("relance","Relance impossible : "+((e&&e.message)||e),"correction"));
+    }
+  }
+  planPropose=plan;planViol=V;
   revBusy=false;render();
+}
+/* Repli (§8.4) : quand aucun plan valide n'est disponible, la structure
+   hebdomadaire garantie s'affiche. Elle n'est jamais vide. */
+function proposerRepli(){
+  planPropose=planRepli();
+  planViol=[viol("repli","Plan de repli : la structure garantie, sans personnalisation.","ajout")];
+  revErr="";render();
 }
 /* Application : le plan remplace DB.plan, le rattrapage passe par les
    règles existantes. Jamais automatique — c'est le second tap. */
@@ -2683,6 +3046,10 @@ function renderTargets(){
        '<div class="tools" style="margin-top:0"><button class="tool" id="msBtn">Importer des cibles</button>'+
        '<button class="tool" id="msPaste">Coller des cibles</button></div>'+
        '<input type="file" id="msFile" accept=".json,application/json,text/plain" hidden>';
+    /* Le tableau et les courbes à cible n'ont rien à montrer sans jalons.
+       Les trois graphes de mesure, eux, tiennent tout seuls : les masquer
+       parce qu'une cible manque priverait de ce qui est déjà mesuré. */
+    h+=graphesMesure();
     document.getElementById("targets").innerHTML=h;
     return;
   }
@@ -2753,6 +3120,12 @@ function renderTargets(){
   h+='<div class="graph">'+horsZoneChart()+'</div>';
   h+='<p class="foot">Une semaine allégée n\'est pas une semaine perdue. Une séance manquée ne se rattrape pas.</p>';
   document.getElementById("targets").innerHTML=h;
+}
+/* Les graphes qui ne dépendent d'aucune cible. */
+function graphesMesure(){
+  return '<div class="graph">'+mgChart()+'</div>'+
+         '<div class="graph">'+seriesChart("FC repos — moyenne 7 jours",rhrSeries(),[{v:RHR_TARGET,txt:"61 · cible"}],1)+'</div>'+
+         '<div class="graph">'+horsZoneChart()+'</div>';
 }
 function lastVal(f){
   const ks=Object.keys(DB.days).sort();
@@ -3283,7 +3656,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#msBtn,#msPaste");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -3306,11 +3679,12 @@ document.addEventListener("click",ev=>{
     catch(e){alert("Cibles non chargées.\n"+(e&&e.message||e));}
     return;}
   if(t.id==="go"){lancerRevue();return;}
+  if(t.id==="repli"){proposerRepli();return;}
   if(t.id==="applyPlan"){
     if(!planPropose)return;
     const r=appliquerPlan(planPropose);
     if(r.err){alert(r.err);return;}
-    planPropose=null;tab="plan";ses("set",tab,TKEY);render();scrollTo(0,0);
+    planPropose=null;planViol=[];tab="plan";ses("set",tab,TKEY);render();scrollTo(0,0);
     alert("Plan appliqué : "+r.jours+" jours."+(r.backfill?"\n"+r.backfill+" mesure"+(r.backfill>1?"s":"")+" complétée"+(r.backfill>1?"s":"")+" sur les jours passés.":""));
     return;}
   if(t.id==="allm"){allMonths=!allMonths;renderTargets();return;}
