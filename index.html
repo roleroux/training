@@ -333,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.3", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.4", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -402,6 +402,48 @@ function monthsTable(){
     if(i===n&&af!==null)o.vol=af;
     return o;
   });
+}
+/* Chargement de jalons depuis un fichier ou un collage. Fusion stricte :
+   seules les clés connues entrent, et rien d'autre que DB.milestones
+   n'est touché — un import de cibles ne doit jamais pouvoir écraser un
+   journal. */
+const MS_GROUPES={poids:["base","date","r1","seuil","r2","forme"],
+  taille:["base","cible"],vol:["base","cible","affutage"],
+  sommeil:["base","cible"],prot:["base","cible"],vo2:["base","cible"]};
+function chargerCibles(txt){
+  let o;
+  try{o=JSON.parse(txt);}catch(e){throw new Error("Ce n'est pas du JSON valide.");}
+  if(!o||typeof o!=="object"||Array.isArray(o))throw new Error("Format non reconnu.");
+  /* Un fichier de sauvegarde complet déposé ici par erreur : on n'en prend
+     que les jalons, on n'écrase pas la base avec. */
+  const src=o.milestones&&typeof o.milestones==="object"?o.milestones:o;
+  let n=0;
+  Object.keys(MS_GROUPES).forEach(g=>{
+    const from=src[g];
+    if(!from||typeof from!=="object")return;
+    if(!DB.milestones[g])DB.milestones[g]={};
+    MS_GROUPES[g].forEach(k=>{
+      const v=from[k];
+      if(v===undefined||v===null||v==="")return;
+      if(k==="date"){if(!isDate(v))return;DB.milestones[g][k]=v;n++;return;}
+      const x=num(v);
+      if(x===null)return;
+      DB.milestones[g][k]=x;n++;
+    });
+  });
+  if(Array.isArray(src.tests)){
+    const t=src.tests.filter(x=>x&&isDate(x.d)&&x.dist)
+      .map(x=>({d:x.d,dist:String(x.dist),cible:x.cible?String(x.cible):null}));
+    if(t.length){DB.milestones.tests=t;n+=t.length;}
+  }
+  if(Array.isArray(src.allures)){
+    const a=src.allures.filter(x=>x&&isDate(x.until)&&x.txt)
+      .map(x=>({until:x.until,txt:String(x.txt)}));
+    if(a.length){DB.milestones.allures=a;n+=a.length;}
+  }
+  if(!n)throw new Error("Aucune cible reconnue dans ce fichier.");
+  save();
+  return n;
 }
 /* Aucune cible paramétrée : le tableau le dit au lieu d'afficher des
    tirets qu'on prendrait pour des données manquantes. */
@@ -2925,7 +2967,13 @@ function renderRefs(){
      Ils vivent ici parce qu'ils ne peuvent pas vivre dans le code : ce
      sont des données de santé, et le dépôt est public. Ils se relisent à
      chaque revue trimestrielle. */
+  /* Seize valeurs à taper sur un téléphone, une fois par trimestre : un
+     fichier tapé une fois ailleurs se dépose ici en un geste. L'import ne
+     touche QUE les jalons — ni le journal, ni le plan, ni les imports. */
   h+='<div class="refs-h">Trajectoire de poids</div>';
+  h+='<div class="tools" style="margin-top:0"><button class="tool" id="msBtn">Importer des cibles</button>'+
+     '<button class="tool" id="msPaste">Coller des cibles</button></div>'+
+     '<input type="file" id="msFile" accept=".json,application/json,text/plain" hidden>';
   const mp=(o,k,lab,unit,hint,step)=>'<div class="log-row"><span class="log-lab">'+esc(lab)+
     (hint?'<span class="hint">'+esc(hint)+'</span>':'')+'</span>'+
     '<input type="'+(k==="date"?"date":"number")+'" '+(k==="date"?"":'step="'+(step||"0.05")+'" inputmode="decimal"')+
@@ -3222,7 +3270,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -3237,6 +3285,13 @@ document.addEventListener("click",ev=>{
     if(!confirm("Revenir à la doctrine importée le "+dm(H[H.length-1].importe)+" ?"))return;
     DB.doctrine=H.pop();save();render();return;}
   if(t.id==="etatCopy"){copyOut(DB.etat,"Bloc ÉTAT copié.");return;}
+  if(t.id==="msBtn"){const f=document.getElementById("msFile");if(f){f.value="";f.click();}return;}
+  if(t.id==="msPaste"){
+    const v=prompt("Colle ici les cibles :");
+    if(!v)return;
+    try{const n=chargerCibles(v);render();alert(n+" valeur"+(n>1?"s":"")+" chargée"+(n>1?"s":"")+".");}
+    catch(e){alert("Cibles non chargées.\n"+(e&&e.message||e));}
+    return;}
   if(t.id==="go"){lancerRevue();return;}
   if(t.id==="applyPlan"){
     if(!planPropose)return;
@@ -3322,6 +3377,14 @@ document.addEventListener("change",async ev=>{
     try{impRes=await importFiles(files);}
     catch(e){impRes={fichiers:0,jours:0,seances:0,du:null,au:null,erreurs:[String(e&&e.message||e)]};}
     impBusy=false;render();
+    return;
+  }
+  if(ev.target.id==="msFile"){
+    const file=(ev.target.files||[])[0];
+    if(!file)return;
+    try{const n=chargerCibles(await file.text());render();
+      alert(n+" valeur"+(n>1?"s":"")+" chargée"+(n>1?"s":"")+".");}
+    catch(e){alert("Cibles non chargées.\n"+(e&&e.message||e));}
     return;
   }
   if(ev.target.id==="docFile"){

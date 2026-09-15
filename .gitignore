@@ -17,3 +17,6 @@ doctrine*.md
 # Sauvegardes de l'app (journal complet)
 pimperel-*.json
 sauvegarde*.json
+
+# Fichiers de cibles : ils portent poids, tour de taille et chronos.
+cibles*.json
