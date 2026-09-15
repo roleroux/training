@@ -100,6 +100,7 @@ header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:1
 .apport{font-size:13px;color:var(--fog)}
 .apport b{color:var(--ink);font-weight:500}
 .apport.warn{color:var(--buoy)}
+.elapsed{font-family:var(--mono);font-size:12px;color:var(--ink);white-space:nowrap}
 .brand{display:flex;align-items:center;gap:13px}
 .mark{width:58px;height:58px;flex:0 0 58px}
 .brand-txt{min-width:0}
@@ -377,7 +378,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.9", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.10", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -648,6 +649,7 @@ function normalize(){
   if(!Array.isArray(DB.milestones.allures))DB.milestones.allures=[];
   if(!DB.settings.api)DB.settings.api={model:MODELE_DEFAUT};
   if(!DB.settings.api.model)DB.settings.api.model=MODELE_DEFAUT;
+  if(!DB.settings.api.modelPlan)DB.settings.api.modelPlan=MODELE_PLAN_DEFAUT;
   /* Une clé rangée dans DB par une version antérieure ou par une
      sauvegarde restaurée est déplacée hors de DB, puis effacée. */
   if(DB.settings.api.key){setApiKey(DB.settings.api.key);delete DB.settings.api.key;}
@@ -1320,6 +1322,13 @@ function keyMask(k){
 }
 const MODELE_DEFAUT="claude-opus-5";
 function modele(){return (DB.settings.api||{}).model||MODELE_DEFAUT;}
+/* Le plan n'est pas l'analyse. Le raisonnement se fait dans l'appel A ;
+   l'appel B met en forme quatorze jours, jusqu'à dix mille jetons de
+   sortie. Sur le plus gros modèle, c'est plusieurs minutes de flux sur un
+   téléphone qui doit rester allumé — et chaque reprise après coupure
+   repart de zéro. Un modèle rapide y suffit et divise l'attente. */
+const MODELE_PLAN_DEFAUT="claude-sonnet-5";
+function modelePlan(){return (DB.settings.api||{}).modelPlan||MODELE_PLAN_DEFAUT;}
 
 /* Empreinte courte, pour savoir d'un coup d'œil si le fichier importé est
    bien celui qu'on croit. SHA-256 tronqué — il s'agit d'identifier une
@@ -1403,12 +1412,17 @@ const RETRIES=[2000,8000];
    Il ne dit rien d'actionnable ; celui-ci, si. */
 const MSG_FLUX="La connexion s'est interrompue pendant la génération du plan. "+
   "Elle dure jusqu'à une minute et demie : garde l'écran allumé et l'app au premier plan.";
-async function apiFetch(body,onStream){
+async function apiFetch(body,onStream,onEssai){
   const key=apiKey();
   if(!key)throw ApiErr("Aucune clé API enregistrée.",0,false);
   let derniere=null;
   for(let essai=0;essai<=RETRIES.length;essai++){
-    if(essai)await new Promise(r=>setTimeout(r,RETRIES[essai-1]));
+    if(essai){
+      /* Une reprise repart de zéro : sans le dire, la barre reculait et
+         l'attente semblait doubler sans raison. */
+      if(onEssai)onEssai(essai+1,RETRIES.length+1,derniere);
+      await new Promise(r=>setTimeout(r,RETRIES[essai-1]));
+    }
     let rep;
     try{
       rep=await fetch(API_URL,{method:"POST",headers:{
@@ -1597,6 +1611,7 @@ function consigneB(){
    "Semaines calendaires, champ start = date du lundi : "+W.map(w=>w.start+" (jours "+w.jours[0]+" → "+w.jours[w.jours.length-1]+")").join(" ; ")+". "+
    "La première semaine peut être partielle : ne remplis que ses jours listés. "+
    "Respecte les régimes de l'agenda et le plafond de course. "+
+   "Sois concis : chaque champ texte tient en une ligne, sans phrase d'explication — le détail d'une séance est une liste de mouvements et de charges, un créneau de repas est une liste d'aliments et de portions. "+
    "Le champ backfill reste vide : l'app le remplit elle-même depuis les mesures importées.";
 }
 
@@ -1622,7 +1637,7 @@ function corpsB(revue,violations){
       "Le plan précédent viole des règles non négociables. Reprends-le en les corrigeant, "+
       "sans rien changer d'autre :\n- "+violations.map(v=>v.code+" : "+v.texte).join("\n- ")});
   return{
-    model:modele(),max_tokens:16000,stream:true,
+    model:modelePlan(),max_tokens:16000,stream:true,
     system:[{type:"text",text:DB.doctrine.texte,cache_control:{type:"ephemeral"}}],
     tools:[{name:"rendre_plan",description:"Plan structuré de quatorze jours.",input_schema:SCHEMA_PLAN}],
     tool_choice:{type:"tool",name:"rendre_plan"},
@@ -1666,10 +1681,10 @@ async function estimerJour(k){
   }catch(x){e.apport={err:(x&&x.message)||String(x)};}
   estBusy=null;save();render();
 }
-async function appelA(){
+async function appelA(onEssai){
   const manque=revuePrete();
   if(manque.length)throw ApiErr("Revue impossible : il manque "+manque.join(", ")+".",0,false);
-  const data=await apiFetch(corpsA());
+  const data=await apiFetch(corpsA(),null,onEssai);
   const r=sortieOutil(data);
   if(!r||typeof r.analyse!=="string")throw ApiErr("Réponse sans revue exploitable.",0,true);
   rangerRevue(r);
@@ -1693,7 +1708,7 @@ function rangerRevue(r){
            registreExpire:r.registreExpire||null,analyse:r.analyse,
            actionsFaites:r.actionsFaites||[],actionsManquees:r.actionsManquees||[],
            indicateurs:r.indicateurs||[],alertes:r.alertes||[],apport:r.apport||null,
-           modele:modele(),digestRef:d?d.du+"→"+d.au:null};
+           modele:modele(),modelePlan:modelePlan(),digestRef:d?d.du+"→"+d.au:null};
   if(!Array.isArray(DB.reviews))DB.reviews=[];
   /* Jalons : la forme est ici, les valeurs viennent de l'appareil. */
   if(!DB.milestones)DB.milestones={};
@@ -1709,8 +1724,8 @@ function rangerRevue(r){
   if(typeof r.etat==="string"&&r.etat.trim())DB.etat=r.etat;
   save();
 }
-async function appelB(revue,onStream,violations){
-  const res=await apiFetch(corpsB(revue,violations),onStream||function(){});
+async function appelB(revue,onStream,violations,onEssai){
+  const res=await apiFetch(corpsB(revue,violations),onStream||function(){},onEssai);
   const p=res.outil;
   if(!p||!Array.isArray(p.semaines)||!p.semaines.length)
     throw ApiErr("Réponse sans plan exploitable.",0,true);
@@ -2511,6 +2526,15 @@ let impRes=null,impBusy=false;
    interrompue ne doit rien laisser derrière elle, hors ce que l'appel A a
    déjà écrit en base. */
 let revBusy=false,revEtape="",revPct=0,revErr="",planPropose=null,planViol=[];
+/* Un chrono pendant l'attente : une barre qui n'avance pas ne dit pas si
+   ça travaille ou si c'est mort. Les secondes, si. */
+let revT0=0,revTick=null,revEssai="";
+function chronoDebut(){revT0=Date.now();revEssai="";if(revTick)clearInterval(revTick);
+  revTick=setInterval(()=>{const e=document.getElementById("elapsed");
+    if(e)e.textContent=Math.round((Date.now()-revT0)/1000)+" s"+(revEssai?" · "+revEssai:"");},1000);}
+function chronoFin(){if(revTick)clearInterval(revTick);revTick=null;}
+const surEssai=(n,total)=>{revEssai="tentative "+n+"/"+total;const e=document.getElementById("elapsed");
+  if(e)e.textContent=Math.round((Date.now()-revT0)/1000)+" s · "+revEssai;};
 /* Replis : la matière brute existe, elle ne s'impose pas. */
 const plie={semaine:true,seances:true};
 function fold(id,titre,sous,corps){
@@ -2671,8 +2695,8 @@ function blocRevue(){
     return h;
   }
   h+='<div class="review-d">'+(revBusy
-      ? esc(revEtape)
-      : "Un tap. L'analyse s'affiche d'abord, le plan se fabrique derrière.")+'</div>';
+      ? esc(revEtape)+' <span class="elapsed" id="elapsed">'+Math.round((Date.now()-revT0)/1000)+' s'+(revEssai?" · "+esc(revEssai):"")+'</span>'
+      : "Un tap. L'analyse d'abord, une à deux minutes ; le plan ensuite, à peu près autant. Garde l'écran allumé.")+'</div>';
   if(revBusy){
     h+='<div class="bar"><div class="bar-in" style="width:'+Math.min(98,revPct)+'%"></div></div>';
   }else{
@@ -2782,13 +2806,14 @@ function fmtHMS(sec){
 async function lancerRevue(){
   if(revBusy)return;
   revBusy=true;revErr="";revPct=0;planPropose=null;
-  revEtape="Analyse de la semaine…";render();
+  revEtape="Analyse de la semaine…";chronoDebut();render();
   let revue;
   try{
-    revue=await appelA();
+    revue=await appelA(surEssai);
   }catch(e){
-    revBusy=false;revErr=(e&&e.message)||String(e);render();return;
+    chronoFin();revBusy=false;revErr=(e&&e.message)||String(e);render();return;
   }
+  revEssai="";
   /* L'analyse est en base et à l'écran ; le plan peut échouer sans elle. */
   revEtape="Analyse prête. Plan des 14 jours…";revPct=8;render();
   const suivre=n=>{
@@ -2801,9 +2826,9 @@ async function lancerRevue(){
   const ctx=contexteGardes(revue);
   let plan=null;
   try{
-    plan=await appelB(revue,suivre);
+    plan=await appelB(revue,suivre,null,surEssai);
   }catch(e){
-    revBusy=false;revErr="Analyse enregistrée, plan non produit : "+((e&&e.message)||e)+
+    chronoFin();revBusy=false;revErr="Analyse enregistrée, plan non produit : "+((e&&e.message)||e)+
       " — « Générer le plan seul » le rejoue sans refaire l'analyse.";render();return;
   }
   /* Le modèle propose, le code vérifie. Une seule relance : au-delà, on
@@ -2813,7 +2838,8 @@ async function lancerRevue(){
   if(rejets(V).length){
     revEtape="Plan refusé sur "+rejets(V).length+" règle(s). Relance…";revPct=8;render();
     try{
-      const plan2=await appelB(revue,suivre,rejets(V));
+      revEssai="";
+      const plan2=await appelB(revue,suivre,rejets(V),surEssai);
       const V2=verifierPlan(plan2,ctx);
       /* La seconde sortie est retenue même si elle viole encore : elle est
          au pire aussi mauvaise, et le bandeau nommera les écarts. */
@@ -2825,7 +2851,7 @@ async function lancerRevue(){
     }
   }
   planPropose=plan;planViol=V;
-  revBusy=false;render();
+  chronoFin();revBusy=false;render();
   const el=document.querySelector(".plan-pret");
   if(el)el.scrollIntoView({block:"start",behavior:"smooth"});
 }
@@ -2837,25 +2863,25 @@ async function relancerPlan(){
   const R=DB.reviews||[],revue=R.length?R[R.length-1]:null;
   if(!revue){revErr="Aucune analyse enregistrée : lance la revue complète.";render();return;}
   revBusy=true;revErr="";revPct=8;planPropose=null;planViol=[];
-  revEtape="Plan des 14 jours, depuis l'analyse du "+fmt(revue.date).num+"…";render();
+  revEtape="Plan, depuis l'analyse du "+fmt(revue.date).num+"…";chronoDebut();render();
   const suivre=n=>{
     revPct=Math.min(95,8+Math.round(n/220));
     const b=document.querySelector(".bar-in");if(b)b.style.width=revPct+"%";
   };
   const ctx=contexteGardes(revue);
   try{
-    const plan=await appelB(revue,suivre);
+    const plan=await appelB(revue,suivre,null,surEssai);
     let V=verifierPlan(plan,ctx);
     if(rejets(V).length){
-      revEtape="Plan refusé sur "+rejets(V).length+" règle(s). Relance…";render();
-      try{const p2=await appelB(revue,suivre,rejets(V));V=verifierPlan(p2,ctx);planPropose=p2;}
+      revEtape="Plan refusé sur "+rejets(V).length+" règle(s). Relance…";revEssai="";render();
+      try{const p2=await appelB(revue,suivre,rejets(V),surEssai);V=verifierPlan(p2,ctx);planPropose=p2;}
       catch(e){planPropose=plan;V.push(viol("relance","Relance impossible : "+((e&&e.message)||e),"correction"));}
     }else planPropose=plan;
     planViol=V;
   }catch(e){
     revErr=((e&&e.message)||String(e))+" — l'analyse reste enregistrée.";
   }
-  revBusy=false;render();
+  chronoFin();revBusy=false;render();
 }
 /* Repli (§8.4) : quand aucun plan valide n'est disponible, la structure
    hebdomadaire garantie s'affiche. Elle n'est jamais vide. */
@@ -3867,8 +3893,10 @@ function renderEtat(){
      (k?'<button class="tool" id="keyDel">Effacer la clé</button>'
        :'<input type="password" class="keyin" placeholder="sk-ant-…" autocomplete="off" '+
         'autocapitalize="off" autocorrect="off" spellcheck="false" data-key="1">')+'</div>';
-  h+='<div class="log-row"><span class="log-lab">Modèle</span>'+
+  h+='<div class="log-row"><span class="log-lab">Modèle de l\'analyse<span class="hint">L\'appel qui raisonne.</span></span>'+
      '<input type="text" class="mdl" value="'+esc(modele())+'" data-s="api|model"><span class="unit"></span></div>';
+  h+='<div class="log-row"><span class="log-lab">Modèle du plan<span class="hint">Met en forme quatorze jours : un modèle rapide y suffit.</span></span>'+
+     '<input type="text" class="mdl" value="'+esc(modelePlan())+'" data-s="api|modelPlan"><span class="unit"></span></div>';
   h+='</div>';
 
   h+='<div class="refs-h">Bloc ÉTAT</div><div class="log">';
