@@ -333,7 +333,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.6", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-15.7", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -1348,6 +1348,10 @@ function messageStatut(st,corps){
 /* Deux tentatives, 2 s puis 8 s, et seulement sur ce qui peut passer :
    réseau et 5xx. Un 401 ne devient pas vrai en insistant. */
 const RETRIES=[2000,8000];
+/* « Load failed » est le message brut de Safari pour une requête coupée.
+   Il ne dit rien d'actionnable ; celui-ci, si. */
+const MSG_FLUX="La connexion s'est interrompue pendant la génération du plan. "+
+  "Elle dure jusqu'à une minute et demie : garde l'écran allumé et l'app au premier plan.";
 async function apiFetch(body,onStream){
   const key=apiKey();
   if(!key)throw ApiErr("Aucune clé API enregistrée.",0,false);
@@ -1362,10 +1366,19 @@ async function apiFetch(body,onStream){
       },body:JSON.stringify(body)});
     }catch(e){
       /* Panne réseau, ou Safari qui suspend la requête en arrière-plan. */
-      derniere=ApiErr("Réseau indisponible pendant l'appel.",0,true);
+      derniere=ApiErr("Le réseau n'a pas répondu. Vérifie la connexion, puis relance.",0,true);
       continue;
     }
-    if(rep.ok)return onStream?await lireSSE(rep,onStream):await rep.json();
+    if(rep.ok){
+      if(!onStream)return await rep.json();
+      /* La lecture du flux est dans la boucle de reprise : une coupure à
+         mi-parcours se rejoue, elle ne remonte plus en exception nue. */
+      try{ return await lireSSE(rep,onStream); }
+      catch(e){
+        if(!e.rejouable)throw e;
+        derniere=e;continue;
+      }
+    }
     const corps=await rep.text().catch(()=>"");
     const err=ApiErr(messageStatut(rep.status,corps),rep.status,rep.status>=500);
     if(!err.rejouable)throw err;
@@ -1378,10 +1391,18 @@ async function apiFetch(body,onStream){
    content_block_stop — un input_json_delta seul n'est jamais du JSON
    valide, c'est un morceau de chaîne. */
 async function lireSSE(rep,onStream){
+  if(!rep.body)throw ApiErr("Ce navigateur ne sait pas lire une réponse en flux.",0,false);
   const lect=rep.body.getReader(),dec=new TextDecoder();
   let tampon="",json="",fini=null,texte="";
   for(;;){
-    const {done,value}=await lect.read();
+    let pas;
+    /* Une coupure EN COURS de flux n'était rattrapée par rien : elle
+       remontait telle quelle, « Load failed », hors de la boucle de
+       reprise. Sur iOS, passer en arrière-plan pendant la génération
+       suffit à la provoquer. */
+    try{ pas=await lect.read(); }
+    catch(e){ throw ApiErr(MSG_FLUX,0,true); }
+    const {done,value}=pas;
     if(done)break;
     tampon+=dec.decode(value,{stream:true});
     let i;
@@ -1398,13 +1419,13 @@ async function lireSSE(rep,onStream){
         }else if(ev.type==="content_block_stop"&&json){
           try{fini=JSON.parse(json);}catch(e){fini=null;}
         }else if(ev.type==="error"){
-          throw ApiErr("Erreur de flux : "+((ev.error||{}).message||"inconnue"),0,false);
+          throw ApiErr("Erreur signalée par l'API : "+((ev.error||{}).message||"inconnue"),0,false);
         }
       });
     }
   }
   if(fini===null&&json){try{fini=JSON.parse(json);}catch(e){}}
-  if(fini===null)throw ApiErr("Le flux s'est terminé sans sortie exploitable.",0,true);
+  if(fini===null)throw ApiErr(MSG_FLUX,0,true);
   return{outil:fini,texte:texte};
 }
 /* Sortie d'outil d'une réponse non streamée : par type, jamais par index. */
@@ -1484,15 +1505,23 @@ function blocAgenda(){
     chargePro:DB.charge[(lastDigest()||{}).semaineDu]||null
   };
 }
-function contexteRevue(){
+/* Deux tailles de contexte. L'appel A a besoin du détail : c'est lui qui
+   analyse. L'appel B reçoit la revue qui vient d'en sortir — lui renvoyer
+   quarante-quatre jours de lignes brutes rallonge la requête et le temps
+   avant le premier jeton, sans rien apprendre de plus. */
+function contexteRevue(compact){
   const d=lastDigest();
+  const dig=!d?null:(compact
+    ?{du:d.du,au:d.au,semaineDu:d.semaineDu,semaine:d.semaine,
+      manquant:d.manquant,seances:weekSeances(d),methodeHorsZone:d.methodeHorsZone}
+    :{du:d.du,au:d.au,semaineDu:d.semaineDu,semaine:d.semaine,
+      manquant:d.manquant,jours:d.jours,seances:d.seances,
+      methodeHorsZone:d.methodeHorsZone});
   return{
     aujourdhui:TODAY,
     agenda:blocAgenda(),
     etat:DB.etat||null,
-    digest:d?{du:d.du,au:d.au,semaineDu:d.semaineDu,semaine:d.semaine,
-              manquant:d.manquant,jours:d.jours,seances:d.seances,
-              methodeHorsZone:d.methodeHorsZone}:null,
+    digest:dig,
     historique:(DB.imports||[]).map(x=>Object.assign({semaine:x.semaineDu},x.semaine)),
     journal:contextBlock().journal14,
     cibles:ciblesPourModele(),
@@ -1527,7 +1556,7 @@ function corpsA(){
 }
 function corpsB(revue,violations){
   const msgs=[
-    {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue())},
+    {role:"user",content:CONSIGNE_A+"\n\n"+JSON.stringify(contexteRevue(true))},
     {role:"assistant",content:[{type:"text",text:JSON.stringify(revue)}]},
     {role:"user",content:CONSIGNE_B}
   ];
@@ -2500,11 +2529,11 @@ function blocRevue(){
     h+='<button class="big" id="go"'+(revBusy?" disabled":"")+'>'+
        (derniere&&derniere.semaine===((lastDigest()||{}).semaineDu)?"Relancer la revue":"Lancer la revue")+'</button>';
   }
-  if(revErr){
-    h+='<div class="banner warn">'+esc(revErr)+'</div>';
-    /* Aucun plan valide : la structure garantie reste disponible d'un tap. */
-    if(!planPropose)h+='<button class="tool" id="repli">Afficher le plan de repli</button>';
-  }
+  if(revErr)h+='<div class="banner warn">'+esc(revErr)+'</div>';
+  /* Une analyse sans plan : le plan se rejoue seul, sans repayer l'analyse. */
+  if(!revBusy&&derniere&&!planPropose)
+    h+='<div class="tools"><button class="tool" id="goPlan">Générer le plan seul</button>'+
+       '<button class="tool" id="repli">Plan de repli</button></div>';
   h+='</section>';
 
   if(derniere)h+=blocAnalyse(derniere);
@@ -2619,7 +2648,7 @@ async function lancerRevue(){
     plan=await appelB(revue,suivre);
   }catch(e){
     revBusy=false;revErr="Analyse enregistrée, plan non produit : "+((e&&e.message)||e)+
-      " — le bouton relance le plan seul.";render();return;
+      " — « Générer le plan seul » le rejoue sans refaire l'analyse.";render();return;
   }
   /* Le modèle propose, le code vérifie. Une seule relance : au-delà, on
      s'acharne sur un modèle qui n'a pas compris, et le plan de repli est
@@ -2640,6 +2669,34 @@ async function lancerRevue(){
     }
   }
   planPropose=plan;planViol=V;
+  revBusy=false;render();
+}
+/* Relancer le PLAN seul, en repartant de l'analyse déjà enregistrée.
+   Le message d'erreur le promettait ; il n'existait pas. Un second appel A
+   serait payé pour rien et réécrirait un ÉTAT déjà bon. */
+async function relancerPlan(){
+  if(revBusy)return;
+  const R=DB.reviews||[],revue=R.length?R[R.length-1]:null;
+  if(!revue){revErr="Aucune analyse enregistrée : lance la revue complète.";render();return;}
+  revBusy=true;revErr="";revPct=8;planPropose=null;planViol=[];
+  revEtape="Plan des 14 jours, depuis l'analyse du "+fmt(revue.date).num+"…";render();
+  const suivre=n=>{
+    revPct=Math.min(95,8+Math.round(n/220));
+    const b=document.querySelector(".bar-in");if(b)b.style.width=revPct+"%";
+  };
+  const ctx=contexteGardes(revue);
+  try{
+    const plan=await appelB(revue,suivre);
+    let V=verifierPlan(plan,ctx);
+    if(rejets(V).length){
+      revEtape="Plan refusé sur "+rejets(V).length+" règle(s). Relance…";render();
+      try{const p2=await appelB(revue,suivre,rejets(V));V=verifierPlan(p2,ctx);planPropose=p2;}
+      catch(e){planPropose=plan;V.push(viol("relance","Relance impossible : "+((e&&e.message)||e),"correction"));}
+    }else planPropose=plan;
+    planViol=V;
+  }catch(e){
+    revErr=((e&&e.message)||String(e))+" — l'analyse reste enregistrée.";
+  }
   revBusy=false;render();
 }
 /* Repli (§8.4) : quand aucun plan valide n'est disponible, la structure
@@ -3656,7 +3713,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#msBtn,#msPaste");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -3680,6 +3737,7 @@ document.addEventListener("click",ev=>{
     return;}
   if(t.id==="go"){lancerRevue();return;}
   if(t.id==="repli"){proposerRepli();return;}
+  if(t.id==="goPlan"){relancerPlan();return;}
   if(t.id==="applyPlan"){
     if(!planPropose)return;
     const r=appliquerPlan(planPropose);
