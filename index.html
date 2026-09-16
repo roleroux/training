@@ -94,6 +94,7 @@ header.compact{padding-top:calc(8px + env(safe-area-inset-top));padding-bottom:1
   background:var(--surface);border:1px solid currentColor;color:inherit;border-radius:8px;padding:8px 10px;cursor:pointer}
 .plan-dates{font-size:14px;margin:0 0 4px;color:var(--ink)}
 .plan-src{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fog);margin:18px 0 -6px}
+.errbox{font-family:var(--mono);font-size:11px;white-space:pre-wrap;word-break:break-word;background:var(--tint);border-radius:9px;padding:10px;color:var(--buoy)}
 .plan-dates b{font-weight:600}
 .valid-row{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
 .valid{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;background:none;
@@ -379,7 +380,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-15.12", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-16.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -756,7 +757,7 @@ const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const parseD=k=>{const a=k.split("-").map(Number);return new Date(a[0],a[1]-1,a[2]);};
 function addDays(k,n){const d=parseD(k);d.setDate(d.getDate()+n);return iso(d);}
 function mondayOf(k){const d=parseD(k),o=(d.getDay()+6)%7;d.setDate(d.getDate()-o);return iso(d);}
-function fmt(k){const d=parseD(k);return{dow:DOW[d.getDay()],num:pad(d.getDate())};}
+function fmt(k){if(!isDate(k))return{dow:"—",num:"—"};const d=parseD(k);return{dow:DOW[d.getDay()],num:pad(d.getDate())};}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const r1=n=>Math.round(n*10)/10;
 /* Volontairement une variable, pas une constante. iOS suspend l'app sans
@@ -1497,6 +1498,43 @@ async function lireSSE(rep,onStream){
   if(fini===null)throw ApiErr(MSG_FLUX,0,true);
   return{outil:fini,texte:texte};
 }
+/* Un plan reçu du modèle n'est pas un plan tant qu'il n'a pas été mis
+   d'équerre : un jour sans date, une liste de courses rendue comme une
+   phrase, une semaine sans lundi — rien de tout cela ne doit pouvoir
+   faire tomber un rendu. On garde ce qui est exploitable, on jette le
+   reste, et on dit ce qu'on a jeté. */
+function normaliserPlan(p){
+  const out={genere:isDate(p&&p.genere)?p.genere:TODAY,semaines:[],courses:[],prepDimanche:[],backfill:{},repli:!!(p&&p.repli)},perdus=[];
+  const liste=v=>Array.isArray(v)?v.map(x=>typeof x==="string"?x:(x&&(x.contenu||x.texte||x.label))||JSON.stringify(x)).filter(Boolean)
+    :(typeof v==="string"&&v.trim()?v.split(/\n|;|·/).map(x=>x.trim()).filter(Boolean):[]);
+  (Array.isArray(p&&p.semaines)?p.semaines:[]).forEach(w=>{
+    if(!w||typeof w!=="object"){perdus.push("une semaine illisible");return;}
+    const jours=[];
+    (Array.isArray(w.jours)?w.jours:[]).forEach(d=>{
+      if(!d||typeof d!=="object"||!isDate(d.d)){perdus.push("un jour sans date");return;}
+      const n=d.nutrition&&typeof d.nutrition==="object"?d.nutrition:null;
+      jours.push({d:d.d,fascia:!!d.fascia,
+        seances:(Array.isArray(d.seances)?d.seances:[]).filter(x=>x&&typeof x==="object").map(x=>({
+          rank:["P1","P2","P3"].indexOf(x.rank)>=0?x.rank:"P3",kind:String(x.kind||"autre"),
+          label:String(x.label||"Séance"),detail:x.detail?String(x.detail):"",fallback:x.fallback?String(x.fallback):"",
+          bonus:!!x.bonus,km:num(x.km)})),
+        nutrition:n?{feculentDiner:!!n.feculentDiner,feculentG:num(n.feculentG),
+          creneaux:(Array.isArray(n.creneaux)?n.creneaux:[]).filter(c=>c&&typeof c==="object").map(c=>({
+            h:String(c.h||""),contenu:String(c.contenu||""),prot:num(c.prot),subi:!!c.subi})),
+          kcal:num(n.kcal),prot:num(n.prot),alcool:num(n.alcool)}:null,
+        note:d.note?String(d.note):""});
+    });
+    if(!jours.length){perdus.push("une semaine sans jour daté");return;}
+    const start=isDate(w.start)?w.start:mondayOf(jours[0].d);
+    out.semaines.push({start:start,regime:["calme","normale","chargee","vacances"].indexOf(w.regime)>=0?w.regime:"normale",
+      runCapKm:num(w.runCapKm),jours:jours.sort((a,b)=>a.d.localeCompare(b.d))});
+  });
+  out.semaines.sort((a,b)=>a.start.localeCompare(b.start));
+  out.courses=liste(p&&p.courses);out.prepDimanche=liste(p&&p.prepDimanche);
+  if(p&&p.backfill&&typeof p.backfill==="object"&&!Array.isArray(p.backfill))out.backfill=p.backfill;
+  out.perdus=perdus;
+  return out;
+}
 /* Sortie d'outil d'une réponse non streamée : par type, jamais par index. */
 function sortieOutil(data){
   const blocs=(data&&data.content)||[];
@@ -1735,9 +1773,8 @@ function rangerRevue(r){
 }
 async function appelB(revue,onStream,violations,onEssai){
   const res=await apiFetch(corpsB(revue,violations),onStream||function(){},onEssai);
-  const p=res.outil;
-  if(!p||!Array.isArray(p.semaines)||!p.semaines.length)
-    throw ApiErr("Réponse sans plan exploitable.",0,true);
+  const p=normaliserPlan(res.outil);
+  if(!p.semaines.length)throw ApiErr("Réponse sans plan exploitable.",0,true);
   return p;
 }
 
@@ -2526,7 +2563,23 @@ function renderTabs(){
     (t[0]==="today"&&reviewDue()?'<span class="dot"></span>':"")+'</button>').join("");
 }
 
+/* Un rendu qui jette laissait l'onglet vide ou figé, sans un mot — et
+   c'est exactement ce qui s'est passé avec un plan mal formé. Chaque vue
+   est isolée : si elle tombe, l'erreur s'affiche à sa place, en clair,
+   et le reste de l'app continue. */
+let lastRenderErr="";
 function renderView(){
+  try{renderViewSur();}
+  catch(e){
+    lastRenderErr=(e&&e.message)||String(e);
+    const v=document.getElementById("view");
+    if(v)v.innerHTML='<section class="panel"><h2>Erreur d\'affichage</h2>'+
+      '<p class="panel-sub">Cet onglet n\'a pas pu se dessiner. Le message ci-dessous est à me transmettre tel quel.</p>'+
+      '<pre class="errbox">'+esc(lastRenderErr+"\n"+String((e&&e.stack)||"").split("\n").slice(0,4).join("\n"))+'</pre>'+
+      (planPropose?'<button class="tool" id="oublierPlan">Oublier le plan proposé</button>':'')+'</section>';
+  }
+}
+function renderViewSur(){
   const v=document.getElementById("view");
   if(tab==="today")v.innerHTML=viewToday();
   else if(tab==="plan")v.innerHTML=viewPlan();
@@ -2895,6 +2948,7 @@ async function lancerRevue(){
     }
   }
   couvrirFenetre(plan,V);
+  (plan.perdus||[]).forEach(x=>V.push(viol("forme","Ignoré dans la réponse du modèle : "+x+".","ajout")));
   planPropose=plan;planViol=V;
   chronoFin();revBusy=false;render();
   const el=document.querySelector(".plan-pret");
@@ -4014,7 +4068,7 @@ function renderTools(){
 
 /* ================= Interactions ================= */
 document.addEventListener("click",ev=>{
-  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],[data-fold],[data-val],.bact,#bascule,#garder,#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#msBtn,#msPaste");
+  const t=ev.target.closest("[data-tab],[data-open],[data-t],[data-b],[data-pr],[data-a],[data-alt],[data-reg],[data-ff],[data-sn],[data-tl],[data-ch],[data-fold],[data-val],.bact,#bascule,#garder,#exp,#imp,#impPlan,#rev,#allm,#impBtn,#docBtn,#docBack,#keyDel,#etatCopy,#go,#applyPlan,#repli,#goPlan,#oublierPlan,#msBtn,#msPaste");
   if(!t)return;
   /* Le bouton ne fait qu'ouvrir le sélecteur : l'input reste caché, un
      champ de fichier nu ne se style pas et se tape mal. */
@@ -4039,6 +4093,7 @@ document.addEventListener("click",ev=>{
   if(t.id==="go"){lancerRevue();return;}
   if(t.id==="repli"){proposerRepli();return;}
   if(t.id==="goPlan"){relancerPlan();return;}
+  if(t.id==="oublierPlan"){planPropose=null;planViol=[];render();return;}
   if(t.id==="bascule"||t.id==="garder"){
     const sem=(lastDigest()||{}).semaineDu||mondayOf(TODAY),sig=signalArret();
     if(t.id==="bascule"){DB.milestones.poids.r1=0.5;}
