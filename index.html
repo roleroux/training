@@ -380,7 +380,7 @@ const APP="Pimperel";
 const KEY="pimperel-v1";
 /* Contrôle de version : à changer À CHAQUE déploiement, en même temps que
    version.txt à la racine. Les deux doivent être identiques. */
-const VERSION="2026-09-16.1", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
+const VERSION="2026-09-16.2", RKEY="pmp-reload", OKEY="pmp-open", TKEY="pmp-tab";
 
 /* ================= Cibles et constantes ================= */
 /* ================= Cibles mensuelles ================= */
@@ -1651,10 +1651,17 @@ const CONSIGNE_A=
  "Pour l'apport, estime sur les menus en clair du journal, en un seul lot sur la semaine, "+
  "et dis sur combien de jours renseignés tu as estimé. N'invente pas de journée manquante. "+
  "Le rythme de perte en vigueur t'est donné : tu ne le changes jamais de toi-même. Si un signal d'arrêt du déficit est présent, tu le nommes dans les alertes ; la décision revient à l'utilisateur.";
+const JOURPLEIN=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+function jourNomme(k){return k+" ("+JOURPLEIN[parseD(k).getDay()]+")";}
 function consigneB(){
   const F=planFenetre(),W=semainesFenetre();
   return "Tu reçois la revue que tu viens de produire. Établis maintenant le plan en appelant l'outil rendre_plan, et rien d'autre. "+
-   "Il couvre EXACTEMENT du "+F.debut+" au "+F.fin+" inclus, jour par jour, sans trou. "+
+   "Il couvre EXACTEMENT du "+jourNomme(F.debut)+" au "+jourNomme(F.fin)+" inclus, jour par jour, sans trou. "+
+   /* Les dates ISO seules ne disent pas le jour de la semaine, et le
+      modèle place alors ses créneaux garantis au jugé : le lundi tombe un
+      vendredi, le samedi reste vide. La liste est donnée en toutes lettres. */
+   "Jours de la fenêtre, dans l'ordre : "+(function(){const a=[];for(let k=F.debut;k<=F.fin;k=addDays(k,1))a.push(jourNomme(k));return a.join(", ");})()+". "+
+   "Les créneaux garantis se posent sur leur jour de la semaine, jamais ailleurs : salle P1 le LUNDI, renforcement et course le SAMEDI, VTT le DIMANCHE. "+
    "Semaines calendaires, champ start = date du lundi : "+W.map(w=>w.start+" (jours "+w.jours[0]+" → "+w.jours[w.jours.length-1]+")").join(" ; ")+". "+
    "La première semaine peut être partielle : ne remplis que ses jours listés. "+
    "Respecte les régimes de l'agenda et le plafond de course. "+
@@ -1980,6 +1987,19 @@ function verifierPlan(p,ctx){
       if(m&&!G_COMPLEMENTS.test(t))
         V.push(viol("G12","Repas du "+dm(x.d.d)+" : complément hors whey et vitamine D — « "+m[1]+" ».","rejet"));
     });
+  });
+
+  /* G18 · un créneau garanti annoncé sur le mauvais jour. On ne le
+     supprime pas — c'est peut-être un bonus légitime — mais on cesse de
+     le faire passer pour le créneau non négociable, et on le dit. */
+  S.forEach(x=>{
+    const dow=isDate(x.d.d)?parseD(x.d.d).getDay():-1;
+    const attendu=REPLI.filter(r=>r.kind===x.s.kind).map(r=>r.jour);
+    if(dow<0||!attendu.length||attendu.indexOf(dow)>=0)return;
+    if(!/non n.gociable|cr.neau garanti/i.test(sTexte(x.s)))return;
+    x.s.detail=String(x.s.detail||"").replace(/Cr.neau non n.gociable\.?\s*/i,"").trim();
+    V.push(viol("G18",(JOURPLEIN[dow].charAt(0).toUpperCase()+JOURPLEIN[dow].slice(1))+" "+dm(x.d.d)+
+      " : « "+x.s.label+" » était annoncée comme créneau garanti — ce créneau est un autre jour.","correction"));
   });
 
   /* G17 · le plan couvre la fenêtre demandée, à partir de DEMAIN. Dire la
@@ -2987,25 +3007,47 @@ async function relancerPlan(){
    couvert est complété par la structure garantie, et c'est dit. Le plan
    commence demain quoi qu'ait fait le modèle — c'est une exigence, pas
    un souhait. */
+function creneauxDe(k){
+  const dow=parseD(k).getDay();
+  return REPLI.filter(x=>x.jour===dow).map(x=>({rank:x.rank,kind:x.kind,label:x.label,
+    detail:x.detail,fallback:x.fallback,bonus:false}));
+}
+/* Deux manques distincts, et le second était le vrai : un jour que le
+   modèle n'a pas rendu, et un jour qu'il a rendu VIDE alors que la
+   structure garantie y pose un créneau. Le samedi et le dimanche
+   arrivaient ainsi sans rien. La structure garantie n'est pas
+   négociable : ce qui manque est ajouté, dans les deux cas. */
 function couvrirFenetre(p,V){
-  const F=planFenetre();
-  const present={};
-  (p.semaines||[]).forEach(w=>(w.jours||[]).forEach(d=>{present[d.d]=1;}));
-  const manque=[];
-  for(let k=F.debut;k<=F.fin;k=addDays(k,1))if(!present[k])manque.push(k);
-  if(!manque.length)return;
-  manque.forEach(k=>{
-    const m=mondayOf(k),dow=parseD(k).getDay();
-    let w=(p.semaines||[]).filter(x=>x.start===m)[0];
-    if(!w){w={start:m,regime:"normale",runCapKm:lastCap(),jours:[]};p.semaines.push(w);}
-    w.jours.push({d:k,fascia:true,
-      seances:REPLI.filter(x=>x.jour===dow).map(x=>({rank:x.rank,kind:x.kind,label:x.label,
-        detail:x.detail,fallback:x.fallback,bonus:false}))});
-    w.jours.sort((a,b)=>String(a.d).localeCompare(String(b.d)));
-  });
+  const F=planFenetre(),present={};
+  (p.semaines||[]).forEach(w=>(w.jours||[]).forEach(d=>{present[d.d]=d;}));
+  const absents=[],completes=[];
+  for(let k=F.debut;k<=F.fin;k=addDays(k,1)){
+    const cr=creneauxDe(k);
+    let d=present[k];
+    if(!d){
+      const m=mondayOf(k);
+      let w=(p.semaines||[]).filter(x=>x.start===m)[0];
+      if(!w){w={start:m,regime:"normale",runCapKm:lastCap(),jours:[]};p.semaines.push(w);}
+      d={d:k,fascia:true,seances:cr.slice(),nutrition:null,note:""};
+      w.jours.push(d);w.jours.sort((a,b)=>String(a.d).localeCompare(String(b.d)));
+      absents.push(k);
+      continue;
+    }
+    /* Le jour existe : on n'ajoute que le créneau garanti qui manque, et
+       seulement si aucune séance du même type n'est déjà prévue. */
+    const ajout=cr.filter(c=>!(d.seances||[]).some(s=>s.kind===c.kind));
+    if(ajout.length){
+      d.seances=(d.seances||[]).concat(ajout);
+      completes.push(k);
+    }
+    if(!d.fascia)d.fascia=true;
+  }
   p.semaines.sort((a,b)=>String(a.start).localeCompare(String(b.start)));
-  V.push(viol("fenêtre",(manque.length>1?"Jours du "+dm(manque[0])+" au "+dm(manque[manque.length-1]):"Jour du "+dm(manque[0]))+
-    " non fournis par le modèle : complétés par la structure garantie.","ajout"));
+  if(absents.length)V.push(viol("fenêtre",(absents.length>1?"Jours du "+dm(absents[0])+" au "+dm(absents[absents.length-1]):"Jour du "+dm(absents[0]))+
+    " non fournis par le modèle : ajoutés depuis la structure garantie.","ajout"));
+  if(completes.length)V.push(viol("fenêtre",
+    completes.map(k=>JOURPLEIN[parseD(k).getDay()]+" "+dm(k)).join(", ")+
+    " : créneau garanti absent, ajouté.","ajout"));
 }
 /* Repli (§8.4) : quand aucun plan valide n'est disponible, la structure
    hebdomadaire garantie s'affiche. Elle n'est jamais vide. */
